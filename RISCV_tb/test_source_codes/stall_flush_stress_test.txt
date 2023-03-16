@@ -1,0 +1,20 @@
+li a7, 1
+li a1, 5
+li a0, 10
+sw a0, 0(x0) # forward from mem to ex 
+lw a1, 0(x0)
+add a2, a1, a0 # [load,Rtype] -> stall 1CC + forward from wb to ex
+bne a0, a2, valid # [Rtype,branch] -> stall 1CC + forward from MEM to ID + flush IF/ID reg on branch taken
+jal error
+valid: jal procedure # [jal] -> IF/ID flush
+li a3, 10
+nop
+add a4, a2, a3 #[Rtype,nop,Rtype] forward result from WB to EX 
+nop
+nop
+bne a2, a4, exit #[Rtype,nop,nop,branch] forward result from WB to ID
+error: li a7 -1
+procedure:jalr x1 # jalr instruction -> IF/ID and 
+jal error # jump after jalr -> possible hazard! 2 simultanious jumps, jump in ID and JALR in EX
+jal error
+exit: nop

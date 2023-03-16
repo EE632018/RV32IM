@@ -1,0 +1,76 @@
+li a7, 1
+li a1, 15
+li a2, -5
+li a3,  5
+add a4, a1, a2 
+sub a5, a1, a3 # expected- a4=a5=10
+addi a6, a6, 0 #test with no stall
+beq a5, a4, valid0  #tested- add,addi,sub,beq,jal
+jal error
+valid0: auipc a4 1
+lui a5 1
+addi a5, a5, 36 # expected- a4=a5=4128
+beq a5, a4, valid1  #tested- lui,auipc
+jal error
+valid1: li a0, 0xc
+li a1, 0xa
+and a2, a1, a0
+or a3, a1, a0
+li a4, 0x6
+xor a5, a3, a4 # expected- a2=a5=8
+beq a2, a5, valid2  #tested- and,or,xor
+jal error
+valid2: andi a2, a0, 0xa
+ori a3, a0, 0xa
+xori a5, a3, 0x6 # expected- a2=a5=8
+beq a2, a5, valid3  #tested- andi,ori,xori
+jal error
+valid3: li a0, 1
+li a1,-1
+slt a2, a0, a1
+sltu a3, a0, a1
+addi a2, a2, 1 # expected- a2=a3=1
+beq a2, a3, valid4  #tested- slt,sltu
+jal error
+valid4: slti a2, a0, -1
+sltiu a3, a0, -1
+addi a2, a2, 1 # expected- a2=a3=1
+beq a2, a3, valid5  #tested- slti,sltiu
+jal error
+valid5: li a1, 2
+sll a2, a0, a1
+srl a2, a2, a0
+slli a3, a0, 2
+srli a3, a3, 1 # expected- a2=a3=2
+beq a2, a3, valid6  #tested- sll,srl,slli,srli
+jal error
+valid6: li a0, -8
+li a4, 2
+srai a2, a0, 2
+sra a3, a0, a4 # expected- a2=a3=-2
+beq a2, a3, valid7  #tested- sra,srai
+jal error
+valid7: jal procedure # expected- a5=a6=69
+beq a5, a6, valid8  #tested- jal,jalr
+jal error
+valid8: addi a6, a6, 1 # expected- a5=70 a6=69
+bne a5, a6, valid9  #tested- bne
+jal error
+valid9: li a6 -1 # expected- a5=69 a6=-1 (for next 4 branches)
+bgt a5, a6, valid10  #tested- gt
+jal error
+valid10: bltu a5, a6, valid11  #tested- ltu
+jal error
+valid11: bgeu a6, a5, valid12  #tested- ltu
+jal error
+valid12: blt a6, a5, valid13  #tested- ltu
+jal error
+valid13: bltu a6, a5, error  #tested- ltu
+jal exit
+procedure: li a5 69
+li a6 69
+jalr x1  #return
+error:li a7,-1 
+exit: nop
+# Instrukcije rade   			 : U a7/X17 se nalazi 1
+# Neka od instrukcija ne radi: U a7/X17 se nalazi -1
