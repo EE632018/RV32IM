@@ -35,6 +35,23 @@ begin
                   if(funct7_i(5)='1')then 
                      alu_op_o <= sub_op;
                   end if;
+               when "001" =>
+                  alu_op_o <= sll_op;  
+               when "101" =>
+                  case funct7_i is
+                    when "0000000" => 
+                        alu_op_o <= srl_op;
+                    when "0100000" =>
+                        alu_op_o <= sra_op;
+                    when others =>
+                        alu_op_o <= srl_op;                    
+                  end case;                      
+               when "100" =>
+                  alu_op_o <= xor_op;
+               when "010" =>
+                  alu_op_o <= lts_op;
+               when "011" =>
+                  alu_op_o <= ltu_op;                                                          
                when "110" =>
                   alu_op_o <= or_op;
                when others =>
