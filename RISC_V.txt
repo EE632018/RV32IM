@@ -1,0 +1,55 @@
+Arhitektura skupa instrukcija opisuje na koji nacin odredjeni procesor funkcionise i koje su njegove mogucnosti. 
+Ona opisuje registre koje ce procesor imati kao i sve masinske instrukcije podrzavati. 
+ISA predstavlja spregu izmedju hardvera i softvera. 
+Danas imamo mnogo arhitektura koje se dele u dve osnovne grupe: RISC i CISC. 
+
+Reduced instruction set architecture- koristi se veci broj jednostavnih instrukcija kako bi se program izvrsio,
+pri cemu se instrukcije izvrsavaju samo jedan ciklus. Dekodovanje instrukcija jednostavno a implementacija protocne obrade 
+laka. Koristi se registarsko-registarski model, pri cemu se aritmeticko logicke operacije izvrsavaju nad registrima. 
+LOAD i STORE se koriste za prebacivanje sadrzaja iz memorije u registre i suprotno. 
+
+Complex Instruction set architecture- koristi se manji broj kompleksnih instrukcija kako bi se program izvrsio, pri cemu se instrukcije 
+izvrsavaju vise taktova. Dekodovanje instrukcija komplikovano kao i implementacija. Operacije ne moraju biti strogo reg-reg,
+te je moguce da su operandi u memoriji. 
+
+Svaki RISC-V skup instrukcija krece slovima RV a zatim je pracen sirinom registara u datoj implementaciji.
+RV32, RV64, RV128. 
+Nakon sirine registara se odredjuju skupovi instrukcija koji ce biti implementirani:
+I - Osnovni set instrukcija za rad sa celim brojevima
+M - Mnozenje i deljenje celobrojnih podataka
+A - Atomicne operacije za interprocesnu sinhronizaciju
+F - Operacije brojevima sa pokretnim zarezom, jednostruka preciznost
+D - Operacije brojevima sa pokretnim zarezom, dvostruka preciznost
+S - Nadzorni mod
+Q - Operacije brojevima sa pokretnim zarezom, cetvorostruka preciznost 
+C - Kompresovane instrukcije
+E - Embeded mikroprocesor, broj registara smanjen na 16
+
+Postoje jos dodatne modifikacije koje su naglasene u specifikaciji ali nisu podrzane jos uvek. 
+
+Tri pravila harverskog dizajna kojeg su se drzali autori RISC-V arhitekture su:
+	1. Jednostavnost nastaje iz regularnosti
+	2. Manje je brze
+	3. Dobar dizajn zahteva dobar kompromis
+
+Operandi instrukcija iz ISA su ograniceni na 32 registra koja se nalaze u procesoru. Po RISC-V specifikaciji se ova 32 
+registra opste namene oznacavaju imanima x0 do x31. Samo registar x0 je specifican jer uvek sadrzi vrednost 0. 
+
+Instrukcije za prenos podatka od memorije ka registru se zove load. 
+Instrukcije za prenos podatka od registra ka memoriji se zove store.
+RISC-V je little-endian arhitektura. 
+Bitno je naglasiti da svaki RISC-V procesor ima i programski brojac. Programski brojac cuva adresu instrukcije koja se treba 
+izvrsiti. On pokazuje na adresu u memoriji na kojoj se cuva kodirana instrukcija. Pri sekvencijalnom izvrsavanju instrukcija 
+PC se uvecava za 4. Njegovu vrednost mogu promeniti samo instrukcije uslovnih i bezuslovnih skokova. 
+
+Instrukcije za RISCV procesore su 32 bitne i one se iskljucivo izvrsavaju nad registrima. RISCV je takozvana arhitektura sa tri adrese.
+Instrukcije su podeljene na polja u zavisnosti od funkcije koju oni imaju u instrukciji. 
+	1. opcode - operation code, kod instrukcije, vrsi osnovnu podelu instrukcija
+	2. funct3 - dodatna 3 bita polju opcode, za definisanje instukcije
+	3. funct7 - dodatnih 7 bita polju opcode, za dataljnije definisanje instrukcija
+	4. rs1 - prvi operand
+	5. rs2 - drugi operand
+	6. rd - ciljni registar, u koji se smesta razultat insrukcije
+	7. imm - immediate, polje koje sadrzi konstantu
+	
+

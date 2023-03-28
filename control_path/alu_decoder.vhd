@@ -28,6 +28,8 @@ begin
             alu_op_o <= add_op;
          when "01" =>
             alu_op_o <= eq_op;
+         when "11" => -- I type
+                            
          when others =>
             case funct3_i is
                when "000" =>
@@ -35,8 +37,14 @@ begin
                   if(funct7_i(5)='1')then 
                      alu_op_o <= sub_op;
                   end if;
+                  if (funct7_i(0) = '1') then
+                    alu_op_o <= mulu_op;
+                  end if;  
                when "001" =>
-                  alu_op_o <= sll_op;  
+                  alu_op_o <= sll_op; 
+                  if (funct7_i(0) = '1') then
+                    alu_op_o <= mulhs_op;
+                  end if; 
                when "101" =>
                   case funct7_i is
                     when "0000000" => 
@@ -50,8 +58,14 @@ begin
                   alu_op_o <= xor_op;
                when "010" =>
                   alu_op_o <= lts_op;
+                  if (funct7_i(0) = '1') then
+                    alu_op_o <= mulhsu_op;
+                  end if;
                when "011" =>
-                  alu_op_o <= ltu_op;                                                          
+                  alu_op_o <= ltu_op; 
+                  if (funct7_i(0) = '1') then
+                    alu_op_o <= mulhu_op;
+                  end if;                                                         
                when "110" =>
                   alu_op_o <= or_op;
                when others =>

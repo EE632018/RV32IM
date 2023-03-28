@@ -19,8 +19,8 @@ architecture Behavioral of immediate is
    constant i_type_instruction : std_logic_vector(2 downto 0):= "001";
    constant s_type_instruction : std_logic_vector(2 downto 0):= "010";
    constant b_type_instruction : std_logic_vector(2 downto 0):= "011";
-   --constant u_type_instruction : std_logic_vector(2 downto 0):= "100";
-   --constant j_type_instruction : std_logic_vector(2 downto 0):= "101";
+   constant u_type_instruction : std_logic_vector(2 downto 0):= "100";
+   constant j_type_instruction : std_logic_vector(2 downto 0):= "101";
    --constant shamt_instruction  : std_logic_vector(2 downto 0):= "110"; 
    --constant fence_ecall_ebreak : std_logic_vector(2 downto 0):= "111";
 
@@ -42,6 +42,9 @@ begin
             instruction_type <= s_type_instruction;
          when "11000" =>
             instruction_type <= b_type_instruction;
+         when "01101" =>
+            instruction_type <= u_type_instruction;
+         --when ""        
          when others =>
             instruction_type <= r_type_instruction;
       end case;

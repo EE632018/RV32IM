@@ -23,11 +23,22 @@ ARCHITECTURE behavioral OF ALU IS
    signal    add_res, sub_res, or_res, and_res,res_s, eq_res :  STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
    signal    sll_res, slt_res, sltu_res, xor_res, srl_res, sra_res: std_logic_vector(WIDTH-1 DOWNTO 0); 
    signal    b_u: integer;   
+   signal    b_mul: integer;
+   signal    a_mul: integer;
+   signal    mul_res, mulhu_res, mulhsu_res  : std_logic_vector(2*WIDTH-1 downto 0);
+   attribute use_dsp: string;
+   attribute use_dsp of Behavioral: architecture is "yes";
 BEGIN
  
     -- Implementing shift left and right uses lower 5 bits from input b
-    b_u <= to_integer(signed(b_i(4 downto 0)));
+    
+   b_u <= to_integer(signed(b_i(4 downto 0)));
 
+    
+   mul_res <= std_logic_vector(signed(a_i) * signed(b_i));
+   mulhu_res <= std_logic_vector(unsigned(a_i) * unsigned(b_i));
+   
+   --mulhu_res <= std_logic_vector(to_signed(a_mul,width) * to_unsigned(b_mul,width)); 
    -- sabiranje
    add_res <= std_logic_vector(unsigned(a_i) + unsigned(b_i));
    -- oduzimanje
@@ -51,7 +62,7 @@ BEGIN
    sltu_res <= std_logic_vector(to_unsigned(1,WIDTH)) when (unsigned(a_i) < unsigned(b_i)) else
               std_logic_vector(to_unsigned(0,WIDTH));
    
-   -- prosledi jedan od rezultata na izlaz u odnosu na  operaciju
+   -- prosledi jedan od rezultata na izlaz u odnosu na operaciju
    res_o <= res_s;
    with op_i select
       res_s <= and_res when and_op,
@@ -65,6 +76,8 @@ BEGIN
                sra_res when sra_op,
                slt_res when lts_op,
                sltu_res when ltu_op,
+               mul_res(31 downto 0) when mulu_op,
+               mulhu_res(63 downto 32) when mulhu_op,
                (others => '1') when others; 
 
 
