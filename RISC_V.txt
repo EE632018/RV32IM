@@ -53,3 +53,79 @@ Instrukcije su podeljene na polja u zavisnosti od funkcije koju oni imaju u inst
 	7. imm - immediate, polje koje sadrzi konstantu
 	
 
+*********************************************************************************************************************************************
+									Vezba 2
+*********************************************************************************************************************************************
+
+RISCV procesor komunicira sa dve memorije. U prvu smesta instrukcije, a u drugu podatke, pri cemu se komunikacija obavlja preko dva interfejsa
+	-> interfejs za komunikaciju sa memorijom za instrukcije, koji mora da obezbedi samo mogucnost citanja
+	-> interfejs za komunikaciju sa memorijom za podatke, koji mora da obezbedi i citanje i pisanje
+Hardverska implementacija podeljena je u dve celine: Controlpath i datapath. Controlpath predstavlja logiku za kontrolu komponenti u datapath-u.
+U zavisnosti od instrukcije koju procesor trenutno izvrsava, contorlpath generise signale koji upravljaju komponentama u datapath-u na takav nacin
+da se izvrsi adekvatna operacija. 
+Memorija za instrukcije i memorija za podatke se ne nalaze unutar arhitekture procesora. 
+Memorija za instrukcije je memorija sa asinhronim citanjem i u njoj je smesten program koji treba da se izvrsi. Koje instrukcije ce biti izvrsene 
+zavisi od PC koji generise adresu na kojoj se nalazi naredna instrukcija. Ovde je bitno naglasiti da se PC uvek uvecava za 4 jer svaka instrukcija 
+je sirine 32 bita. PC je registar sto znaci da naredna vrednost na njegovom izlazu pojaviti na rastucoj ivici takta, a kako je memorija za instrukcije sa 
+asinhronim citanjem pri svakoj promeni stanja PC promenice se i izlaz memorije. 
+
+
+********1. Komponenta - registarska banka ************
+Registarska banka sadrzi 32 registra sirine 32 bita i uloga svakog od registara objasnjena je na prethodnim vezbama. Komunikacija sa registarskom bankom odvija 
+se preko dva interfejsa za citanje i jednog interfejsa za upis.
+Interfejs za citanje podatka sastoji se iz dva pristupa. Citanje podataka iz memorije je asinhrono. 
+Interfejs za upis podataka se sastoji iz addr,data i we pristupa. Upis podatak je sinhron. 
+
+********2. Komponenta - ALU **************************
+Uloga ALU jedinice je obavljanje aritmeticko logickih operacija. Interfejs je sledeci 
+a) Dva ulazna porta za operande nad kojima se vrsi aritmeticko logicka operacija
+b) Ulaznog porta alu_op za izbor operacije koju treba izvrsiti. 
+c) Izlaznog porta na kome se pojavljuje rezultat operacije. 
+Tacka a) dolazi iz registarske banke, b) kontrolise ControlPath, a tacka c) je dovedena na ulaz registarske banke. 
+ 
+********3. Komponenta - Memorija za podatke ***********
+Memorija ima jednostavan interfejs koji se sastoji:
+a) Addr port -> odredjuje sa koje adrese se cita, odnosno na koju adresu se pise.
+b) data_i -> predstavlja ulazni port za upis podataka. Upis je sinhron.
+c) data_o -> predstavlja izlazni port citanja podataka. Citanje je asinhrono.
+d) data_we -> predstavlja ulazni port dozvole upisa i kontrolisan je od strane signala koji potice iz controlpath celine.
+
+********4. Komponenta - Immediate *********************
+Uloga je da prosiri konstantu sa 12 bita na 32, pri cemu se gornji prosiruju nulama ili jedinicama u zavisnosti od najviseg bita
+immediate polja kako bi se odrzao predznak konstante. Nezavisno od formata instrukcije, najvisi bit immediate polja ce se uvek poklapati sa najvisim 
+bitom instrukcije. Prosirenje je neophodno uraditi kako bi ALU jedinica mogla da sabere immediate polje sa rs1 izlazom registarske banke jer ona ocekuje da oba 
+ulazna operanda budu iste sirine od 32 bita. Interfejs immediate komponente se sastoji od dva porta:
+a) Instruction predstavlja ulazni port preko koga se prima instrukcija
+b) Immediate_extended izlazni port predstavlja prosireno immediate polje
+Opcode polje je takodje neophodno jer na osnovu njega koji format instrukcije je u pitanju i shodno tome vrsi prosirivanje. 
+
+********5. Komponenta - Mux****************************
+Poslednja komponenta koja je neophodna kako bi se multipleksirao ulaz b ALU jedinice i njega kontrolise alu_src_b signal iz controlpath dela. 
+   
+!!!Sve ove komponente su neophodne da bi se moglo uraditi upisivanje u memoriju za podatke (STORE)!!!
+
+Za upisivanje podataka iz memorije za podatke potrebno je ubaciti dodatni mux koji ce kontrolisati izlaz te memorije i sta ce se upisivati u registarsku banku. 
+Ovde su nam od interesa instrukcije I tipa! Konkretna polja su imm(11:0),rs1 i rd. Rd predstavlja registar u koji ce se smestiti podatak iz memorije, dok suma 
+izmedju rs1 i immediate polja predstavljaju adresu u memoriji za podatke sa koje treba da se ucita informacija. 
+
+Potrebna nam je opet Immediate komponenta da prosirimo polje imm(11:0) na 32 bita. Dodatna komponenta jeste mux 2 na 1 i on odredjuje sta ce biti upisano u registarsku banku.
+Njegov selekcioni ulaz je takodje kontrolisan od strane controlpath celine. 
+
+******** Implementacija instrukcije uslovnog skoka ********************
+Prilikom implementiranja svih instrukcija do sada, PC se uvek uvecavao za konstantnu vrednost, odnosno instrukcije su uvek izvrsavane sekvencijalno.
+Ubacivanjem uslovnog skoka, omogucava se skok na proizvoljnu instrukciju u memoriji ukoliko je uslov jednakosti ispunjen. 
+Ovo pripada B tipu instrukcija!!!
+Polja koja nisu od interesa su funct3 i opcode. Rs1 i rs2 polja sadrze u sebi adrese registara koji se porede i od njihove jednakosti zavisi da li ce
+se desiti skok ili ne. U immediate poljima se krije informacija koliko bajtova treba skociti do zeljene instrukcije. Moramo immediate polje prvo da 
+konkataniramo (preslozimo bite)  i nakon toga prosirivanje na 32 bita. 
+
+Jos jedna operacija koju treba dodati jeste pomeranje prosirene vrednosti za jednu poziciju levo. Rezultat nakon pomeranja predstavice broj bajtova od trenutne 
+vrednosti PC do naredne instrukcije koju treba izvrsiti. Smisao iz pomeranja jeste da bi se prosirio opseg instrukcija do kojih moze da se skoci. 
+
+Ova vrednost se sabira sa trenutnom vrednoscu PC i da li ce se proslediti na ulaz PC zavisi od pc_sel, selekcionog signala koji je generisan od strane contrlopath 
+dela. Da li ce se ovo desiti zavisi od branch_condition signala koji nam govori da li su jednaki ulazi a i b. 
+
+
+
+
+
