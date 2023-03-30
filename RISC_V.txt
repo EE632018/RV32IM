@@ -231,3 +231,17 @@ Za neke hazarde podatka prosledjivanje nije dovoljno i tada je neophodno izvrsit
 
 *** 2. Komponenta - hazard unit***
 Hazard unit komponenta zaustavlja prihvat novih instrukcija pomocu tri kontrolna signala: pc_en, if_id_en, controll_pass. 
+Prvi kontrolise pc registar, ako je on na niskoj vrednosti ostaje adresa memorije ista. Drugi kontrolise if_id_reg i ukoliko je on na niskoj vrednosti instrukcija iz IF faze 
+ne moze biti propustena u ID fazu. Controll_pass resetuje ID_EX_reg u control path celini, odnosno resetuje sve kontrolne signale u EXE fazi sto je ekvivalentno nop instrukciji.
+Ovako zadrzavamo instrukciju u ID fazi.
+Objasnjenje rada hazara unit-a.
+
+*** Upravljacki hazardi ***
+Za upravljacke hazarde hazard unit mora da se prosiri sa tri dodatna ulazna porta:
+
+1. branch_id sadrzi informaciju da li je primljena instrukcija uslovnog skoka. Potreba za ovom informacijom proizilazi iz cinjenice da ukoliko instrukcija 
+u ID fazi nije instrukcija uslovnog skoka, stall ce biti dugacak maksimalno 1 takt, a u suprotnom ce mozda biti dva. 
+2. rd_address_mem, sadrzi informaciju o tome kom registru pristupa instrukcija koja se nalazi u mem fazi. 
+3. mem_to_reg_mem govori da li instrukcija u MEM fazi vrsi citanje iz memorije za podatke i smesta citanja u registarsku banku. 
+
+
