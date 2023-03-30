@@ -125,7 +125,109 @@ vrednosti PC do naredne instrukcije koju treba izvrsiti. Smisao iz pomeranja jes
 Ova vrednost se sabira sa trenutnom vrednoscu PC i da li ce se proslediti na ulaz PC zavisi od pc_sel, selekcionog signala koji je generisan od strane contrlopath 
 dela. Da li ce se ovo desiti zavisi od branch_condition signala koji nam govori da li su jednaki ulazi a i b. 
 
+*******************************************************************************************************************************************************************
+										Controlpath
+*******************************************************************************************************************************************************************
 
+Osnovna dva bloka od kojih se sastoji controlpath celina su: control decoder i alu decoder. Razdvajanje ove dve komponente nije bilo neophodno mogli smo i napraviti kao 
+jednu komponentu. 
 
+********1. Komponenta - Alu decoder **********************************
+Alu decoder je komponenta zaduzena za kontrolisanje ALU jedinice, odnosno ona odredjuje koju instrukciju ALU treba da izvrsi. Njen interes se sastoji iz sledecih portova:
+	1. alu_2bit_op -> 2 bitni ulazni port kontrolisan od strane control decoder komponente.
+	2. funct3	-> 3 bitni ulazni port preko koga se primaju 3 bita instrukcije koji predstavljaju polje funct3
+	3. funct7	-> 7 bitni ulazni port preko koga se primaju 7 bita instrukcije koji predstavljaju polje funct7
+	4. alu_op	-> 5 bitni izlazni port koji generise kontrolne signale za upravljanje ALU jedinicom.
+	
+********2. Komponenta - Control decoder ******************************	
+Control decoder je komponenta zaduzena za generisanje kontrolnih signala kojima se kontrolisu sve ostale komponente u datapath celini i njen interfejs se sastoji 
+iz sledecih portova:
+	1. opcode	-> ulazni port preko koga prima 7 bita instrukcije koja se izvrsava.
+	2. branch	-> Izlazni port koji se postavlja na visok nivo ukoliko je iz instrukcione memorije zahvacena BEQ instrukcija.
+	3. rd_we	-> izlazni port koji se postavlja na visok nivo ukoliko instrukcija prihvacena iz instrukcione memorije upisuje podatak u registarsku banku
+	4. alu_src_a	-> izlazni port koji se postavlja na visok nivo ukoliko instrukcija koja se izvrsava prosledjuje immediate_extended vrednost umesto b.
+	5. data_mem_we	-> izlazni port koji se postavlja na visok nivo ukoliko instrukcija prihvacena iz instrukcione memorije upisuje podatak u memoriju za podatke. 
+	6. mem_to_reg 	-> izlazni port koje kontrolise mux ispred memorije za podatke i koji se postavlja na visok nivo ukoliko je u registarsku banku potrebno 
+			   upisati podatak iz memorije za podatke, a nizak kada se prosledjuje iz ALU jedinice. 
+        7. alu_2bit_op -> 2 bitni izlazni port koji se prosledjuje alu decoderu i na osnovu koga se odredjuje koja operacija treba da se izvrsi.
 
+*********************************************************************************************************************************************
+									Vezba 3
+*********************************************************************************************************************************************
 
+Osnovni princip protocne obrade -> protocna obrada je tehnika implementacije procesora kod koje se vise instrukcija izvrsava istovremeno.
+Paralelizam u protocnoj obradi jeste glavni razlog njene vece efikasnosti, odnosno u istom intervalu vremena odradice se veca kolicina informacija. 
+Ukoliko sve faze zahtevaju istu kolicinu vremena da se izvrse i ako postoji dovoljno posla, onda ce ubrzanje biti jednako umnosku broja faza protocne obrade.
+
+Faze u RISCV procesoru bice podeljenje na sledeci nacin:
+	1. Instruction fetch
+	2. Instruction decode
+	3. Execute
+	4. Memory
+	5. Write back
+
+Kod implementacije sa protocnom obradom perioda takta ce biti srazmerna propagacionom vremenu faze protocne obrade koja se najvise izvrsava.
+
+Formula za protocnu obradu: 
+	Ubrzanje = (broj instrukcija * Tsigle_cycle)/(Broj instrukcija -1) * Tpipe+Tpopunjavanja_pipelina
+Mozemo da zakljucimo da sto se veci broj instrukcija izvrsava to je poboljsanje vece!!!
+
+Registri dele faze izvrsavanja tako sto omogucavaju da se rezultati pojedinacnih faza sacuvaju u njima na rastucoj ivici takta. Osim dodavanja registara,
+neophodno je kroz sve faze proslediti adresu registra u koji se instrukcija upisuje. Ovo se radi kako bi rezultat izvrsavanja instrukcije i adresa registra istovremeno stigli 
+do registarske banke. 
+Jos jednom da ponovimo upis u registarsku banku se vrsi na opadajucu ivicu takta, a citanje na rastucu!!!
+
+Ono na sta mora da se obraca paznja jesu kontroli signali kroz koje smo prosli, koji su generisani u control path celini. Neki od njih moraju da idu duze kroz faze protocne obrade i da se iskoriste u onom trenutku protocne obrade u kome vrse kontrolu. 
+	1. ID - branch
+	2. EXE - alu_src_b, alu_2bit_op
+	3. MEM - data_mem_we
+	4. WB - rd_we_mem, mem_to_reg
+Bitno je da funtc3,funct7 isto usporimo za jedan takt, kada dolazi u EXE fazu i ide u blok alu_decoder. 
+Ovim smo ubacili i protocnu obradu u controlpath celinu, moze da se uradi na dva nacina, mozda je laksi nacin da se postavi da bude odvojeno control path od data path-a zbog interfejsa i njegovog 
+komplikovanja. 
+
+************ Hazardi u protocnoj obradi **************************************************************
+Problemi koji nastaju su zavisnost izmedju instrukcija koje se nalaze unutar protocne obrade.
+***Hazardi R tipa***
+	sub x2,x1,x3
+	and x11,x2,x5
+
+Jedan od nacina da se razresi ovaj problem jeste da se saceka da sub instrukcija azurira vrednost registra x2 i tek onda da se nastavi sa izvrsavanjem ostalih instrukcija.
+Resenje 1. 
+	sub x2, x1, x3
+	nop
+	nop  
+	and x11,x2,x5
+
+Drugi nacin da se resi ovaj problem jeste implementiranje jedinice za prosledjivanje podatka (forwarding unit). Ukoliko se desi hazard podataka, odnosno jedna instrukcija 
+zavisi od rezultata prethodne, ideja je da jedinica za prosledjivanje podataka prosledi rezultat izvrsavanja prethodne instrukcije u trenutku kada je taj rezultat potreban trenutnoj instrukciji.
+
+*********** 1. Komponenta - forwarding unit ****************************
+Uloga je da zakljuci da li postoji zavisnost izmedju insrukcija koje se nalaze u fazama protocne obrade. Kako bi to uradila neophodne su joj sledece informacije:
+
+1. Adrese registara koji su potrebni instrukciji u EXE fazi. Sa njihovim vrednostima ALU izvrsava operaciju shodono prihvacenoj instrukciji.
+2. Adrese odredisnog registra instrukcije iz MEM faze.
+3. Signal dozvole upisa u registarsku banku rd_we instrukcije MEM faze.
+4. Adresu odredisnog registra instrukcije iz WB faze.
+5. Signal dozvole upisa u registarsku banku rd_we instrukcije iz WB faze. 
+
+3. i 4. stavka su neophodne da bi se zakljucilo da li instrukcije u MEM i WB fazi uopste vrse upisivanje u registarsku banku, jer ukoliko ne vrse upis, nema zavisnosti izmedju instrukcija i prosledjivanje nije neophodno. Ukoliko su signali iz 3. i 4. stavke na visokom nivou, odnosno instrukcije u MEM i WB fazi vrse upis u registarsku banku, potrebno je jos uporediti da li su registi rs1 i
+rs2, koji su neophodni instrukciji u EX fazi jednaki sa registrom rd u koji upisuju instrukcije u MEM i WB fazi. Ukoliko su jednaki, jedinica za prosledjivanje podataka ce generisati kontrolne
+signale koji selektuju sta ce se proslediti ALU jedinici. 
+Ti kontrolni signali su oznaceni kao alu_forward_a i alu_forward_b. To su dva dvobitna signala koji su dovedeni na selekcione ulaze mux-a. 
+Sta koja vrednost prosledjuje 
+"00" -> nema zavisnosti izmedju instrukcija 
+"01" -> postoji zavisnost neophodno je propustiti rezultat iz WB faze
+"10" -> postoji zavisnost neophodno je propustiti rezultat iz MEM faze
+!!! BITNO - MEM faza ima priorite u odnosu na WB fazu !!! -> razlog ima sveziju informaciju o trazenom registru. 
+
+*** Hazardi uslovnog skoka ***
+
+Potrebno je prosiriti forward unit sa dva signala rs1_addr_id i rs2_addr_id i napraviti dva izlaza branch_forward_a i branch_forward_b. 
+
+*** Hazardi podataka i zadrzavanje procesora ***
+
+Za neke hazarde podatka prosledjivanje nije dovoljno i tada je neophodno izvrsiti zadrzavanje procesora. 
+
+*** 2. Komponenta - hazard unit***
+Hazard unit komponenta zaustavlja prihvat novih instrukcija pomocu tri kontrolna signala: pc_en, if_id_en, controll_pass. 
