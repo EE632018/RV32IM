@@ -27,49 +27,61 @@ begin
          when "00" => 
             alu_op_o <= add_op;
          when "01" =>
-            alu_op_o <= eq_op;
-         when "11" => -- I type
-                            
+            case funct3_i(2 downto 1) is
+                when "00" =>
+                    alu_op_o <= eq_op;
+                when "10" =>
+                    alu_op_o <= lts_op;
+                when others =>
+                    alu_op_o <= ltu_op;
+            end case;                                                                    
          when others =>
             case funct3_i is
                when "000" =>
                   alu_op_o <= add_op;
-                  if(funct7_i(5)='1')then 
+                  if(alu_2bit_op_i = "10" and funct7_i(5)='1')then 
                      alu_op_o <= sub_op;
+                  elsif funct7_i(0) = '1' then
+                     alu_op_o <= mulu_op;   
                   end if;
-                  if (funct7_i(0) = '1') then
-                    alu_op_o <= mulu_op;
-                  end if;  
                when "001" =>
                   alu_op_o <= sll_op; 
-                  if (funct7_i(0) = '1') then
+                  if (alu_2bit_op_i = "10" and funct7_i(0) = '1') then
                     alu_op_o <= mulhs_op;
                   end if; 
-               when "101" =>
-                  case funct7_i is
-                    when "0000000" => 
-                        alu_op_o <= srl_op;
-                    when "0100000" =>
-                        alu_op_o <= sra_op;
-                    when others =>
-                        alu_op_o <= srl_op;                    
-                  end case;                      
-               when "100" =>
-                  alu_op_o <= xor_op;
                when "010" =>
                   alu_op_o <= lts_op;
-                  if (funct7_i(0) = '1') then
+                  if (alu_2bit_op_i = "10" and funct7_i(0) = '1') then
                     alu_op_o <= mulhsu_op;
                   end if;
                when "011" =>
-                  alu_op_o <= ltu_op; 
-                  if (funct7_i(0) = '1') then
+                  alu_op_o <= ltu_op;
+                  if (alu_2bit_op_i = "10" and funct7_i(0) = '1') then
                     alu_op_o <= mulhu_op;
-                  end if;                                                         
+                  end if;
+               when "100" =>
+                  alu_op_o <= xor_op;
+                  if (alu_2bit_op_i = "10" and funct7_i(0) = '1') then
+                    alu_op_o <= divs_op;
+                  end if;                       
+               when "101" =>
+                  alu_op_o <= srl_op;  
+                  if funct7_i(5) = '1' then
+                    alu_op_o <= sra_op;
+                  end if;                        
+                  if (alu_2bit_op_i = "10" and funct7_i(0) = '1') then
+                    alu_op_o <= divu_op;
+                  end if;  
                when "110" =>
                   alu_op_o <= or_op;
+                  if (alu_2bit_op_i = "10" and funct7_i(0) = '1') then
+                    alu_op_o <= rems_op;
+                  end if;  
                when others =>
                   alu_op_o <= and_op;
+                  if (alu_2bit_op_i = "10" and funct7_i(0) = '1') then
+                    alu_op_o <= remu_op;
+                  end if;     
             end case;
       end case;
    end process;

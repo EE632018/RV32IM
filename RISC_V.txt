@@ -61,7 +61,7 @@ RISCV procesor komunicira sa dve memorije. U prvu smesta instrukcije, a u drugu 
 	-> interfejs za komunikaciju sa memorijom za instrukcije, koji mora da obezbedi samo mogucnost citanja
 	-> interfejs za komunikaciju sa memorijom za podatke, koji mora da obezbedi i citanje i pisanje
 Hardverska implementacija podeljena je u dve celine: Controlpath i datapath. Controlpath predstavlja logiku za kontrolu komponenti u datapath-u.
-U zavisnosti od instrukcije koju procesor trenutno izvrsava, contorlpath generise signale koji upravljaju komponentama u datapath-u na takav nacin
+U zavisnosti od instrukcije koju procesor trenutno izvrsava, controlpath generise signale koji upravljaju komponentama u datapath-u na takav nacin
 da se izvrsi adekvatna operacija. 
 Memorija za instrukcije i memorija za podatke se ne nalaze unutar arhitekture procesora. 
 Memorija za instrukcije je memorija sa asinhronim citanjem i u njoj je smesten program koji treba da se izvrsi. Koje instrukcije ce biti izvrsene 

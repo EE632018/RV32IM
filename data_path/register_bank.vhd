@@ -7,10 +7,13 @@ entity register_bank is
    generic (WIDTH: positive:= 32);
    port (clk            : in std_logic;
          reset          : in std_logic;
+         
          rs1_address_i  : in std_logic_vector(4 downto 0);
          rs2_address_i  : in std_logic_vector(4 downto 0);
+         
          rs1_data_o     : out std_logic_vector(WIDTH - 1 downto 0);
          rs2_data_o     : out std_logic_vector(WIDTH - 1 downto 0);
+         
          rd_we_i        : in std_logic;
          rd_address_i   : in std_logic_vector(4 downto 0);
          rd_data_i      : in std_logic_vector(WIDTH - 1 downto 0));
