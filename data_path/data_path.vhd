@@ -133,8 +133,6 @@ begin
    end process;
 
 
-
-
    --***********  Kombinaciona logika  ***************
    -- sabirac za uvecavanje programskog brojaca (sledeca instrukcija)
    pc_adder_if_s <= std_logic_vector(unsigned(pc_reg_if_s) + to_unsigned(4, 32));
@@ -146,12 +144,14 @@ begin
    branch_condition_a_ex_s <= alu_result_mem_s when branch_forward_a_i = '1' else
                               rs1_data_id_s;
    branch_condition_b_ex_s <= alu_result_mem_s when branch_forward_b_i = '1' else
-                              rs2_data_id_s;
+                              rs2_data_id_s;        
 
    -- provera uslova za skok
-   process(funct3_mem_s)
+   funct3_id_s  <= instruction_id_s(14 downto 12);
+   
+   process(funct3_id_s,branch_condition_a_ex_s,branch_condition_b_ex_s)
    begin
-        case funct3_mem_s is
+        case funct3_id_s is
             when "000" => 
                 if  (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) then
                      branch_condition_o <= '1';
@@ -198,8 +198,8 @@ begin
    end process;
    
    
-   branch_condition_o <= '1' when (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) else
-                         '0';
+   --branch_condition_o <= '1' when (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) else
+     --                    '0';
 
    -- multiplekser za azuriranje programskog brojaca
    with pc_next_sel_i select
@@ -228,7 +228,7 @@ begin
    rs1_address_id_s <= instruction_id_s(19 downto 15);
    rs2_address_id_s <= instruction_id_s(24 downto 20);
    rd_address_id_s  <= instruction_id_s(11 downto 7);
-
+   
 
    --***********  Instanciranje modula ***********
    -- Registarska banka

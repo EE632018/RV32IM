@@ -1,3 +1,8 @@
+********************* GIT LOG*********************
+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
+**************************************************
+
+
 Arhitektura skupa instrukcija opisuje na koji nacin odredjeni procesor funkcionise i koje su njegove mogucnosti. 
 Ona opisuje registre koje ce procesor imati kao i sve masinske instrukcije podrzavati. 
 ISA predstavlja spregu izmedju hardvera i softvera. 
