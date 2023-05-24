@@ -44,6 +44,10 @@ package datapath_signals_pkg is
    signal rd_address_mem_s        : std_logic_vector (4 downto 0) := (others=>'0');
    signal rs2_data_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
    signal data_mem_read_mem_s     : std_logic_vector (31 downto 0) := (others=>'0');
+   signal funct3_mem_s		   : std_logic_vector (2 downto 0) := (others => '0');
+   signal data_mem_read_mem_s2    : std_logic_vector (31 downto 0) := (others => '0');
+   signal alu_forward_b_mem_s      : std_logic_vector(31 downto 0) := (others=>'0'); -- sa registra ex ulaz u memoriju kada radimo store operaciju. 
+   
 
    --*********      WRITEBACK      **************
    signal pc_adder_wb_s           : std_logic_vector (31 downto 0) := (others=>'0');

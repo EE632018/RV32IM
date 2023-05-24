@@ -245,3 +245,8 @@ u ID fazi nije instrukcija uslovnog skoka, stall ce biti dugacak maksimalno 1 ta
 3. mem_to_reg_mem govori da li instrukcija u MEM fazi vrsi citanje iz memorije za podatke i smesta citanja u registarsku banku. 
 
 
+
+****************************************** 
+Ready signal iz mnozenja i deljenja i dodatni signal se izvlaci iz Alu_decodera. Taj signal je 0 kada je mnozenje i deljenje u ostalim slucajevima je signal 1. 
+Oni se zajedno spajaju na ILI kolo, ciji se izlaz dovodi na enable od PC i IF/ID registra.
+

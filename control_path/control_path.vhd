@@ -28,12 +28,16 @@ entity control_path is
       if_id_flush_o      : out std_logic;
       -- kontrolni signali za zaustavljanje protocne obrade
       pc_en_o            : out std_logic;
-      if_id_en_o         : out std_logic
+      if_id_en_o         : out std_logic;
+      funct3_mem_o       : out std_logic_vector(2 downto 0)
       );
 end entity;
 
 
 architecture behavioral of control_path is
+
+    
+
 begin
 
 
@@ -109,10 +113,12 @@ begin
             data_mem_we_mem_s <= '0';
             rd_we_mem_s       <= '0';
             mem_to_reg_mem_s  <= '0';
+            funct3_mem_s      <= (others => '0');  
             rd_address_mem_s  <= (others => '0');
          else
             data_mem_we_mem_s <= data_mem_we_ex_s;
             rd_we_mem_s       <= rd_we_ex_s;
+            funct3_mem_s      <= funct3_ex_s;
             mem_to_reg_mem_s  <= mem_to_reg_ex_s;
             rd_address_mem_s  <= rd_address_ex_s;
          end if;
@@ -206,7 +212,7 @@ begin
    alu_src_b_o   <= alu_src_b_ex_s;
    rd_we_o       <= rd_we_wb_s;
    if_id_flush_o <= if_id_flush_s;
-
+   funct3_mem_o  <= funct3_mem_s;
 
 
 end architecture;

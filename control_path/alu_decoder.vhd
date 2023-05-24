@@ -29,7 +29,7 @@ begin
          when "01" =>
             case funct3_i(2 downto 1) is
                 when "00" =>
-                    alu_op_o <= eq_op;
+                    alu_op_o <= eq_op;    
                 when "10" =>
                     alu_op_o <= lts_op;
                 when others =>
@@ -39,7 +39,7 @@ begin
             case funct3_i is
                when "000" =>
                   alu_op_o <= add_op;
-                  if(alu_2bit_op_i = "10" and funct7_i(5)='1')then 
+                  if(alu_2bit_op_i = "10" and funct7_i(5)='1' ) or (alu_2bit_op_i = "11" and funct7_i(5)='1') then 
                      alu_op_o <= sub_op;
                   elsif funct7_i(0) = '1' then
                      alu_op_o <= mulu_op;   

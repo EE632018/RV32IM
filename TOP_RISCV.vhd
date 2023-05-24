@@ -7,10 +7,10 @@ entity TOP_RISCV is
       -- Globalna sinhronizacija
       clk                 : in  std_logic;
       reset               : in  std_logic;
-      -- Interfejs ka memoriji za podatke
+      -- Interfejs ka memoriji za instrukcije
       instr_mem_address_o : out std_logic_vector(31 downto 0);
       instr_mem_read_i    : in  std_logic_vector(31 downto 0);
-      -- Interfejs ka memoriji za instrukcije
+      -- Interfejs ka memoriji za podatke
       data_mem_address_o  : out std_logic_vector(31 downto 0);
       data_mem_read_i     : in  std_logic_vector(31 downto 0);
       data_mem_write_o    : out std_logic_vector(31 downto 0);

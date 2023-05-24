@@ -33,12 +33,16 @@ entity data_path is
       if_id_flush_i       : in  std_logic;
       -- kontrolni signali za zaustavljanje protocne obrade
       pc_en_i             : in  std_logic;
-      if_id_en_i          : in  std_logic);
+      if_id_en_i          : in  std_logic;
+      funct3_mem_i        : in  std_logic_vector(2 downto 0)
+      );
 
 end entity;
 
 
 architecture Behavioral of data_path is
+
+    
 begin
 
    --***********  Sekvencijalna logika  ******************
@@ -103,7 +107,7 @@ begin
             rd_address_mem_s <= (others => '0');
          else
             alu_result_mem_s <= alu_result_ex_s;
-            rs2_data_mem_s   <= alu_forward_b_ex_s;
+            alu_forward_b_mem_s   <= alu_forward_b_ex_s;
             pc_adder_mem_s   <= pc_adder_ex_s;
             rd_address_mem_s <= rd_address_ex_s;
          end if;
@@ -123,7 +127,7 @@ begin
             alu_result_wb_s    <= alu_result_mem_s;
             pc_adder_wb_s      <= pc_adder_mem_s;
             rd_address_wb_s    <= rd_address_mem_s;
-            data_mem_read_wb_s <= data_mem_read_mem_s;
+            data_mem_read_wb_s <= data_mem_read_mem_s2;
          end if;
       end if;
    end process;
@@ -145,6 +149,55 @@ begin
                               rs2_data_id_s;
 
    -- provera uslova za skok
+   process(funct3_mem_s)
+   begin
+        case funct3_mem_s is
+            when "000" => 
+                if  (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) then
+                     branch_condition_o <= '1';
+                else
+                    branch_condition_o <= '0';
+                end if;
+            when "001" =>
+                if  (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) then
+                     branch_condition_o <= '0';
+                else
+                    branch_condition_o <= '1';
+                end if;             
+            when "100" => 
+                if (signed(branch_condition_a_ex_s) < signed(branch_condition_b_ex_s)) then
+                    branch_condition_o <= '1';
+                else
+                    branch_condition_o <= '0';
+                end if;
+            when "101" => 
+                if  (signed(branch_condition_a_ex_s) >= signed(branch_condition_b_ex_s)) then
+                     branch_condition_o <= '1';
+                else
+                    branch_condition_o <= '0';
+                end if;                
+            when "110" =>
+                if  (unsigned(branch_condition_a_ex_s) < unsigned(branch_condition_b_ex_s)) then
+                     branch_condition_o <= '1';
+                else
+                    branch_condition_o <= '0';
+                end if;    
+             when "111" =>
+                if (unsigned(branch_condition_a_ex_s) >= unsigned(branch_condition_b_ex_s)) then
+                     branch_condition_o <= '1';
+                else
+                    branch_condition_o <= '0';
+                end if;
+             when others =>
+                if  (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) then
+                     branch_condition_o <= '1';
+                else
+                    branch_condition_o <= '0';
+                end if;       
+        end case;
+   end process;
+   
+   
    branch_condition_o <= '1' when (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) else
                          '0';
 
@@ -177,8 +230,6 @@ begin
    rd_address_id_s  <= instruction_id_s(11 downto 7);
 
 
-
-
    --***********  Instanciranje modula ***********
    -- Registarska banka
    register_bank_1 : entity work.register_bank
@@ -206,12 +257,15 @@ begin
       generic map (
          WIDTH => 32)
       port map (
+         clk    => clk,
+         reset  => reset,
          a_i    => a_ex_s,
          b_i    => b_ex_s,
          op_i   => alu_op_i,
-         res_o  => alu_result_ex_s,
-         zero_o => alu_zero_ex_s,
-         of_o   => alu_of_ex_s);
+         res_o  => alu_result_ex_s
+         --zero_o => alu_zero_ex_s,
+         --of_o   => alu_of_ex_s
+         );
 
    --***********  Ulazi/Izlazi  ***************
    -- Ka controlpath-u
@@ -223,6 +277,30 @@ begin
    data_mem_address_o  <= alu_result_mem_s;
    data_mem_write_o    <= rs2_data_mem_s;
    data_mem_read_mem_s <= data_mem_read_i;
+   funct3_mem_s        <= funct3_mem_i;
+   -- Logika koja nam multipleksira koji tip Load instrukcije cemo raditi u sistemu
+   process(funct3_mem_s,data_mem_read_mem_s)
+   begin
+        case funct3_mem_s is
+            when "010" =>  data_mem_read_mem_s2 <= data_mem_read_mem_s;
+            when "001" => data_mem_read_mem_s2 <=  (31 downto 16 => data_mem_read_mem_s(15)) & data_mem_read_mem_s(15 downto 0);
+            when "101" => data_mem_read_mem_s2 <= (31 downto 16 => '0') & data_mem_read_mem_s(15 downto 0);
+            when "000" => data_mem_read_mem_s2 <= (31 downto 8 => data_mem_read_mem_s(7)) & data_mem_read_mem_s(7 downto 0);
+            when "100" => data_mem_read_mem_s2 <= (31 downto 8 => '0') & data_mem_read_mem_s(7 downto 0);
+            when others => data_mem_read_mem_s2 <= data_mem_read_mem_s;
+        end case;
+   end process;
+
+    -- Logika koja nam multipleksira koji tip Stoar instrukcije 
+   process(funct3_mem_s,alu_forward_b_mem_s)
+   begin
+        case funct3_mem_s is
+            when "010" =>  rs2_data_mem_s <= alu_forward_b_mem_s;
+            when "001" => rs2_data_mem_s <=  (31 downto 16 => '0') & alu_forward_b_mem_s(15 downto 0);
+            when "000" => rs2_data_mem_s <= (31 downto 8 => '0') & alu_forward_b_mem_s(7 downto 0);
+            when others => rs2_data_mem_s <= alu_forward_b_mem_s;
+        end case;
+   end process;
 
 end architecture;
 

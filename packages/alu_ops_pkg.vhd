@@ -22,7 +22,7 @@ package alu_ops_pkg is
    constant divu_op: std_logic_vector (4 downto 0):="01101"; ---> divide unsigned
    constant divs_op: std_logic_vector (4 downto 0):="01110"; ---> divide signed
    constant remu_op: std_logic_vector (4 downto 0):="01111"; ---> reminder unsigned
-   constant rems_op: std_logic_vector (4 downto 0):="10000"; ---> reminder signed
-
+   constant rems_op: std_logic_vector (4 downto 0):="10000"; ---> reminder signed	
+   	
 
 end package alu_ops_pkg;
