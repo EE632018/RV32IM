@@ -31,7 +31,7 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity multiply is
+entity multiply_us is
 Port (clk   : in std_logic;
       reset : in std_logic;
       a_in  : in std_logic_vector(31 downto 0);
@@ -39,15 +39,15 @@ Port (clk   : in std_logic;
       c_out  : out std_logic_vector(63 downto 0)  
      
      );
-end multiply;
+end multiply_us;
 
-architecture Behavioral of multiply is
+architecture Behavioral of multiply_us is
 
-    signal a_dsp1,b_dsp1: unsigned(15 downto 0);
-    signal a_dsp2,b_dsp2: unsigned(15 downto 0);
-    signal a_dsp3,b_dsp3,a_dsp3b,b_dsp3b: unsigned(31 downto 0);
-    signal c_dsp3mul,c_dsp3mul_2: unsigned(31 downto 0);
-    signal result: unsigned(31 downto 0);
+    signal a_dsp1,b_dsp1: signed(15 downto 0);
+    signal a_dsp2,b_dsp2: signed(15 downto 0);
+    signal a_dsp3,b_dsp3,a_dsp3b,b_dsp3b: signed(31 downto 0);
+    signal c_dsp3mul,c_dsp3mul_2: signed(31 downto 0);
+    signal result: signed(31 downto 0);
     
     attribute use_dsp: string;
     attribute use_dsp of Behavioral: architecture is "yes";
@@ -71,11 +71,11 @@ begin
                                 c_dsp3mul_2 <= (others=> '0');
                             elsif rising_edge(clk) then
                                 -- Stage1 first 16 bit
-                                a_dsp1 <= unsigned(a_in(15 downto 0));                            
-                                b_dsp1 <= unsigned(b_in(15 downto 0));        
+                                a_dsp1 <= signed(a_in(15 downto 0));                            
+                                b_dsp1 <= signed(b_in(15 downto 0));        
                                 -- Stage1 second 16bit 
-                                a_dsp2 <= unsigned(a_in(31 downto 16));                                                            
-                                b_dsp2 <= unsigned(b_in(31 downto 16));                                                            
+                                a_dsp2 <=  signed(a_in(31 downto 16));                                                            
+                                b_dsp2 <= '0' & signed(b_in(30 downto 16));                                                            
                                 -- Stage2
                                 a_dsp3 <= a_dsp3b;                            
                                 b_dsp3 <= b_dsp3b;                            
@@ -95,6 +95,7 @@ begin
     result <= a_dsp3 + b_dsp3;
     -- Izlaz iz trece faze
     c_out   <= std_logic_vector(c_dsp3mul & c_dsp3mul_2);
+   
     
     -- Status signal is generated with opcode, when instruction 
     -- is started we can start counting 3 cycles

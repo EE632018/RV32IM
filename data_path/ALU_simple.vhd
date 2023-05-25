@@ -50,6 +50,15 @@ ARCHITECTURE behavioral OF ALU IS
       c_out  : out std_logic_vector(63 downto 0)  
      );            
     end component;
+    
+    component multiply_us
+    Port (clk   : in std_logic;
+      reset : in std_logic;
+      a_in  : in std_logic_vector(31 downto 0);
+      b_in  : in std_logic_vector(31 downto 0);
+      c_out  : out std_logic_vector(63 downto 0)  
+     );            
+    end component;
    
    constant  l2WIDTH : natural := integer(ceil(log2(real(WIDTH))));
    signal    add_res, sub_res, or_res, and_res,res_s, eq_res :  STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
@@ -86,6 +95,15 @@ BEGIN
        a_in => a_i,
        b_in => b_i,
        c_out =>  mulhu_res
+   ); 
+   
+   inst_mul_us: multiply_us 
+   port map(
+       clk => clk,
+       reset => reset,
+       a_in => a_i,
+       b_in => b_i,
+       c_out =>  mulhsu_res
    ); 
        
    inst_div: divider
@@ -150,6 +168,7 @@ BEGIN
                mul_res(31 downto 0) when mulu_op, --signed lower
                mul_res(63 downto 32) when mulhs_op, -- signed high
                mulhu_res(63 downto 32) when mulhu_op,-- unsigned high
+               mulhsu_res (63 downto 32) when mulhsu_op,
                std_logic_vector(div_res_u) when divu_op,
                std_logic_vector(div_res_s) when divs_op,
                std_logic_vector(rem_res_u) when remu_op,
