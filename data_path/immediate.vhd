@@ -50,8 +50,10 @@ begin
             instruction_type <= s_type_instruction;
          when "11000" =>
             instruction_type <= b_type_instruction;
-         when "01101" =>
+         when "01101" => -- LUI instrukcija
             instruction_type <= u_type_instruction;
+         when "00101" => -- AUIPC instrukcija
+            instruction_type <= u_type_instruction;   
          when "11011" =>
             instruction_type <= j_type_instruction;        
          when others =>

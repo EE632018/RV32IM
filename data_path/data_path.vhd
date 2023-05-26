@@ -35,6 +35,7 @@ entity data_path is
       pc_en_i             : in  std_logic;
       if_id_en_i          : in  std_logic;
       rd_mux_i            : in  std_logic_vector(1 downto 0);
+      load_mux_i          : in  std_logic;
       funct3_mem_i        : in  std_logic_vector(2 downto 0)
       );
 
@@ -58,6 +59,7 @@ architecture Behavioral of data_path is
    signal rs1_data_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal rs2_data_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal immediate_extended_id_s : std_logic_vector (31 downto 0) := (others=>'0');
+   signal immediate_extended_id_s2 : std_logic_vector (31 downto 0) := (others=>'0');
    signal branch_condition_b_ex_s : std_logic_vector (31 downto 0) := (others=>'0');
    signal branch_condition_a_ex_s : std_logic_vector (31 downto 0) := (others=>'0');
    signal branch_adder_id_s       : std_logic_vector (31 downto 0) := (others=>'0');
@@ -149,7 +151,7 @@ begin
             pc_adder_ex_s           <= pc_adder_id_s;
             rs1_data_ex_s           <= rs1_data_id_s;
             rs2_data_ex_s           <= rs2_data_id_s;
-            immediate_extended_ex_s <= immediate_extended_id_s;
+            immediate_extended_ex_s <= immediate_extended_id_s2;
             rd_address_ex_s         <= rd_address_id_s;
          end if;
       end if;
@@ -267,6 +269,7 @@ begin
    -- multiplekseri za prosledjivanje operanada iz kasnijih faza pajplajna
    alu_forward_a_ex_s <= rd_data_wb_s when alu_forward_a_i = "01" else
                          alu_result_mem_s when alu_forward_a_i = "10" else
+                         (others => '0') when alu_forward_a_i = "11" else -- Ovo ubacujemo za slucajeve LUI i AUIPC
                          rs1_data_ex_s;
    alu_forward_b_ex_s <= rd_data_wb_s when alu_forward_b_i = "01" else
                          alu_result_mem_s when alu_forward_b_i = "10" else
@@ -377,6 +380,8 @@ begin
         end case;
    end process;
 
+    immediate_extended_id_s2 <= std_logic_vector(signed(immediate_extended_id_s) + signed(pc_reg_id_s)) when load_mux_i = '1' else
+                                std_logic_vector(signed(immediate_extended_id_s));
 end architecture;
 
 

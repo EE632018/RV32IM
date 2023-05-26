@@ -30,7 +30,8 @@ entity control_path is
       pc_en_o            : out std_logic;
       if_id_en_o         : out std_logic;
       rd_mux_o           : out std_logic_vector(1 downto 0);
-      funct3_mem_o       : out std_logic_vector(2 downto 0)
+      funct3_mem_o       : out std_logic_vector(2 downto 0);
+      load_mux_o         : out std_logic
       );
 end entity;
 
@@ -60,6 +61,7 @@ architecture behavioral of control_path is
    signal rd_address_id_s   : std_logic_vector (4 downto 0) := (others=>'0');
    signal bcc_id_s          : std_logic := '0';
    signal rd_mux_s          : std_logic_vector (1 downto 0) := (others=>'0');
+   signal load_mux_s        : std_logic  := '0';
 
    --*********       EXECUTE       **************
    signal branch_ex_s       : std_logic := '0';
@@ -211,6 +213,7 @@ begin
          rs1_in_use_o  => rs1_in_use_id_s,
          rs2_in_use_o  => rs2_in_use_id_s,
          rd_mux_o      => rd_mux_s,
+         load_mux_o    => load_mux_s,
          alu_2bit_op_o => alu_2bit_op_id_s);
 
    -- Dekoder za ALU operaciju
@@ -269,7 +272,7 @@ begin
    if_id_flush_o <= if_id_flush_s;
    funct3_mem_o  <= funct3_mem_s;
    rd_mux_o      <= rd_mux_s;
-
+   load_mux_o    <= load_mux_s;
 
 end architecture;
 
