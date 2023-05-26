@@ -80,7 +80,7 @@ begin
                                 a_dsp3 <= a_dsp3b;                            
                                 b_dsp3 <= b_dsp3b;                            
                                 --Stage3
-                                c_dsp3mul <= result;                            
+                                c_dsp3mul <= b_dsp3;                            
                                 c_dsp3mul_2 <= a_dsp3;                            
                             end if;
                       
@@ -92,7 +92,7 @@ begin
     
     
     -- sabiranje za gornje bite druga faza 
-    result <= a_dsp3 + b_dsp3;
+    --result <= a_dsp3 + b_dsp3;
     -- Izlaz iz trece faze
     c_out   <= std_logic_vector(c_dsp3mul & c_dsp3mul_2);
     
