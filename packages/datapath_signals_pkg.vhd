@@ -24,7 +24,8 @@ package datapath_signals_pkg is
    signal rs2_address_id_s        : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_id_s         : std_logic_vector (4 downto 0) := (others=>'0');
    signal if_id_reg_flush_s       : std_logic := '0';
-   signal funct3_id_s       : std_logic_vector(2 downto 0) := (others=>'0');
+   signal funct3_id_s	           : std_logic_vector(2 downto 0) := (others=>'0');
+   signal rd_mux_s                : std_logic_vector(1 downto 0) := (others=>'0');
 
    --*********       EXECUTE       **************
    signal pc_adder_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');

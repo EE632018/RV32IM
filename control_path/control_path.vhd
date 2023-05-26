@@ -29,6 +29,7 @@ entity control_path is
       -- kontrolni signali za zaustavljanje protocne obrade
       pc_en_o            : out std_logic;
       if_id_en_o         : out std_logic;
+      rd_mux_o           : out std_logic_vector(1 downto 0);
       funct3_mem_o       : out std_logic_vector(2 downto 0)
       );
 end entity;
@@ -36,7 +37,60 @@ end entity;
 
 architecture behavioral of control_path is
 
-    
+
+   --********** REGISTER CONTROL ***************
+   signal if_id_en_s        : std_logic := '0';   
+   signal if_id_flush_s     : std_logic := '0';   
+   signal id_ex_flush_s     : std_logic := '0';   
+   
+   --*********  INSTRUCTION DECODE **************
+   signal branch_id_s       : std_logic := '0';
+   signal funct3_id_s       : std_logic_vector(2 downto 0) := (others=>'0');
+   signal funct7_id_s       : std_logic_vector(6 downto 0) := (others=>'0');
+   signal alu_2bit_op_id_s  : std_logic_vector(1 downto 0) := (others=>'0');
+   signal control_pass_s    : std_logic := '0';
+   signal rs1_in_use_id_s   : std_logic := '0';
+   signal rs2_in_use_id_s   : std_logic := '0';
+   signal alu_src_b_id_s    : std_logic := '0';
+   signal data_mem_we_id_s  : std_logic := '0';
+   signal rd_we_id_s        : std_logic := '0';
+   signal mem_to_reg_id_s   : std_logic := '0';
+   signal rs1_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rs2_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rd_address_id_s   : std_logic_vector (4 downto 0) := (others=>'0');
+   signal bcc_id_s          : std_logic := '0';
+   signal rd_mux_s          : std_logic_vector (1 downto 0) := (others=>'0');
+
+   --*********       EXECUTE       **************
+   signal branch_ex_s       : std_logic := '0';
+   signal funct3_ex_s       : std_logic_vector(2 downto 0) := (others=>'0');
+   signal funct7_ex_s       : std_logic_vector(6 downto 0) := (others=>'0');
+   signal alu_2bit_op_ex_s  : std_logic_vector(1 downto 0) := (others=>'0');
+   signal alu_src_b_ex_s    : std_logic := '0';
+   signal data_mem_we_ex_s  : std_logic := '0';
+   signal rd_we_ex_s        : std_logic := '0';
+   signal mem_to_reg_ex_s   : std_logic := '0';
+
+
+   signal rs1_address_ex_s  : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rs2_address_ex_s  : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rd_address_ex_s   : std_logic_vector (4 downto 0) := (others=>'0');
+   
+   
+
+   --*********       MEMORY        **************
+   signal data_mem_we_mem_s : std_logic := '0';
+   signal rd_we_mem_s       : std_logic := '0';
+   signal mem_to_reg_mem_s  : std_logic := '0';
+   signal rd_address_mem_s  : std_logic_vector (4 downto 0) := (others=>'0');
+   signal funct3_mem_s       : std_logic_vector(2 downto 0) := (others=>'0');
+	
+   --*********      WRITEBACK      **************
+   signal rd_we_wb_s        : std_logic := '0';
+   signal mem_to_reg_wb_s   : std_logic := '0';
+   signal rd_address_wb_s   : std_logic_vector (4 downto 0) := (others=>'0');
+
+
 
 begin
 
@@ -156,6 +210,7 @@ begin
          rd_we_o       => rd_we_id_s,
          rs1_in_use_o  => rs1_in_use_id_s,
          rs2_in_use_o  => rs2_in_use_id_s,
+         rd_mux_o      => rd_mux_s,
          alu_2bit_op_o => alu_2bit_op_id_s);
 
    -- Dekoder za ALU operaciju
@@ -213,6 +268,7 @@ begin
    rd_we_o       <= rd_we_wb_s;
    if_id_flush_o <= if_id_flush_s;
    funct3_mem_o  <= funct3_mem_s;
+   rd_mux_o      <= rd_mux_s;
 
 
 end architecture;

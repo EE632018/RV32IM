@@ -37,6 +37,8 @@ architecture structural of TOP_RISCV is
 
    signal pc_en_s            : std_logic;
    signal if_id_en_s         : std_logic;
+   signal funct3_mem_s       : std_logic_vector(2 downto 0);
+   signal rd_mux_s           : std_logic_vector(1 downto 0);
          
    
 begin
@@ -70,6 +72,8 @@ begin
          if_id_flush_i       => if_id_flush_s,
          -- kontrolni signali za zaustavljanje protocne obrade
          pc_en_i             => pc_en_s,
+         funct3_mem_i        => funct3_mem_s,
+         rd_mux_i            => rd_mux_s,
          if_id_en_i          => if_id_en_s); 
 
 
@@ -98,6 +102,8 @@ begin
          if_id_flush_o       => if_id_flush_s,
          -- kontrolni signali za zaustavljanje protocne obrade
          pc_en_o             => pc_en_s,
+         rd_mux_o            => rd_mux_s,
+         funct3_mem_o        => funct3_mem_s,
          if_id_en_o          => if_id_en_s);
    
 end architecture;

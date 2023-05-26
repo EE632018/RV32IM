@@ -14,6 +14,7 @@ entity ctrl_decoder is
       rd_we_o       : out std_logic;
       rs1_in_use_o  : out std_logic;
       rs2_in_use_o  : out std_logic;
+      rd_mux_o      : out std_logic_vector(1 downto 0);
       alu_2bit_op_o : out std_logic_vector(1 downto 0)
 
       );
@@ -33,6 +34,7 @@ begin
       alu_2bit_op_o <= "00";
       rs1_in_use_o  <= '0';
       rs2_in_use_o  <= '0';
+      rd_mux_o <= "00";
       case opcode_i is
          when "0000011" =>              --LOAD
             alu_2bit_op_o <= "00";
@@ -58,6 +60,12 @@ begin
             rs1_in_use_o  <= '1';
          when "1100011" =>              --B tip
             alu_2bit_op_o <= "01";
+            branch_o      <= '1';
+         when "1101111" =>              -- J tip
+            rd_mux_o      <= "01";
+            branch_o      <= '1';
+         when "1100111" =>              -- J tip
+            rd_mux_o      <= "10";
             branch_o      <= '1';
          when others =>
       end case;

@@ -34,6 +34,7 @@ entity data_path is
       -- kontrolni signali za zaustavljanje protocne obrade
       pc_en_i             : in  std_logic;
       if_id_en_i          : in  std_logic;
+      rd_mux_i            : in  std_logic_vector(1 downto 0);
       funct3_mem_i        : in  std_logic_vector(2 downto 0)
       );
 
@@ -41,6 +42,64 @@ end entity;
 
 
 architecture Behavioral of data_path is
+
+
+
+   --*********  INSTRUCTION FETCH  **************
+   signal pc_reg_if_s             : std_logic_vector (31 downto 0) := (others=>'0');
+   signal pc_next_if_s            : std_logic_vector (31 downto 0) := (others=>'0');
+   signal pc_adder_if_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal instruction_if_s        : std_logic_vector (31 downto 0) := (others=>'0');
+
+   --*********  INSTRUCTION DECODE **************
+   signal instruction_id_s        : std_logic_vector (31 downto 0) := (others=>'0');
+   signal pc_adder_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal pc_reg_id_s             : std_logic_vector (31 downto 0) := (others=>'0');
+   signal rs1_data_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal rs2_data_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal immediate_extended_id_s : std_logic_vector (31 downto 0) := (others=>'0');
+   signal branch_condition_b_ex_s : std_logic_vector (31 downto 0) := (others=>'0');
+   signal branch_condition_a_ex_s : std_logic_vector (31 downto 0) := (others=>'0');
+   signal branch_adder_id_s       : std_logic_vector (31 downto 0) := (others=>'0');
+   signal rs1_address_id_s        : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rs2_address_id_s        : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rd_address_id_s         : std_logic_vector (4 downto 0) := (others=>'0');
+   signal if_id_reg_flush_s       : std_logic := '0';
+   signal funct3_id_s	           : std_logic_vector(2 downto 0) := (others=>'0');
+   signal rd_mux_s                : std_logic_vector(1 downto 0) := (others=>'0');
+
+   --*********       EXECUTE       **************
+   signal pc_adder_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal immediate_extended_ex_s : std_logic_vector (31 downto 0) := (others=>'0');
+   signal alu_forward_a_ex_s      : std_logic_vector(31 downto 0) := (others=>'0');
+   signal alu_forward_b_ex_s      : std_logic_vector(31 downto 0) := (others=>'0');
+   signal alu_zero_ex_s           : std_logic := '0';
+   signal alu_of_ex_s             : std_logic := '0';
+   signal b_ex_s, a_ex_s          : std_logic_vector(31 downto 0) := (others=>'0');
+   signal alu_result_ex_s         : std_logic_vector(31 downto 0) := (others=>'0');
+   signal rs1_data_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal rs2_data_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal rd_address_ex_s         : std_logic_vector (4 downto 0) := (others=>'0');
+
+   --*********       MEMORY        **************
+   signal pc_adder_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
+   signal alu_result_mem_s        : std_logic_vector(31 downto 0) := (others=>'0');
+   signal rd_address_mem_s        : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rs2_data_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
+   signal data_mem_read_mem_s     : std_logic_vector (31 downto 0) := (others=>'0');
+   signal funct3_mem_s		   : std_logic_vector (2 downto 0) := (others => '0');
+   signal data_mem_read_mem_s2    : std_logic_vector (31 downto 0) := (others => '0');
+   signal alu_forward_b_mem_s      : std_logic_vector(31 downto 0) := (others=>'0'); -- sa registra ex ulaz u memoriju kada radimo store operaciju. 
+   
+
+   --*********      WRITEBACK      **************
+   signal pc_adder_wb_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal alu_result_wb_s         : std_logic_vector(31 downto 0) := (others=>'0');
+   signal rd_data_wb_s            : std_logic_vector (31 downto 0) := (others=>'0');
+   signal rd_address_wb_s         : std_logic_vector (4 downto 0) := (others=>'0');
+   signal data_mem_read_wb_s      : std_logic_vector (31 downto 0) := (others=>'0');
+
+
 
     
 begin
@@ -137,8 +196,7 @@ begin
    -- sabirac za uvecavanje programskog brojaca (sledeca instrukcija)
    pc_adder_if_s <= std_logic_vector(unsigned(pc_reg_if_s) + to_unsigned(4, 32));
 
-   -- sabirac za uslovne skokove
-   branch_adder_id_s <= std_logic_vector(signed(immediate_extended_id_s) + signed(pc_reg_id_s));
+   
 
    -- multiplekseri za prosledjivanje operanada komparatoru za proveravanje uslova za skok
    branch_condition_a_ex_s <= alu_result_mem_s when branch_forward_a_i = '1' else
@@ -278,6 +336,7 @@ begin
    data_mem_write_o    <= rs2_data_mem_s;
    data_mem_read_mem_s <= data_mem_read_i;
    funct3_mem_s        <= funct3_mem_i;
+   rd_mux_s            <= rd_mux_i;
    -- Logika koja nam multipleksira koji tip Load instrukcije cemo raditi u sistemu
    process(funct3_mem_s,data_mem_read_mem_s)
    begin
@@ -299,6 +358,22 @@ begin
             when "001" => rs2_data_mem_s <=  (31 downto 16 => '0') & alu_forward_b_mem_s(15 downto 0);
             when "000" => rs2_data_mem_s <= (31 downto 8 => '0') & alu_forward_b_mem_s(7 downto 0);
             when others => rs2_data_mem_s <= alu_forward_b_mem_s;
+        end case;
+   end process;
+   
+   process(rd_mux_s, immediate_extended_id_s, pc_reg_id_s, rs1_data_id_s)
+   begin
+        case rd_mux_s is
+        when "00" => -- sabirac za uslovne skokove
+            branch_adder_id_s <= std_logic_vector(signed(immediate_extended_id_s) + signed(pc_reg_id_s));
+        when "01" =>
+            -- sabirac za uslovne skokove jal
+            branch_adder_id_s <= std_logic_vector(signed(immediate_extended_id_s) + 0);
+        when "10" => -- sabirac za uslovne skokove jalr
+            branch_adder_id_s <= std_logic_vector(signed(immediate_extended_id_s) + signed(rs1_data_id_s));
+        when others => 
+            -- sabirac za uslovne skokove
+            branch_adder_id_s <= std_logic_vector(signed(immediate_extended_id_s) + signed(pc_reg_id_s));
         end case;
    end process;
 

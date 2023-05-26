@@ -24,6 +24,7 @@ package controlpath_signals_pkg is
    signal rs2_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_id_s   : std_logic_vector (4 downto 0) := (others=>'0');
    signal bcc_id_s          : std_logic := '0';
+   signal rd_mux_s          : std_logic_vector (1 downto 0) := (others=>'0');
 
    --*********       EXECUTE       **************
    signal branch_ex_s       : std_logic := '0';
@@ -39,6 +40,8 @@ package controlpath_signals_pkg is
    signal rs1_address_ex_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rs2_address_ex_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_ex_s   : std_logic_vector (4 downto 0) := (others=>'0');
+   
+   
 
    --*********       MEMORY        **************
    signal data_mem_we_mem_s : std_logic := '0';
