@@ -36,8 +36,8 @@ Port (clk   : in std_logic;
       reset : in std_logic;
       a_in  : in std_logic_vector(31 downto 0);
       b_in  : in std_logic_vector(31 downto 0);
-      c_out  : out std_logic_vector(63 downto 0)  
-     
+      c_out  : out std_logic_vector(63 downto 0);  
+      stall_status: out std_logic
      );
 end multiply_s;
 
@@ -55,7 +55,7 @@ architecture Behavioral of multiply_s is
     attribute use_dsp of b_dsp3b: signal is "yes";
     --attribute use_dsp of b_in: signal is "yes";
    
-
+    signal cnt_status, cnt_status_next: std_logic_vector(1 downto 0);
 begin
 
     register_process: process(clk,reset)
@@ -86,6 +86,18 @@ begin
                       
                       end process;
 
+    cnt_process: process(clk, reset)
+                 begin
+                    if reset = '1' then
+                        cnt_status_next <= (others => '0');
+                    elsif rising_edge(clk) then
+                        if cnt_status = "11" then
+                            cnt_status_next <= (others => '0');
+                        end if;
+                        cnt_status <= std_logic_vector(unsigned(cnt_status_next) + TO_UNSIGNED(1,2));
+                    end if;    
+                 end process;
+
     -- Izlaz prve faze
     a_dsp3b <= a_dsp1 * b_dsp1; -- donjih 32 bita
     b_dsp3b <= a_dsp2 * b_dsp2; -- gornjih 32 bita
@@ -95,7 +107,8 @@ begin
     --result <= a_dsp3 + b_dsp3;
     -- Izlaz iz trece faze
     c_out   <= std_logic_vector(c_dsp3mul & c_dsp3mul_2);
-   
+    stall_status    <= '1' when cnt_status = "11" else
+                       '0';
     
     -- Status signal is generated with opcode, when instruction 
     -- is started we can start counting 3 cycles
