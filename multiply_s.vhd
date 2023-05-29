@@ -86,15 +86,12 @@ begin
                       
                       end process;
 
-    cnt_process: process(clk, reset)
+   cnt_process: process(clk, reset)
                  begin
                     if reset = '1' then
-                        cnt_status_next <= (others => '0');
+                        cnt_status <= (others => '0');
                     elsif rising_edge(clk) then
-                        if cnt_status = "11" then
-                            cnt_status_next <= (others => '0');
-                        end if;
-                        cnt_status <= std_logic_vector(unsigned(cnt_status_next) + TO_UNSIGNED(1,2));
+                        cnt_status <= std_logic_vector(unsigned(cnt_status) + TO_UNSIGNED(1,2));
                     end if;    
                  end process;
 
