@@ -31,7 +31,7 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity multiply is
+entity multiply_su is
 Port (clk   : in std_logic;
       reset : in std_logic;
       a_in  : in std_logic_vector(31 downto 0);
@@ -40,22 +40,27 @@ Port (clk   : in std_logic;
       stall_status: out std_logic;
       start_status: in std_logic
      );
-end multiply;
+end multiply_su;
 
-architecture Behavioral of multiply is
+architecture Behavioral of multiply_su is
 
     attribute use_dsp: string;
     attribute use_dsp of Behavioral: architecture is "yes";
     
-    signal a_up,a_down,b_up,b_down: signed(15 downto 0);
-    signal res1,res2,res3,res4: signed(31 downto 0);
-    signal res5: signed(31 downto 0);
-    signal res6: signed(47 downto 0);
-    signal res7: signed(47 downto 0);
+    signal a_new: std_logic_vector(31 downto 0);
+    signal bit_sign: std_logic;
+    signal bit_sign1,bit_sign2: std_logic;
+    signal a_up,a_down: unsigned(15 downto 0);
+    signal b_up,b_down: unsigned(15 downto 0);
+    signal res1,res2,res3,res4: unsigned(31 downto 0);
+    signal res5: unsigned(31 downto 0);
+    signal res6: unsigned(47 downto 0);
+    signal res7: unsigned(47 downto 0);
     
     
-    signal reg1,reg2,reg3,reg4,reg5,reg1_1: signed(31 downto 0);
-    signal reg6,reg7: signed(47 downto 0);
+    signal reg1,reg2,reg3,reg4,reg5,reg1_1: unsigned(31 downto 0);
+    signal reg6,reg7: unsigned(47 downto 0);
+    signal c_reg: std_logic_vector(63 downto 0);
     
     type fsm_state is (start,work,done);
     signal state,state_next: fsm_state; 
@@ -91,10 +96,21 @@ begin
     
     end process;
 
-    a_up <= signed(a_in(31 downto 16));
-    a_down <= signed(a_in(15 downto 0));
-    b_up <= signed(b_in(31 downto 16));
-    b_down <= signed(b_in(15 downto 0));
+    process(a_in)
+    begin
+        if a_in(31) = '1' then
+            a_new <= std_logic_vector(unsigned(not(a_in)) + to_unsigned(1,32));
+            bit_sign <= '1';
+        else
+            a_new <= a_in;  
+            bit_sign <= '0';  
+        end if;
+    end process;
+
+    a_up <= unsigned(a_new(31 downto 16));
+    a_down <= unsigned(a_new(15 downto 0));
+    b_up <= unsigned(b_in(31 downto 16));
+    b_down <= unsigned(b_in(15 downto 0));
     
     res4 <= a_up * b_up;
     res3 <= b_up * a_down;
@@ -117,20 +133,36 @@ begin
             reg6 <= (others => '0');
             reg5 <= (others => '0');
             reg1_1 <= (others => '0');
+            bit_sign1 <= '0';
+            bit_sign2 <= '0';
         elsif rising_edge(clk) then
             -- Stage 1
             reg1 <= res1;
             reg2 <= res2;
             reg3 <= res3;
             reg4 <= res4;
+            bit_sign1 <= bit_sign;
+            
             --Stage 2
             reg5 <= res5;
             reg6 <= res6;
             reg1_1 <= reg1;
+            bit_sign2 <= bit_sign1;
             
         end if;
     end process;
+   
+    c_reg <= std_logic_vector(res7 & reg1_1(15 downto 0));
     
-    c_out <= std_logic_vector(res7 & reg1_1(15 downto 0));
+    process(bit_sign2)
+    begin
+        if bit_sign2 = '1' then
+            c_out <= std_logic_vector(unsigned(not(c_reg)) + to_unsigned(1,64));
+        else 
+            c_out <= c_reg;    
+        end if;
+    
+    end process;
+    
 end Behavioral;
 

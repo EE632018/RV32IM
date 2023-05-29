@@ -31,7 +31,7 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity multiply is
+entity multiply_u is
 Port (clk   : in std_logic;
       reset : in std_logic;
       a_in  : in std_logic_vector(31 downto 0);
@@ -40,22 +40,22 @@ Port (clk   : in std_logic;
       stall_status: out std_logic;
       start_status: in std_logic
      );
-end multiply;
+end multiply_u;
 
-architecture Behavioral of multiply is
+architecture Behavioral of multiply_u is
 
     attribute use_dsp: string;
     attribute use_dsp of Behavioral: architecture is "yes";
     
-    signal a_up,a_down,b_up,b_down: signed(15 downto 0);
-    signal res1,res2,res3,res4: signed(31 downto 0);
-    signal res5: signed(31 downto 0);
-    signal res6: signed(47 downto 0);
-    signal res7: signed(47 downto 0);
+    signal a_up,a_down,b_up,b_down: unsigned(15 downto 0);
+    signal res1,res2,res3,res4: unsigned(31 downto 0);
+    signal res5: unsigned(31 downto 0);
+    signal res6: unsigned(47 downto 0);
+    signal res7: unsigned(47 downto 0);
     
     
-    signal reg1,reg2,reg3,reg4,reg5,reg1_1: signed(31 downto 0);
-    signal reg6,reg7: signed(47 downto 0);
+    signal reg1,reg2,reg3,reg4,reg5,reg1_1: unsigned(31 downto 0);
+    signal reg6,reg7: unsigned(47 downto 0);
     
     type fsm_state is (start,work,done);
     signal state,state_next: fsm_state; 
@@ -91,10 +91,10 @@ begin
     
     end process;
 
-    a_up <= signed(a_in(31 downto 16));
-    a_down <= signed(a_in(15 downto 0));
-    b_up <= signed(b_in(31 downto 16));
-    b_down <= signed(b_in(15 downto 0));
+    a_up <= unsigned(a_in(31 downto 16));
+    a_down <= unsigned(a_in(15 downto 0));
+    b_up <= unsigned(b_in(31 downto 16));
+    b_down <= unsigned(b_in(15 downto 0));
     
     res4 <= a_up * b_up;
     res3 <= b_up * a_down;

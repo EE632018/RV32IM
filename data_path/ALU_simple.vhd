@@ -14,7 +14,9 @@ ENTITY ALU IS
       a_i    : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0); --prvi operand
       b_i    : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0); --drugi operand
       op_i   : in STD_LOGIC_VECTOR(4 DOWNTO 0); --selekcija operacije
-      res_o  : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0)); --rezultatinteger
+      res_o  : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
+      stall_o: out std_logic
+      ); --rezultatinteger
       --zero_o : out STD_LOGIC; --signalni bit jednakosti nuli
       --of_o   : out STD_LOGIC); --signalni bit prekoracenja opsega
 END ALU;
@@ -27,7 +29,7 @@ ARCHITECTURE behavioral OF ALU IS
            VALID: in STD_LOGIC; --valid bit
            clk1: in STD_LOGIC; --clock signal 
            reset:in STD_LOGIC;
-           READY : inout STD_LOGIC;
+           READY : out STD_LOGIC;
            remainder : out STD_LOGIC_VECTOR (31 downto 0);
            divisor_zero: out std_logic;
            quotient : out STD_LOGIC_VECTOR (31 downto 0));
@@ -38,25 +40,31 @@ ARCHITECTURE behavioral OF ALU IS
       reset : in std_logic;
       a_in  : in std_logic_vector(31 downto 0);
       b_in  : in std_logic_vector(31 downto 0);
-      c_out  : out std_logic_vector(63 downto 0)   
+      c_out  : out std_logic_vector(63 downto 0);
+      stall_status: out std_logic;
+      start_status: in std_logic   
      );            
     end component;
     
-    component multiply_s
+    component multiply_u
     Port (clk   : in std_logic;
       reset : in std_logic;
       a_in  : in std_logic_vector(31 downto 0);
       b_in  : in std_logic_vector(31 downto 0);
-      c_out  : out std_logic_vector(63 downto 0)  
+      c_out  : out std_logic_vector(63 downto 0);
+      stall_status: out std_logic;
+      start_status: in std_logic   
      );            
     end component;
     
-    component multiply_us
+    component multiply_su
     Port (clk   : in std_logic;
       reset : in std_logic;
       a_in  : in std_logic_vector(31 downto 0);
       b_in  : in std_logic_vector(31 downto 0);
-      c_out  : out std_logic_vector(63 downto 0)  
+      c_out  : out std_logic_vector(63 downto 0);
+      stall_status: out std_logic;
+      start_status: in std_logic   
      );            
     end component;
    
@@ -93,22 +101,15 @@ ARCHITECTURE behavioral OF ALU IS
    constant divs_op: std_logic_vector (4 downto 0):="01110"; ---> divide signed
    constant remu_op: std_logic_vector (4 downto 0):="01111"; ---> reminder unsigned
    constant rems_op: std_logic_vector (4 downto 0):="10000"; ---> reminder signed	
-   	
-
+   
+   
+   signal stall, start : std_logic_vector(2 downto 0);	
+   signal ready_s,valid_s: std_logic; 
 BEGIN
  
     -- Implementing shift left and right uses lower 5 bits from input b
     
    b_u <= to_integer(signed(b_i(4 downto 0)));
-
-   inst_mul_s: multiply_s 
-   port map(
-       clk => clk,
-       reset => reset,
-       a_in => a_i,
-       b_in => b_i,
-       c_out =>  mul_res
-   ); 
    
    inst_mul: multiply 
    port map(
@@ -116,26 +117,41 @@ BEGIN
        reset => reset,
        a_in => a_i,
        b_in => b_i,
-       c_out =>  mulhu_res
+       c_out =>  mul_res,
+       stall_status => stall(2),
+       start_status => start(2)
    ); 
    
-   inst_mul_us: multiply_us 
+   inst_mul_u: multiply_u 
    port map(
        clk => clk,
        reset => reset,
        a_in => a_i,
        b_in => b_i,
-       c_out =>  mulhsu_res
+       c_out =>  mulhu_res,
+       stall_status => stall(1),
+       start_status => start(1)
+   ); 
+   
+   inst_mul_su: multiply_su 
+   port map(
+       clk => clk,
+       reset => reset,
+       a_in => a_i,
+       b_in => b_i,
+       c_out =>  mulhsu_res,
+       stall_status => stall(0),
+       start_status => start(0)
    ); 
        
    inst_div: divider
    port map
    (N => a_i,
     D => b_i,  --denominator 
-    VALID => '1', --valid bit
+    VALID => valid_s, --valid bit
     clk1 => clk, --clock signal 
     reset => reset,
-    READY => open,
+    READY => ready_s,
     remainder => rem_res,
     divisor_zero => open,
     quotient => div_res
@@ -198,6 +214,42 @@ BEGIN
                (others => '1') when others; 
 
 
+    process(op_i, stall, ready_s)
+    begin
+        start <= "000";
+        valid_s <= '0';
+        stall_o <= '1';
+        case op_i is
+            when mulu_op => 
+                start <= "100";
+                stall_o <= stall(2);
+            when mulhs_op =>
+                start <= "100";
+                stall_o <= stall(2); 
+            when mulhu_op =>
+                start <= "010";
+                stall_o <= stall(1);
+            when mulhsu_op =>
+                start <= "001";
+                stall_o <= stall(0);
+            when divu_op =>
+                valid_s <= '1';
+                stall_o <= ready_s;
+            when divs_op =>
+                valid_s <= '1';
+                stall_o <= ready_s;
+            when remu_op =>
+                valid_s <= '1';
+                stall_o <= ready_s;
+            when rems_op =>    
+                valid_s <= '1';
+                stall_o <= ready_s;
+            when others => 
+                start <= "000";
+                stall_o <= '1';
+                valid_s <= '0';
+        end case;
+    end process;
    -- signalni izlazi
    -- postavi singnalni bit jednakosti nuli
    --zero_o <= '1' when res_s = std_logic_vector(to_unsigned(0,WIDTH)) else

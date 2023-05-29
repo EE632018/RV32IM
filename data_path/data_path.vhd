@@ -36,7 +36,8 @@ entity data_path is
       if_id_en_i          : in  std_logic;
       rd_mux_i            : in  std_logic_vector(1 downto 0);
       load_mux_i          : in  std_logic;
-      funct3_mem_i        : in  std_logic_vector(2 downto 0)
+      funct3_mem_i        : in  std_logic_vector(2 downto 0);
+      stall_o             : out std_logic
       );
 
 end entity;
@@ -82,6 +83,7 @@ architecture Behavioral of data_path is
    signal rs1_data_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal rs2_data_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal rd_address_ex_s         : std_logic_vector (4 downto 0) := (others=>'0');
+   signal stall_s                 : std_logic;
 
    --*********       MEMORY        **************
    signal pc_adder_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
@@ -323,10 +325,14 @@ begin
          a_i    => a_ex_s,
          b_i    => b_ex_s,
          op_i   => alu_op_i,
-         res_o  => alu_result_ex_s
+         res_o  => alu_result_ex_s,
+         stall_o=> stall_s
          --zero_o => alu_zero_ex_s,
          --of_o   => alu_of_ex_s
          );
+
+    stall_o <= stall_s;
+
 
    --***********  Ulazi/Izlazi  ***************
    -- Ka controlpath-u

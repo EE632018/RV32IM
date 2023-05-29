@@ -31,7 +31,8 @@ entity control_path is
       if_id_en_o         : out std_logic;
       rd_mux_o           : out std_logic_vector(1 downto 0);
       funct3_mem_o       : out std_logic_vector(2 downto 0);
-      load_mux_o         : out std_logic
+      load_mux_o         : out std_logic;
+      stall_i            : in std_logic
       );
 end entity;
 
@@ -258,7 +259,8 @@ begin
 
          pc_en_o        => pc_en_o,
          if_id_en_o     => if_id_en_s,
-         control_pass_o => control_pass_s);
+         control_pass_o => control_pass_s,
+         stall_i        => stall_i);
 
 
 

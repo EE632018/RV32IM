@@ -22,7 +22,8 @@ entity hazard_unit is
       if_id_en_o       : out std_logic; 
       -- control_pass_o kontrolise da li ce u execute fazu biti prosledjeni
       --   kontrolni signali iz ctrl_decoder-a ili sve nule 
-      control_pass_o   : out std_logic 
+      control_pass_o   : out std_logic;
+      stall_i          : in std_logic 
       );
 end entity;
 
@@ -37,7 +38,7 @@ begin
    -- 1) enable signali PC i IF/ID registara postavljaju na nulu
    -- 2) kontrolni signali u ID/EX fazi resetuju cime se ne propagira njihov uticaj u dalje faze protocne orade
    process (rs1_address_id_i, rs2_address_id_i, branch_id_i, rd_address_ex_i, rd_we_ex_i,
-            rd_address_mem_i, mem_to_reg_ex_i, mem_to_reg_mem_i, rs1_in_use_i, rs2_in_use_i) is
+            rd_address_mem_i, mem_to_reg_ex_i, mem_to_reg_mem_i, rs1_in_use_i, rs2_in_use_i, stall_i) is
    begin
       en_s <= '1';
       if (branch_id_i = '0') then -- instrukcija u ID fazi nije skok
@@ -45,6 +46,8 @@ begin
             (rs2_address_id_i = rd_address_ex_i and rs2_in_use_i = '1')) and
             mem_to_reg_ex_i = '1' and rd_we_ex_i = '1')then -- load instrukcija je u EX fazi
             en_s <='0';
+         elsif(stall_i = '0') then
+            en_s <='0';   
          end if;
       elsif(branch_id_i = '1')then -- instrukcija u ID fazi je uslovni skok (branch)
          if((rs1_address_id_i = rd_address_ex_i or rs2_address_id_i = rd_address_ex_i)
