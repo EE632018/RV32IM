@@ -165,7 +165,7 @@ begin
       if (rising_edge(clk)) then
          if (reset = '0')then
             alu_result_mem_s <= (others => '0');
-            rs2_data_mem_s   <= (others => '0');
+            alu_forward_b_mem_s   <= (others => '0');
             pc_adder_mem_s   <= (others => '0');
             rd_address_mem_s <= (others => '0');
          else
