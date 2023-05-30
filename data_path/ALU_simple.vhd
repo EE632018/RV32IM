@@ -22,18 +22,6 @@ ENTITY ALU IS
 END ALU;
 
 ARCHITECTURE behavioral OF ALU IS
-
-   component divider
-   Port (  N : in STD_LOGIC_VECTOR (31 downto 0); --numerator!
-           D : in STD_LOGIC_VECTOR (31 downto 0);  --denominator 
-           VALID: in STD_LOGIC; --valid bit
-           clk1: in STD_LOGIC; --clock signal 
-           reset:in STD_LOGIC;
-           READY : out STD_LOGIC;
-           remainder : out STD_LOGIC_VECTOR (31 downto 0);
-           divisor_zero: out std_logic;
-           quotient : out STD_LOGIC_VECTOR (31 downto 0));
-    end component;
     
     component multiply
     Port (clk   : in std_logic;
@@ -68,6 +56,17 @@ ARCHITECTURE behavioral OF ALU IS
      );            
     end component;
    
+   component division_u
+   Port (clk           : in std_logic;
+      reset         : in std_logic;
+      start_i       : in std_logic;
+      dividend_i    : in std_logic_vector(31 downto 0);
+      divisor_i     : in std_logic_vector(31 downto 0);
+      quotient_o    : out std_logic_vector(31 downto 0);
+      remainder_o   : out std_logic_vector(31 downto 0);
+      stall_o       : out std_logic);
+   end component; 
+   
    constant  l2WIDTH : natural := integer(ceil(log2(real(WIDTH))));
    signal    add_res, sub_res, or_res, and_res,res_s, eq_res :  STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
    signal    sll_res, slt_res, sltu_res, xor_res, srl_res, sra_res: std_logic_vector(WIDTH-1 DOWNTO 0); 
@@ -76,7 +75,7 @@ ARCHITECTURE behavioral OF ALU IS
    signal    a_mul: integer;
    signal    mul_res, mulhu_res, mulhsu_res  : std_logic_vector(2*WIDTH-1 downto 0);
    signal    rem_res, div_res : std_logic_vector(WIDTH-1 downto 0);
-   signal    rem_res_s,div_res_s: signed(WIDTH-1 downto 0); 
+   signal    rem_res_s,div_res_s: std_logic_vector(WIDTH-1 downto 0); 
    signal    rem_res_u,div_res_u: unsigned(WIDTH-1 downto 0); 
    attribute use_dsp: string;
    attribute use_dsp of Behavioral: architecture is "yes";
@@ -144,28 +143,22 @@ BEGIN
        start_status => start(0)
    ); 
        
-   inst_div: divider
-   port map
-   (N => a_i,
-    D => b_i,  --denominator 
-    VALID => valid_s, --valid bit
-    clk1 => clk, --clock signal 
-    reset => reset,
-    READY => ready_s,
-    remainder => rem_res,
-    divisor_zero => open,
-    quotient => div_res
-   );    
+   inst_div_s: division_u
+   port map(
+      clk => clk,
+      reset => reset,
+      start_i => valid_s,
+      dividend_i => a_i,
+      divisor_i  => b_i,
+      quotient_o => div_res_s,
+      remainder_o => rem_res_s,
+      stall_o  =>  ready_s
+   );   
    
-   div_res_u <= unsigned(div_res);
-   div_res_s <= signed(div_res);
-   rem_res_u <= unsigned(rem_res);
-   rem_res_s <= signed(rem_res);
+   div_res_u <= unsigned(div_res_s);
+   rem_res_u <= unsigned(rem_res_s);
    
-   --mul_res <= std_logic_vector(signed(a_i) * signed(b_i));
-   --mulhu_res <= std_logic_vector(unsigned(a_i) * unsigned(b_i));
-   
-   --mulhu_res <= std_logic_vector(to_signed(a_mul,width) * to_unsigned(b_mul,width)); 
+  
    -- sabiranje
    add_res <= std_logic_vector(unsigned(a_i) + unsigned(b_i));
    -- oduzimanje
