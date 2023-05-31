@@ -60,6 +60,7 @@ ARCHITECTURE behavioral OF ALU IS
    Port (clk           : in std_logic;
       reset         : in std_logic;
       start_i       : in std_logic;
+      SorU          : in std_logic;
       dividend_i    : in std_logic_vector(31 downto 0);
       divisor_i     : in std_logic_vector(31 downto 0);
       quotient_o    : out std_logic_vector(31 downto 0);
@@ -75,8 +76,6 @@ ARCHITECTURE behavioral OF ALU IS
    signal    a_mul: integer;
    signal    mul_res, mulhu_res, mulhsu_res  : std_logic_vector(2*WIDTH-1 downto 0);
    signal    rem_res, div_res : std_logic_vector(WIDTH-1 downto 0);
-   signal    rem_res_s,div_res_s: std_logic_vector(WIDTH-1 downto 0); 
-   signal    rem_res_u,div_res_u: unsigned(WIDTH-1 downto 0); 
    attribute use_dsp: string;
    attribute use_dsp of Behavioral: architecture is "yes";
    
@@ -103,7 +102,7 @@ ARCHITECTURE behavioral OF ALU IS
    
    
    signal stall, start : std_logic_vector(2 downto 0);	
-   signal ready_s,valid_s: std_logic; 
+   signal ready_s,valid_s, SorU: std_logic; 
 BEGIN
  
     -- Implementing shift left and right uses lower 5 bits from input b
@@ -148,17 +147,14 @@ BEGIN
       clk => clk,
       reset => reset,
       start_i => valid_s,
+      SorU    => SorU,
       dividend_i => a_i,
       divisor_i  => b_i,
-      quotient_o => div_res_s,
-      remainder_o => rem_res_s,
+      quotient_o => div_res,
+      remainder_o => rem_res,
       stall_o  =>  ready_s
    );   
    
-   div_res_u <= unsigned(div_res_s);
-   rem_res_u <= unsigned(rem_res_s);
-   
-  
    -- sabiranje
    add_res <= std_logic_vector(unsigned(a_i) + unsigned(b_i));
    -- oduzimanje
@@ -200,10 +196,10 @@ BEGIN
                mul_res(63 downto 32) when mulhs_op, -- signed high
                mulhu_res(63 downto 32) when mulhu_op,-- unsigned high
                mulhsu_res (63 downto 32) when mulhsu_op,
-               std_logic_vector(div_res_u) when divu_op,
-               std_logic_vector(div_res_s) when divs_op,
-               std_logic_vector(rem_res_u) when remu_op,
-               std_logic_vector(rem_res_s) when rems_op,
+               std_logic_vector(div_res) when divu_op,
+               std_logic_vector(div_res) when divs_op,
+               std_logic_vector(rem_res) when remu_op,
+               std_logic_vector(rem_res) when rems_op,
                (others => '1') when others; 
 
 
@@ -212,6 +208,7 @@ BEGIN
         start <= "000";
         valid_s <= '0';
         stall_o <= '1';
+        SorU    <= '0';
         case op_i is
             when mulu_op => 
                 start <= "100";
@@ -228,15 +225,19 @@ BEGIN
             when divu_op =>
                 valid_s <= '1';
                 stall_o <= ready_s;
+                SorU    <= '0';
             when divs_op =>
                 valid_s <= '1';
                 stall_o <= ready_s;
+                SorU    <= '1';
             when remu_op =>
                 valid_s <= '1';
                 stall_o <= ready_s;
+                SorU    <= '0';
             when rems_op =>    
                 valid_s <= '1';
                 stall_o <= ready_s;
+                SorU    <= '1';
             when others => 
                 start <= "000";
                 stall_o <= '1';

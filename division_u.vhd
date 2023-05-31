@@ -124,21 +124,33 @@ begin
                else
                     state_next <= work2;
                     cnt_next <= std_logic_vector(signed(cnt_clk) + to_signed(1,7));
-                    remainder_next <= std_logic_vector(signed(remainder_s) - signed(divisor_s));  
+                    if(SorU = '1') then
+                        remainder_next <= std_logic_vector(signed(remainder_s) - signed(divisor_s));
+                    else
+                        if(unsigned(divisor_s) > unsigned(remainder_s)) then
+                            remainder_next  <= remainder_s;
+                            divisor_next  <= '0' & divisor_s(63 downto 1);
+                            quotient_next <= quotient_s(30 downto 0) & '0';
+                            state_next <= work;
+                        else
+                            remainder_next <= std_logic_vector(unsigned(remainder_s) - unsigned(divisor_s));
+                        end if;
+                    end if;  
  
                 end if;
            when work2 =>
                 state_next <= work;
-
                 if remainder_s(63) = '0' then
-
                    quotient_next <= quotient_s(30 downto 0) & '1'; 
                    divisor_next  <= '0' & divisor_s(63 downto 1);
                 else
-
                    divisor_next  <= '0' & divisor_s(63 downto 1);
                    quotient_next <= quotient_s(30 downto 0) & '0';
-                   remainder_next <= std_logic_vector(signed(remainder_s) + signed(divisor_s));                         
+                   if(SorU = '1') then
+                        remainder_next <= std_logic_vector(signed(remainder_s) + signed(divisor_s));
+                    else
+                        remainder_next <= std_logic_vector(unsigned(remainder_s) + unsigned(divisor_s));
+                    end if;                          
                 end if;                 
            when done => 
                 state_next <= start;
@@ -164,3 +176,4 @@ begin
     end process;
 
 end Behavioral;
+
