@@ -4,7 +4,6 @@ USE ieee.numeric_std.ALL;
 use ieee.math_real.all;
 use work.alu_ops_pkg.all;
 
-
 ENTITY ALU IS
    GENERIC(
       WIDTH : NATURAL := 32);
