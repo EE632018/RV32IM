@@ -4,7 +4,7 @@ li a2, -5
 li a3,  5
 add a4, a1, a2 
 sub a5, a1, a3 # expected- a4=a5=10
-addi a6, a6, 0 #test with no stall
+li a6, a6, 0 #test with no stall
 beq a5, a4, valid0  #tested- add,addi,sub,beq,jal
 jal error
 valid0: auipc a4 1

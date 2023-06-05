@@ -15,6 +15,7 @@ entity hazard_unit is
       rd_we_ex_i       : in std_logic;
       rd_address_mem_i : in std_logic_vector(4 downto 0);
       mem_to_reg_mem_i : in std_logic;
+      stall_i          : in std_logic; 
       -- izlazni kontrolni signali
       -- pc_en_o je signal dozvole rada za pc registar
       pc_en_o          : out std_logic; 
@@ -22,15 +23,14 @@ entity hazard_unit is
       if_id_en_o       : out std_logic; 
       -- control_pass_o kontrolise da li ce u execute fazu biti prosledjeni
       --   kontrolni signali iz ctrl_decoder-a ili sve nule 
-      control_pass_o   : out std_logic;
-      stall_i          : in std_logic 
+      control_pass_o   : out std_logic
       );
 end entity;
 
 
 architecture behavioral of hazard_unit is
-   signal en_s:std_logic:='0';
-   signal pass_ctrl_s:std_logic:='0';
+   signal en_s:std_logic        :='0';
+   signal pass_ctrl_s:std_logic :='0';
 begin
 
    

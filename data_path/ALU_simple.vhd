@@ -70,9 +70,7 @@ ARCHITECTURE behavioral OF ALU IS
    constant  l2WIDTH : natural := integer(ceil(log2(real(WIDTH))));
    signal    add_res, sub_res, or_res, and_res,res_s, eq_res :  STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
    signal    sll_res, slt_res, sltu_res, xor_res, srl_res, sra_res: std_logic_vector(WIDTH-1 DOWNTO 0); 
-   signal    b_u: integer;   
-   signal    b_mul: integer;
-   signal    a_mul: integer;
+   signal    b_u: integer := 0;  
    signal    mul_res, mulhu_res, mulhsu_res  : std_logic_vector(2*WIDTH-1 downto 0);
    signal    rem_res, div_res : std_logic_vector(WIDTH-1 downto 0);
    attribute use_dsp: string;
@@ -106,7 +104,7 @@ BEGIN
  
     -- Implementing shift left and right uses lower 5 bits from input b
     
-   b_u <= to_integer(signed(b_i(4 downto 0)));
+   b_u <= to_integer(unsigned(b_i(4 downto 0)));
    
    inst_mul: multiply 
    port map(
@@ -155,9 +153,9 @@ BEGIN
    );   
    
    -- sabiranje
-   add_res <= std_logic_vector(unsigned(a_i) + unsigned(b_i));
+   add_res <= std_logic_vector(signed(a_i) + signed(b_i));
    -- oduzimanje
-   sub_res <= std_logic_vector(unsigned(a_i) - unsigned(b_i));
+   sub_res <= std_logic_vector(signed(a_i) - signed(b_i));
    -- i kolo
    and_res <= a_i and b_i;
    -- ili kolo
