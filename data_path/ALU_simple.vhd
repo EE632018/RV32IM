@@ -25,6 +25,7 @@ ARCHITECTURE behavioral OF ALU IS
     component multiply
     Port (clk   : in std_logic;
       reset : in std_logic;
+      con_s : in std_logic_vector(1 downto 0);
       a_in  : in std_logic_vector(31 downto 0);
       b_in  : in std_logic_vector(31 downto 0);
       c_out  : out std_logic_vector(63 downto 0);
@@ -98,8 +99,9 @@ ARCHITECTURE behavioral OF ALU IS
    constant rems_op: std_logic_vector (4 downto 0):="10000"; ---> reminder signed	
    
    
-   signal stall, start : std_logic_vector(2 downto 0);	
+   signal stall, start : std_logic;	
    signal ready_s,valid_s, SorU: std_logic; 
+   signal con_s: std_logic_vector(1 downto 0) := (others => '0');
 BEGIN
  
     -- Implementing shift left and right uses lower 5 bits from input b
@@ -112,32 +114,13 @@ BEGIN
        reset => reset,
        a_in => a_i,
        b_in => b_i,
+       con_s => con_s,
        c_out =>  mul_res,
-       stall_status => stall(2),
-       start_status => start(2)
+       stall_status => stall,
+       start_status => start
    ); 
    
-   inst_mul_u: multiply_u 
-   port map(
-       clk => clk,
-       reset => reset,
-       a_in => a_i,
-       b_in => b_i,
-       c_out =>  mulhu_res,
-       stall_status => stall(1),
-       start_status => start(1)
-   ); 
    
-   inst_mul_su: multiply_su 
-   port map(
-       clk => clk,
-       reset => reset,
-       a_in => a_i,
-       b_in => b_i,
-       c_out =>  mulhsu_res,
-       stall_status => stall(0),
-       start_status => start(0)
-   ); 
        
    inst_div_s: division_u
    port map(
@@ -202,23 +185,28 @@ BEGIN
 
     process(op_i, stall, ready_s)
     begin
-        start <= "000";
+        start <= '0';
         valid_s <= '0';
         stall_o <= '1';
         SorU    <= '0';
+        con_s <= "00";
         case op_i is
             when mulu_op => 
-                start <= "100";
-                stall_o <= stall(2);
+                start <= '1';
+                stall_o <= stall;
+                con_s <= "00";
             when mulhs_op =>
-                start <= "100";
-                stall_o <= stall(2); 
+                start <= '1';
+                stall_o <= stall; 
+                con_s <= "00";
             when mulhu_op =>
-                start <= "010";
-                stall_o <= stall(1);
+                start <= '1';
+                stall_o <= stall;
+                con_s <= "11";
             when mulhsu_op =>
-                start <= "001";
-                stall_o <= stall(0);
+                start <= '1';
+                stall_o <= stall;
+                con_s <= "01";
             when divu_op =>
                 valid_s <= '1';
                 stall_o <= ready_s;
@@ -236,7 +224,7 @@ BEGIN
                 stall_o <= ready_s;
                 SorU    <= '1';
             when others => 
-                start <= "000";
+                start <= '0';
                 stall_o <= '1';
                 valid_s <= '0';
         end case;
