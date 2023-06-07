@@ -33,28 +33,6 @@ ARCHITECTURE behavioral OF ALU IS
       start_status: in std_logic   
      );            
     end component;
-    
-    component multiply_u
-    Port (clk   : in std_logic;
-      reset : in std_logic;
-      a_in  : in std_logic_vector(31 downto 0);
-      b_in  : in std_logic_vector(31 downto 0);
-      c_out  : out std_logic_vector(63 downto 0);
-      stall_status: out std_logic;
-      start_status: in std_logic   
-     );            
-    end component;
-    
-    component multiply_su
-    Port (clk   : in std_logic;
-      reset : in std_logic;
-      a_in  : in std_logic_vector(31 downto 0);
-      b_in  : in std_logic_vector(31 downto 0);
-      c_out  : out std_logic_vector(63 downto 0);
-      stall_status: out std_logic;
-      start_status: in std_logic   
-     );            
-    end component;
    
    component division_u
    Port (clk           : in std_logic;
