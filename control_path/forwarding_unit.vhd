@@ -61,16 +61,16 @@ begin
    -- prosledjivanje iz MEM faze ima veci prioritet od prosledjivanja iz WB faze,
    -- zato sto je vrednost novija ('svezija')
    forward_branch_proc : process(rd_we_mem_i, rd_address_mem_i, rd_we_wb_i, rd_address_wb_i,
-                                 rs1_address_id_i, rs2_address_id_i)is
+                                 rs1_address_ex_i, rs2_address_ex_i)is
    begin
       branch_forward_b_o <= '0';
       branch_forward_a_o <= '0';      
       -- prosledjivanje signala iz MEM faze
       if (rd_we_mem_i = '1' and rd_address_mem_i /= zero_c)then
-         if (rd_address_mem_i = rs1_address_id_i)then
+         if (rd_address_mem_i = rs1_address_ex_i)then
             branch_forward_a_o <= '1'; --
          end if;
-         if (rd_address_mem_i = rs2_address_id_i)then
+         if (rd_address_mem_i = rs2_address_ex_i)then
             branch_forward_b_o <= '1';
          end if;
       end if;

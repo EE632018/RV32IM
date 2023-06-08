@@ -11,7 +11,9 @@ end entity;
 
 architecture Behavioral of TOP_RISCV_tb is
    -- Operand za pristup asemblerskom kodu programa
-   file RISCV_instructions: text open read_mode is "/home/milos/Documents/master/NMS/RV32IM/RISCV_tb/test_source_codes/stall_flush_stress_test_bin.txt";   
+   --file RISCV_instructions: text open read_mode is "/home/milos/Documents/master/NMS/RV32IM/RISCV_tb/test_source_codes/stall_flush_stress_test_bin.txt";
+   file RISCV_instructions: text open read_mode is "/home/dejan/RV32IM/RISCV_tb/test_source_codes/R_B_U_J_I_bin.txt";   
+   
    -- Globalni signali
    signal clk: std_logic:='0';
    signal reset: std_logic;       
@@ -107,7 +109,7 @@ begin
       variable i: integer:= 0;
    begin
       reset <= '0';
-      reset <= '1' after 20 ns;
+      reset <= '1' after 180 ns;
       wea_instr_s <= (others => '1');
       while (not endfile(RISCV_instructions))loop         
          readline(RISCV_instructions, row);

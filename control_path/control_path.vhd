@@ -29,6 +29,7 @@ entity control_path is
       -- kontrolni signali za zaustavljanje protocne obrade
       pc_en_o            : out std_logic;
       if_id_en_o         : out std_logic;
+      funct3_ex_o        : out std_logic_vector(2 downto 0);
       rd_mux_o           : out std_logic_vector(1 downto 0);
       funct3_mem_o       : out std_logic_vector(2 downto 0);
       load_mux_o         : out std_logic;
@@ -79,7 +80,7 @@ architecture behavioral of control_path is
    signal rs2_address_ex_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_ex_s   : std_logic_vector (4 downto 0) := (others=>'0');
    
-   
+   signal rd_mux_ex_s       : std_logic_vector(1 downto 0) := (others=>'0');
 
    --*********       MEMORY        **************
    signal data_mem_we_mem_s : std_logic := '0';
@@ -118,11 +119,11 @@ begin
    -- za uslovni skok
    --    kontrolise multiplekser za sledecu adresu PC-a
    --    resetuje if/id registar ukoliko je uslov zadovoljen
-   pc_next_if_s : process(branch_id_s, branch_condition_i, bcc_id_s)
+   pc_next_if_s : process(branch_ex_s, branch_condition_i, bcc_id_s)
    begin
       if_id_flush_s <= '0';
       pc_next_sel_o <= '0';
-      if (branch_id_s = '1' and branch_condition_i = '1')then
+      if (branch_ex_s = '1' and branch_condition_i = '1')then
          pc_next_sel_o <= '1';
          if_id_flush_s <= '1';
       end if;
@@ -135,7 +136,7 @@ begin
    id_ex : process (clk) is
    begin
       if (rising_edge(clk)) then
-         if (reset = '0' or control_pass_s = '0')then
+         if (reset = '0' or control_pass_s = '0' or if_id_flush_s = '1')then
             branch_ex_s      <= '0';
             funct3_ex_s      <= (others => '0');
             funct7_ex_s      <= (others => '0');
@@ -145,9 +146,11 @@ begin
             rs1_address_ex_s <= (others => '0');
             rs2_address_ex_s <= (others => '0');
             rd_address_ex_s  <= (others => '0');
+            rd_mux_ex_s      <= (others => '0');
             rd_we_ex_s       <= '0';
             data_mem_we_ex_s <= '0';
          else
+            rd_mux_ex_s      <= rd_mux_s;
             branch_ex_s      <= branch_id_s;
             funct7_ex_s      <= funct7_id_s;
             funct3_ex_s      <= funct3_id_s;
@@ -166,7 +169,7 @@ begin
    ex_mem : process (clk) is
    begin
       if (rising_edge(clk)) then
-         if (reset = '0')then
+         if (reset = '0' or id_ex_flush_s = '1')then
             data_mem_we_mem_s <= '0';
             rd_we_mem_s       <= '0';
             mem_to_reg_mem_s  <= '0';
@@ -273,8 +276,9 @@ begin
    rd_we_o       <= rd_we_wb_s;
    if_id_flush_o <= if_id_flush_s;
    funct3_mem_o  <= funct3_mem_s;
-   rd_mux_o      <= rd_mux_s;
+   rd_mux_o      <= rd_mux_ex_s;
    load_mux_o    <= load_mux_s;
+   funct3_ex_o   <= funct3_ex_s;
 
 end architecture;
 

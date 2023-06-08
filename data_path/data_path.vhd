@@ -37,6 +37,7 @@ entity data_path is
       rd_mux_i            : in  std_logic_vector(1 downto 0);
       load_mux_i          : in  std_logic;
       funct3_mem_i        : in  std_logic_vector(2 downto 0);
+      funct3_ex_i         : in  std_logic_vector(2 downto 0);
       stall_o             : out std_logic
       );
 
@@ -63,7 +64,7 @@ architecture Behavioral of data_path is
    signal immediate_extended_id_s2 : std_logic_vector (31 downto 0) := (others=>'0');
    signal branch_condition_b_ex_s : std_logic_vector (31 downto 0) := (others=>'0');
    signal branch_condition_a_ex_s : std_logic_vector (31 downto 0) := (others=>'0');
-   signal branch_adder_id_s       : std_logic_vector (31 downto 0) := (others=>'0');
+   
    signal rs1_address_id_s        : std_logic_vector (4 downto 0) := (others=>'0');
    signal rs2_address_id_s        : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_id_s         : std_logic_vector (4 downto 0) := (others=>'0');
@@ -84,6 +85,8 @@ architecture Behavioral of data_path is
    signal rs2_data_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal rd_address_ex_s         : std_logic_vector (4 downto 0) := (others=>'0');
    signal stall_s                 : std_logic;
+   signal pc_reg_ex_s             : std_logic_vector (31 downto 0) := (others=>'0');
+   signal branch_adder_ex_s       : std_logic_vector (31 downto 0) := (others=>'0');
 
    --*********       MEMORY        **************
    signal pc_adder_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
@@ -143,19 +146,23 @@ begin
    id_ex : process (clk) is
    begin
       if (rising_edge(clk)) then
-         if (reset = '0')then
-            pc_adder_ex_s           <= (others => '0');
-            rs1_data_ex_s           <= (others => '0');
-            rs2_data_ex_s           <= (others => '0');
-            immediate_extended_ex_s <= (others => '0');
-            rd_address_ex_s         <= (others => '0');
-         else
-            pc_adder_ex_s           <= pc_adder_id_s;
-            rs1_data_ex_s           <= rs1_data_id_s;
-            rs2_data_ex_s           <= rs2_data_id_s;
-            immediate_extended_ex_s <= immediate_extended_id_s2;
-            rd_address_ex_s         <= rd_address_id_s;
-         end if;
+          if(if_id_en_i = '1')then
+             if (reset = '0' or if_id_flush_i = '1')then
+                pc_adder_ex_s           <= (others => '0');
+                rs1_data_ex_s           <= (others => '0');
+                rs2_data_ex_s           <= (others => '0');
+                immediate_extended_ex_s <= (others => '0');
+                rd_address_ex_s         <= (others => '0');
+                pc_reg_ex_s             <= (others => '0');
+             else
+                pc_reg_ex_s             <= pc_reg_id_s;
+                pc_adder_ex_s           <= pc_adder_id_s;
+                rs1_data_ex_s           <= rs1_data_id_s;
+                rs2_data_ex_s           <= rs2_data_id_s;
+                immediate_extended_ex_s <= immediate_extended_id_s2;
+                rd_address_ex_s         <= rd_address_id_s;
+             end if;
+          end if;
       end if;
    end process;
 
@@ -204,54 +211,54 @@ begin
 
    -- multiplekseri za prosledjivanje operanada komparatoru za proveravanje uslova za skok
    branch_condition_a_ex_s <= alu_result_mem_s when branch_forward_a_i = '1' else
-                              rs1_data_id_s;
+                              rs1_data_ex_s;
    branch_condition_b_ex_s <= alu_result_mem_s when branch_forward_b_i = '1' else
-                              rs2_data_id_s;        
+                              rs2_data_ex_s;        
 
    -- provera uslova za skok
    funct3_id_s  <= instruction_id_s(14 downto 12);
    
-   process(funct3_id_s,branch_condition_a_ex_s,branch_condition_b_ex_s)
+   process(funct3_ex_i,alu_forward_a_ex_s,alu_forward_b_ex_s)
    begin
-        case funct3_id_s is
+        case funct3_ex_i is
             when "000" => 
-                if  (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) then
+                if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
                      branch_condition_o <= '1';
                 else
                     branch_condition_o <= '0';
                 end if;
             when "001" =>
-                if  (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) then
+                if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
                      branch_condition_o <= '0';
                 else
                     branch_condition_o <= '1';
                 end if;             
             when "100" => 
-                if (signed(branch_condition_a_ex_s) < signed(branch_condition_b_ex_s)) then
+                if (signed(alu_forward_a_ex_s) < signed(alu_forward_b_ex_s)) then
                     branch_condition_o <= '1';
                 else
                     branch_condition_o <= '0';
                 end if;
             when "101" => 
-                if  (signed(branch_condition_a_ex_s) >= signed(branch_condition_b_ex_s)) then
+                if  (signed(alu_forward_a_ex_s) >= signed(alu_forward_b_ex_s)) then
                      branch_condition_o <= '1';
                 else
                     branch_condition_o <= '0';
                 end if;                
             when "110" =>
-                if  (unsigned(branch_condition_a_ex_s) < unsigned(branch_condition_b_ex_s)) then
+                if  (unsigned(alu_forward_a_ex_s) < unsigned(alu_forward_b_ex_s)) then
                      branch_condition_o <= '1';
                 else
                     branch_condition_o <= '0';
                 end if;    
              when "111" =>
-                if (unsigned(branch_condition_a_ex_s) >= unsigned(branch_condition_b_ex_s)) then
+                if (unsigned(alu_forward_a_ex_s) >= unsigned(alu_forward_b_ex_s)) then
                      branch_condition_o <= '1';
                 else
                     branch_condition_o <= '0';
                 end if;
              when others =>
-                if  (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) then
+                if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
                      branch_condition_o <= '1';
                 else
                     branch_condition_o <= '0';
@@ -264,9 +271,10 @@ begin
      --                    '0';
 
    -- multiplekser za azuriranje programskog brojaca
+   
    with pc_next_sel_i select
       pc_next_if_s <= pc_adder_if_s         when '0',
-                      branch_adder_id_s     when others;
+                      branch_adder_ex_s     when others;
 
    -- multiplekseri za prosledjivanje operanada iz kasnijih faza pajplajna
    alu_forward_a_ex_s <= rd_data_wb_s when alu_forward_a_i = "01" else
@@ -370,19 +378,20 @@ begin
         end case;
    end process;
    
-   process(rd_mux_s, immediate_extended_id_s, pc_reg_id_s, rs1_data_id_s)
+   -- Logika za promenu adrese PC brojaca prilikom branch logike i skok
+   process(rd_mux_s, immediate_extended_ex_s, pc_reg_ex_s, alu_forward_a_ex_s)
    begin
         case rd_mux_s is
         when "00" => -- sabirac za uslovne skokove
-            branch_adder_id_s <= std_logic_vector(signed(immediate_extended_id_s) + signed(pc_reg_id_s));
+            branch_adder_ex_s <= std_logic_vector(signed(immediate_extended_ex_s) + signed(pc_reg_ex_s));
         when "01" =>
             -- sabirac za uslovne skokove jal
-            branch_adder_id_s <= std_logic_vector(signed(immediate_extended_id_s) + 0);
+            branch_adder_ex_s <= std_logic_vector(signed(immediate_extended_ex_s) + 0);
         when "10" => -- sabirac za uslovne skokove jalr
-            branch_adder_id_s <= std_logic_vector(signed(immediate_extended_id_s) + signed(rs1_data_id_s));
+            branch_adder_ex_s <= std_logic_vector(signed(immediate_extended_ex_s) + signed(alu_forward_a_ex_s));
         when others => 
             -- sabirac za uslovne skokove
-            branch_adder_id_s <= std_logic_vector(signed(immediate_extended_id_s) + signed(pc_reg_id_s));
+            branch_adder_ex_s <= std_logic_vector(signed(immediate_extended_ex_s) + signed(pc_reg_ex_s));
         end case;
    end process;
 
