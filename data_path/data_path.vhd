@@ -73,6 +73,7 @@ architecture Behavioral of data_path is
    signal rd_mux_s                : std_logic_vector(1 downto 0) := (others=>'0');
 
    --*********       EXECUTE       **************
+   signal instruction_ex_s        : std_logic_vector (31 downto 0) := (others=>'0');
    signal pc_adder_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal immediate_extended_ex_s : std_logic_vector (31 downto 0) := (others=>'0');
    signal alu_forward_a_ex_s      : std_logic_vector(31 downto 0) := (others=>'0');
@@ -154,6 +155,7 @@ begin
                 immediate_extended_ex_s <= (others => '0');
                 rd_address_ex_s         <= (others => '0');
                 pc_reg_ex_s             <= (others => '0');
+                instruction_ex_s        <= (others => '0');
              else
                 pc_reg_ex_s             <= pc_reg_id_s;
                 pc_adder_ex_s           <= pc_adder_id_s;
@@ -161,6 +163,7 @@ begin
                 rs2_data_ex_s           <= rs2_data_id_s;
                 immediate_extended_ex_s <= immediate_extended_id_s2;
                 rd_address_ex_s         <= rd_address_id_s;
+                instruction_ex_s        <= instruction_id_s;
              end if;
           end if;
       end if;
@@ -218,52 +221,60 @@ begin
    -- provera uslova za skok
    funct3_id_s  <= instruction_id_s(14 downto 12);
    
-   process(funct3_ex_i,alu_forward_a_ex_s,alu_forward_b_ex_s)
+   process(funct3_ex_i,alu_forward_a_ex_s,alu_forward_b_ex_s, instruction_ex_s)
    begin
-        case funct3_ex_i is
-            when "000" => 
-                if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
-                     branch_condition_o <= '1';
-                else
-                    branch_condition_o <= '0';
-                end if;
-            when "001" =>
-                if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
-                     branch_condition_o <= '0';
-                else
-                    branch_condition_o <= '1';
-                end if;             
-            when "100" => 
-                if (signed(alu_forward_a_ex_s) < signed(alu_forward_b_ex_s)) then
-                    branch_condition_o <= '1';
-                else
-                    branch_condition_o <= '0';
-                end if;
-            when "101" => 
-                if  (signed(alu_forward_a_ex_s) >= signed(alu_forward_b_ex_s)) then
-                     branch_condition_o <= '1';
-                else
-                    branch_condition_o <= '0';
-                end if;                
-            when "110" =>
-                if  (unsigned(alu_forward_a_ex_s) < unsigned(alu_forward_b_ex_s)) then
-                     branch_condition_o <= '1';
-                else
-                    branch_condition_o <= '0';
-                end if;    
-             when "111" =>
-                if (unsigned(alu_forward_a_ex_s) >= unsigned(alu_forward_b_ex_s)) then
-                     branch_condition_o <= '1';
-                else
-                    branch_condition_o <= '0';
-                end if;
-             when others =>
-                if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
-                     branch_condition_o <= '1';
-                else
-                    branch_condition_o <= '0';
-                end if;       
-        end case;
+        if(instruction_ex_s(6 downto 0) = "1100011") then
+            case funct3_ex_i is
+                when "000" => 
+                    if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
+                         branch_condition_o <= '1';
+                    else
+                        branch_condition_o <= '0';
+                    end if;
+                when "001" =>
+                    if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
+                         branch_condition_o <= '0';
+                    else
+                        branch_condition_o <= '1';
+                    end if;             
+                when "100" => 
+                    if (signed(alu_forward_a_ex_s) < signed(alu_forward_b_ex_s)) then
+                        branch_condition_o <= '1';
+                    else
+                        branch_condition_o <= '0';
+                    end if;
+                when "101" => 
+                    if  (signed(alu_forward_a_ex_s) >= signed(alu_forward_b_ex_s)) then
+                         branch_condition_o <= '1';
+                    else
+                        branch_condition_o <= '0';
+                    end if;                
+                when "110" =>
+                    if  (unsigned(alu_forward_a_ex_s) < unsigned(alu_forward_b_ex_s)) then
+                         branch_condition_o <= '1';
+                    else
+                        branch_condition_o <= '0';
+                    end if;    
+                 when "111" =>
+                    if (unsigned(alu_forward_a_ex_s) >= unsigned(alu_forward_b_ex_s)) then
+                         branch_condition_o <= '1';
+                    else
+                        branch_condition_o <= '0';
+                    end if;
+                 when others =>
+                    if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
+                         branch_condition_o <= '1';
+                    else
+                        branch_condition_o <= '0';
+                    end if;       
+            end case;
+        elsif(instruction_ex_s(6 downto 0) = "1101111") then
+            branch_condition_o <= '1';
+        elsif(instruction_ex_s(6 downto 0) = "1100111") then
+            branch_condition_o <= '1';
+        else
+            branch_condition_o <= '0';
+        end if;
    end process;
    
    
