@@ -14,15 +14,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="999995fs"></ZoomStartTime>
-      <ZoomEndTime time="1000001fs"></ZoomEndTime>
-      <Cursor1Time time="1000000fs"></Cursor1Time>
+      <ZoomStartTime time="1766666fs"></ZoomStartTime>
+      <ZoomEndTime time="2766667fs"></ZoomEndTime>
+      <Cursor1Time time="2600000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="222"></NameColumnWidth>
-      <ValueColumnWidth column_width="136"></ValueColumnWidth>
+      <ValueColumnWidth column_width="124"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="47" />
+   <WVObjectSize size="50" />
    <wvobject type="logic" fp_name="/TOP_RISCV_tb/clk">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -138,6 +138,7 @@
    <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/alu_op_i">
       <obj_property name="ElementShortName">alu_op_i[4:0]</obj_property>
       <obj_property name="ObjectShortName">alu_op_i[4:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/alu_result_ex_s">
       <obj_property name="ElementShortName">alu_result_ex_s[31:0]</obj_property>
@@ -154,18 +155,22 @@
    <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/rs1_address_id_s">
       <obj_property name="ElementShortName">rs1_address_id_s[4:0]</obj_property>
       <obj_property name="ObjectShortName">rs1_address_id_s[4:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/rs1_data_id_s">
       <obj_property name="ElementShortName">rs1_data_id_s[31:0]</obj_property>
       <obj_property name="ObjectShortName">rs1_data_id_s[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/rs2_address_id_s">
       <obj_property name="ElementShortName">rs2_address_id_s[4:0]</obj_property>
       <obj_property name="ObjectShortName">rs2_address_id_s[4:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/rs2_data_id_s">
       <obj_property name="ElementShortName">rs2_data_id_s[31:0]</obj_property>
       <obj_property name="ObjectShortName">rs2_data_id_s[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/rd_we_i">
       <obj_property name="ElementShortName">rd_we_i</obj_property>
@@ -174,10 +179,12 @@
    <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/rd_address_wb_s">
       <obj_property name="ElementShortName">rd_address_wb_s[4:0]</obj_property>
       <obj_property name="ObjectShortName">rd_address_wb_s[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/rd_data_wb_s">
       <obj_property name="ElementShortName">rd_data_wb_s[31:0]</obj_property>
       <obj_property name="ObjectShortName">rd_data_wb_s[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="divider55" type="divider">
       <obj_property name="label">PROSLEDJIVANJE</obj_property>
@@ -210,5 +217,18 @@
    <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/control_path_1/alu_op_o">
       <obj_property name="ElementShortName">alu_op_o[4:0]</obj_property>
       <obj_property name="ObjectShortName">alu_op_o[4:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/funct3_mem_s">
+      <obj_property name="ElementShortName">funct3_mem_s[2:0]</obj_property>
+      <obj_property name="ObjectShortName">funct3_mem_s[2:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/data_mem_read_mem_s2">
+      <obj_property name="ElementShortName">data_mem_read_mem_s2[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_mem_read_mem_s2[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/TOP_RISCV_tb/TOP_RISCV_1/data_path_1/rs2_data_mem_s">
+      <obj_property name="ElementShortName">rs2_data_mem_s[31:0]</obj_property>
+      <obj_property name="ObjectShortName">rs2_data_mem_s[31:0]</obj_property>
    </wvobject>
 </wave_config>
