@@ -11,10 +11,10 @@ entity hazard_unit is
       rs2_in_use_i     : in std_logic;
       branch_id_i      : in std_logic;
       rd_address_ex_i  : in std_logic_vector(4 downto 0);
-      mem_to_reg_ex_i  : in std_logic;
+      mem_to_reg_ex_i  : in std_logic_vector(1 downto 0);
       rd_we_ex_i       : in std_logic;
       rd_address_mem_i : in std_logic_vector(4 downto 0);
-      mem_to_reg_mem_i : in std_logic;
+      mem_to_reg_mem_i : in std_logic_vector(1 downto 0);
       stall_i          : in std_logic; 
       -- izlazni kontrolni signali
       -- pc_en_o je signal dozvole rada za pc registar
@@ -44,7 +44,7 @@ begin
       if (branch_id_i = '0') then -- instrukcija u ID fazi nije skok
          if(((rs1_address_id_i = rd_address_ex_i and rs1_in_use_i = '1') or
             (rs2_address_id_i = rd_address_ex_i and rs2_in_use_i = '1')) and
-            mem_to_reg_ex_i = '1' and rd_we_ex_i = '1')then -- load instrukcija je u EX fazi
+            mem_to_reg_ex_i = "01" and rd_we_ex_i = '1')then -- load instrukcija je u EX fazi
             en_s <='0';
          elsif(stall_i = '0') then
             en_s <='0';   
@@ -54,7 +54,7 @@ begin
             and rd_we_ex_i = '1')then -- load ili R-tip u EX fazi
             en_s <='0';
          elsif((rs1_address_id_i = rd_address_mem_i or rs2_address_id_i = rd_address_mem_i)
-            and mem_to_reg_mem_i = '1')then -- load u MEM fazi
+            and mem_to_reg_mem_i = "01")then -- load u MEM fazi
             en_s <='0';
          end if;
       end if;

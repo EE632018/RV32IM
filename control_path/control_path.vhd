@@ -13,7 +13,7 @@ entity control_path is
       -- Statusni signaln iz datapath celine
       branch_condition_i : in  std_logic;
       -- kontrolni signali koji se prosledjiuju u datapath
-      mem_to_reg_o       : out std_logic;
+      mem_to_reg_o       : out std_logic_vector(1 downto 0);
       alu_op_o           : out std_logic_vector(4 downto 0);
       alu_src_b_o        : out std_logic;
       rd_we_o            : out std_logic;
@@ -57,7 +57,7 @@ architecture behavioral of control_path is
    signal alu_src_b_id_s    : std_logic := '0';
    signal data_mem_we_id_s  : std_logic := '0';
    signal rd_we_id_s        : std_logic := '0';
-   signal mem_to_reg_id_s   : std_logic := '0';
+   signal mem_to_reg_id_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rs1_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rs2_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_id_s   : std_logic_vector (4 downto 0) := (others=>'0');
@@ -73,7 +73,7 @@ architecture behavioral of control_path is
    signal alu_src_b_ex_s    : std_logic := '0';
    signal data_mem_we_ex_s  : std_logic := '0';
    signal rd_we_ex_s        : std_logic := '0';
-   signal mem_to_reg_ex_s   : std_logic := '0';
+   signal mem_to_reg_ex_s   : std_logic_vector(1 downto 0) := (others=>'0');
 
 
    signal rs1_address_ex_s  : std_logic_vector (4 downto 0) := (others=>'0');
@@ -85,13 +85,13 @@ architecture behavioral of control_path is
    --*********       MEMORY        **************
    signal data_mem_we_mem_s : std_logic := '0';
    signal rd_we_mem_s       : std_logic := '0';
-   signal mem_to_reg_mem_s  : std_logic := '0';
+   signal mem_to_reg_mem_s  : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_mem_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal funct3_mem_s       : std_logic_vector(2 downto 0) := (others=>'0');
 	
    --*********      WRITEBACK      **************
    signal rd_we_wb_s        : std_logic := '0';
-   signal mem_to_reg_wb_s   : std_logic := '0';
+   signal mem_to_reg_wb_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_wb_s   : std_logic_vector (4 downto 0) := (others=>'0');
 
 
@@ -141,7 +141,7 @@ begin
             funct3_ex_s      <= (others => '0');
             funct7_ex_s      <= (others => '0');
             alu_src_b_ex_s   <= '0';
-            mem_to_reg_ex_s  <= '0';
+            mem_to_reg_ex_s  <= (others => '0');
             alu_2bit_op_ex_s <= (others => '0');
             rs1_address_ex_s <= (others => '0');
             rs2_address_ex_s <= (others => '0');
@@ -172,7 +172,7 @@ begin
          if (reset = '0' or id_ex_flush_s = '1')then
             data_mem_we_mem_s <= '0';
             rd_we_mem_s       <= '0';
-            mem_to_reg_mem_s  <= '0';
+            mem_to_reg_mem_s  <= (others => '0');
             funct3_mem_s      <= (others => '0');  
             rd_address_mem_s  <= (others => '0');
          else
@@ -191,7 +191,7 @@ begin
       if (rising_edge(clk)) then
          if (reset = '0')then
             rd_we_wb_s      <= '0';
-            mem_to_reg_wb_s <= '0';
+            mem_to_reg_wb_s <= (others => '0');
             rd_address_wb_s <= (others => '0');
          else
             rd_we_wb_s      <= rd_we_mem_s;

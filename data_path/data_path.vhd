@@ -18,7 +18,7 @@ entity data_path is
       data_mem_write_o    : out std_logic_vector(31 downto 0);
       data_mem_read_i     : in  std_logic_vector (31 downto 0);
       -- kontrolni signali
-      mem_to_reg_i        : in  std_logic;
+      mem_to_reg_i        : in  std_logic_vector(1 downto 0);
       alu_op_i            : in  std_logic_vector (4 downto 0);
       alu_src_b_i         : in  std_logic;
       pc_next_sel_i       : in  std_logic;
@@ -303,7 +303,8 @@ begin
    a_ex_s <= alu_forward_a_ex_s;
 
    -- multiplekser koji selektuje sta se upisuje u odredisni registar
-   rd_data_wb_s <= data_mem_read_wb_s when mem_to_reg_i = '1' else
+   rd_data_wb_s <= data_mem_read_wb_s when mem_to_reg_i = "01" else
+                   pc_adder_wb_s      when mem_to_reg_i = "10" else
                    alu_result_wb_s;
 
    -- izdvoji adrese opereanada iz 32-bitne instrukcije
@@ -397,7 +398,7 @@ begin
             branch_adder_ex_s <= std_logic_vector(signed(immediate_extended_ex_s) + signed(pc_reg_ex_s));
         when "01" =>
             -- sabirac za uslovne skokove jal
-            branch_adder_ex_s <= std_logic_vector(signed(immediate_extended_ex_s) + 0);
+            branch_adder_ex_s <= std_logic_vector(signed(immediate_extended_ex_s) + signed(pc_reg_ex_s));
         when "10" => -- sabirac za uslovne skokove jalr
             branch_adder_ex_s <= std_logic_vector(signed(immediate_extended_ex_s) + signed(alu_forward_a_ex_s));
         when others => 
