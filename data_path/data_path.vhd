@@ -46,8 +46,6 @@ end entity;
 
 architecture Behavioral of data_path is
 
-
-
    --*********  INSTRUCTION FETCH  **************
    signal pc_reg_if_s             : std_logic_vector (31 downto 0) := (others=>'0');
    signal pc_next_if_s            : std_logic_vector (31 downto 0) := (others=>'0');
