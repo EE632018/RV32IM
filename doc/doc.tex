@@ -1,0 +1,203 @@
+\documentclass{scrreprt}
+\usepackage{graphicx} % Required for inserting images
+
+\title{RV32IM Description}
+\author{Milos Strizak}
+\date{October 2023}
+
+\begin{document}
+
+\maketitle
+
+\section*{Introduction}
+\subsection*{Scope}
+This document represents Implementation of RISC-V processor. It describes building blocks and their 
+connection and how together they work. It also covers the type of instructions that are implemented.
+\subsection*{Document overview}
+This document is composed of following items:
+\begin{itemize}
+    \item RISC-V ISA overview
+    \item What type of instruction this implementation covers, how is each instruction decoded.
+    \item Description of each unit in Data/Control path and connection between them.
+    \item Interface description. 
+\end{itemize}
+
+\section*{RISC-V ISA}
+    \subsection*{Overview}
+    - Instruction set architecture describe how processor works and what are processors capabilities. In ISA it is fully described how many registers has and all instructions it contains. Each instruction is fully described how it works and the way it's coded. ISA represents bridge between HW and SW. 
+    - RISC-V is open-source ISA that uses different ideas form different architectures and combines them in one for getting the best results. Good side of this is also capability to make processor only for your needs, you can implement only instructions you need. 
+    - Questions needed to be answered are next:
+    \begin{itemize}
+        \item Width of registers - 32 bit.
+        \item How much registers processors contains - 32 registers
+        \item Instruction width - 32 bit.
+        \item Type of instructions implemented - I-type and M-type. 
+    \end{itemize}
+    There is convention for RISC-V set instruction. Every set begins with letters RV followed with width of registers:
+    \begin{itemize}
+        \item  RV32 - 32-bit processor
+        \item  RV64 - 64-bit processor
+        \item  RV128 - 128-bit processor
+    \end{itemize}
+    After width of registers it goes set of instructions that are implemented in design, this is represented in next table:
+    
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|} \hline 
+             n & Set of instructions & Description \\ \hline 
+             1. &  I-set & Base set of instruction to work with integer data \\ \hline 
+             2. &  M-set & Multiply/divide integer data \\ \hline 
+             3. &  A-set &  Atomic operations \\ \hline 
+             4. &  F-set &   Floating point number operations, single precision\\ \hline 
+             5. &  D-set &  Floating point number operations, double precision\\ \hline 
+             6. &  S-set &  Supervisor mode\\ \hline 
+             7. &  C-set &  Compressed instruction \\ \hline 
+             8. &  E-set &  Embedded microprocessor, number of register 16 \\\hline 
+             9. &  L-set &   Decimal arithmetic \\ \hline 
+             10. &  V-set &  Vector instructions \\ \hline 
+             11. &  P-set &  Packaging SIMD instruction\\ \hline 
+             12. &  B-set &  Operation to manipulate bits \\ \hline 
+             13. &  T-set &  Support for transaction memory model \\\hline 
+             14. &  J-set &  Support for dynamic translate of instructions \\ \hline 
+             15. &  N-set &  Support for interrupts on user level  \\\hline 
+             
+        \end{tabular}
+        \caption{Set of instructions in RISC-V}
+        \label{tab:table1}
+    \end{table}
+    \subsection*{Format of instructions}
+        Most of standard processor contain first five sets in there implementation. For example,if we have 32bit processor, this can be represented as RV32IMAFD. Because this is not readable convention is to write this as RV32G. 
+        When we try to represent some instruction, we know that every instruction doesn't contain same number of operand. For example, instruction for add contains two operands, and some load instruction contains one operand and some constant value. From this case we can understand that representation of instruction is not the same in all cases. Therefore in RISC-V in I-type of instructions we have basic types of formats. In next table they are represented:
+    
+      \begin{table}[ht]
+          \centering
+          \begin{tabular}{|c|c|c|c|c|c|c|} \hline  
+               funct7 & rs2 & rs1 & funct3 & rd & opcode & R-type\\ \hline  
+               \multicolumn{2}{|c|}{imm[11:0]} & rs1 & funct3 & rd & opcode & I-type \\ \hline  
+               imm[11:5] & rs2 & rs1 & funct3 & imm[4:0] & opcode &  S-type\\ \hline  
+               imm[12| 10:5]& rs2 & rs1 & funct3 & imm[4:1|11] & opcode &  B-type\\ \hline  
+               \multicolumn{4}{|c|}{imm[31:12]}  & rd & opcode &  U-type\\ \hline  
+               \multicolumn{4}{|c|}{imm[20|10:1|11|19:12]} & rd & opcode &  J-type\\ \hline 
+          \end{tabular}
+          \caption{Format of RV32I instructions}
+          \label{tab:table2}
+      \end{table}  
+
+    Fields in Table 2 are described in next section.
+     \begin{itemize}
+        \item  opcode - operation code, width 7-bits.
+        \item  funct3 - additional 3 bits for opcode, to define the instructions in more detail.
+        \item  funct7 - additional 7 bits for opcode, to define the instructions in more detail.
+        \item  rs1 - first operand
+        \item  rs2 - second operand.
+        \item  rd - result register
+        \item  imm - immediate, constant filed
+    \end{itemize}
+
+    \subsection*{Register in RV32}
+    In processor there is 32 general purpose register, each 32 bit wide. They are represented as x0-x31. Register x0 is hardwired with all bits equal to 0. General purpose registers x1-x31 hold values that various instructions interpret as a collection of Boolean values, or as two's complement signed binary or unsigned binary integers. 
+    There is one additional unprivileged register: the program counter pc holds the address of the
+current instruction.
+    
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|c|} \hline 
+            Name & Register number & Usage & Preserved on call\\ \hline 
+            x0 & 0 & Constant value 0 & n.a\\ \hline 
+            x1 (ra) & 1 & Return address & yes\\ \hline 
+            x2 (sp) & 2 & Stack pointer & yes\\ \hline 
+            x3 (gp) & 3 & Global pointer & yes\\ \hline 
+            x4 (tp) & 4 & Thread pointer & yes\\ \hline 
+            x5-x7 & 5-7 & Temporaries & no \\ \hline 
+            x8-x9 & 8-9 & Saved & yes\\ \hline 
+            x10-x17 & 10-17 & Arguments/result & no\\ \hline 
+            x18-x27 & 18-27 & Saved & yes\\ \hline 
+            x28-x31 & 28-31 & Temporaries & no\\ \hline
+        \end{tabular}
+        \caption{RISC-V registers}
+        \label{tab:table3}
+    \end{table}
+
+    Even though registers are general purpose, it's decided that register x1 is return address register and is used for instructions like JAR and JALR ( \textit{further explained lather on}). Each program needs to save value stack pointer for proper execution of instructions push and pop. For this purpose it's reserved register x2, and his value is initialized on start of execution on appropriate value in memory representing top of the stack. Register x4 represents global pointer and is used to point to static variables in program. Register x5 is used to memories thread that is executed. Registers x5-x7 and x28-x31 are used for local variables that are not going to be saved, therefore they have spacial name \textit{temporary t0-t6}. Registers x8-x9 and x18-x27 are used for local variables that are going to be saved in call of the procedure, therefore have name \textit{saved s0-s11}. Last group are register x10-x17 and they are used to send arguments to procedure and for return value after executing the same.  
+    
+    \subsection*{RV32I-type of instructions}
+    In this subsection is described all instruction in I-set. They are sorted in groups, depending on format of instruction they represent. There is 47 instructions in this set, they are divided in 6 types: 
+    \begin{enumerate}
+        \item  R-type: register-register
+        \item  I-type: short immediates and loads
+        \item  S-type: stores
+        \item  B-type: conditional branches, a variation of S-type
+        \item  U-type: long immediates
+        \item  J-type: unconditional jumps, a variation of U-type
+    \end{enumerate}
+    In R-type of instructions we have arithmetic and logic instructions. Instructions are:
+    \begin{enumerate}
+        \item ADD - Addition of two operands. 
+        \item SUB - Subtraction of two operands. 
+        \item SLL - Shift left logical. 
+        \item SLT - Shift lest than. 
+        \item SLTU - Shift lest than unsigned. 
+        \item XOR - XOR logical operation. 
+        \item SRL - Shift right logical. 
+        \item SRA - Shift right arithmetic. 
+        \item OR - OR logical operation. 
+        \item AND - AND logical operation.
+    \end{enumerate}
+    \hfill \break
+    In S-type instruction we have instructions for locating values in memory ( store). There are three instructions with this type:
+    \begin{enumerate}
+        \item SB - Lowest 8 bits register rs2 is stored on address rs1+imm. 
+        \item SH - Lower 16 bits register rs2 is stored on address rs1+imm. 
+        \item SW - Value of register rs2 is stored on address rs1+imm. 
+    \end{enumerate}
+
+    \hfill \break
+    There is six types of conditional branches, they are all B-type of instructions. There expalnation is next:
+    \begin{enumerate}
+        \item BEQ - Lowest 8 bits register rs2 is stored on address rs1+imm. 
+        \item BNE - Lower 16 bits register rs2 is stored on address rs1+imm. 
+        \item BLT - Value of register rs2 is stored on address rs1+imm.
+        \item BGE - Lowest 8 bits register rs2 is stored on address rs1+imm. 
+        \item BLTU - Lower 16 bits register rs2 is stored on address rs1+imm. 
+        \item BGEU - Value of register rs2 is stored on address rs1+imm.
+    \end{enumerate}
+    
+    In next table we can see how this instructions are coded.       
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|c|} \hline 
+             Instr. & funct7 & rs2 & rs1 & funct3 & rd & opcode\\ \hline 
+             ADD & 0b0000000 & rs2 & rs1 & 0b000 & rd & 0b0110011\\ \hline 
+             SUB & 0b0100000 & rs2 & rs1 & 0b000 & rd & 0b0110011\\ \hline 
+             SLL & 0b0000000 & rs2 & rs1 & 0b001 & rd & 0b0110011\\ \hline 
+             SLT & 0b0000000 & rs2 & rs1 & 0b010 & rd & 0b0110011\\ \hline 
+             SLTU & 0b0000000 & rs2 & rs1 & 0b011 & rd & 0b0110011\\ \hline 
+             XOR & 0b0000000 & rs2 & rs1 & 0b100 & rd & 0b0110011\\ \hline 
+             SRL & 0b0000000 & rs2 & rs1 & 0b101 & rd & 0b0110011\\ \hline 
+             SRA & 0b0100000 & rs2 & rs1 & 0b101 & rd & 0b0110011 \\ \hline 
+             OR & 0b0000000 & rs2 & rs1 & 0b110 & rd & 0b0110011\\ \hline 
+             AND & 0b0000000 & rs2 & rs1 & 0b111 & rd & 0b0110011\\ \hline
+        \end{tabular}
+        \caption{R-type instructions in RV32}
+        \label{tab:table}
+    \end{table}
+    \newline
+    
+    
+    
+\section*{Acronyms}
+    Defining all acronyms in document. 
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|} \hline 
+            HW & Hardware\\ \hline 
+            SW & Sowtware\\ \hline 
+            ISA & Instruction set architecture\\ \hline 
+             & \\ \hline 
+             & \\ \hline 
+             & \\ \hline
+        \end{tabular}
+        \caption{Acronyms}
+        \label{tab:table4}
+    \end{table}
+\end{document}
