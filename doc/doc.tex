@@ -154,16 +154,52 @@ current instruction.
     \hfill \break
     There is six types of conditional branches, they are all B-type of instructions. There expalnation is next:
     \begin{enumerate}
-        \item BEQ - Lowest 8 bits register rs2 is stored on address rs1+imm. 
-        \item BNE - Lower 16 bits register rs2 is stored on address rs1+imm. 
-        \item BLT - Value of register rs2 is stored on address rs1+imm.
-        \item BGE - Lowest 8 bits register rs2 is stored on address rs1+imm. 
-        \item BLTU - Lower 16 bits register rs2 is stored on address rs1+imm. 
-        \item BGEU - Value of register rs2 is stored on address rs1+imm.
+        \item BEQ - Branch if equal, PC gets value PC+imm if value of register rs1 is equal to value of register rs2, otherwise PC gets PC+4 (next instruction). 
+        \item BNE - Branch if not equal, PC get value PC+imm if value of register rs1 is not equal to value of register rs2, otherwise PC gets PC+4. 
+        \item BLT - Branch if less then, PC get value PC+imm if value of register rs1 is lower than value of register rs2, otherwise PC gets PC+4. Values of registers are interpreted in complement 2's.
+        \item BGE - Branch if greater or equal, PC get value PC+imm if value of register rs1 is greater or equal than value of register rs2, otherwise PC gets PC+4. Values of registers are interpreted in complement 2's. 
+        \item BLTU - Branch if less then unsigned, PC get value PC+imm if value of register rs1 is lower than value of register rs2, otherwise PC gets PC+4. Values of registers are interpreted in unsigned format. 
+        \item BGEU - Branch if greater or equal unsigned, PC get value PC+imm if value of register rs1 is greater or equal than value of register rs2, otherwise PC gets PC+4. Values of registers are interpreted in unsigned format.
     \end{enumerate}
+
+    I-type of instructions we have two groups, load and arithmetic and logic operations with immediate operand. Load instructions we have five and they represent getting data from memory to registers in processor. 
+    \hfill \break
+    \begin{enumerate}
+        \item LW - Load word, from address rs1+imm in memory we take 32bit value and place it in rd register.
+        \item LH - Load halfword, from address rs1+imm in memory we take 16bit value and expand it to 32 bit and place it in rd register. Expanding is done with replication of 15th bit, this is done to save sign of the value.
+        \item LHU - Load halfword unsigned, from address rs1+imm in memory we take 16bit value and expand it to 32 bit and place it in rd register. Expanding is done puting all zeros on upper 16bits.
+        \item LB - Load byte, from address rs1+imm in memory we take 8bit value and expand it to 32 bit and place it in rd register. Expanding is done with replication of 7th bit, this is done to save sign of the value. 
+        \item LBU - Load byte unsigned, from address rs1+imm in memory we take 8bit value and expand it to 32 bit and place it in rd register. Expanding is done puting all zeros on upper 24bits. 
+    \end{enumerate}
+
+    I-type of arithmetic and logic instructions we have nine, explanation for them is:
+
+    \begin{enumerate}
+        \item ADDI - Addition with constant.  
+        \item SLLI - Shift left for constant. 
+        \item SLTI - Shift lest than, done with constant. 
+        \item SLTIU - Shift lest than unsigned, done with constant. 
+        \item XORI - XOR logical operation, done with constant. 
+        \item SRLI - Shift right logical, done with constant. 
+        \item SRAI - Shift right arithmetic, done with constant. 
+        \item ORI - OR logical operation, done with constant. 
+        \item ANDI - AND logical operation, done with constant.
+    \end{enumerate}
+
+    Next are instructions for unconditional jump, they are J-type of instructions. There are used for call of procedure or functions in some code. Two instructions are JAL and JALR.
+    \textit{JAL} - jump and link used for "call procedure". This instruction executes two things. Value PC+4 is written in rd register, after that PC gets value from immediate field. Register rd is the one where is gonna be sent return address. 
+    \textit{JALR} - jump and link register used for "return from procedure". In rd register is written value PC+4, after that PC gets value rs1+imm. If this is used for return from procedure, imm field is set to zero, and rs1 register is the one where is set return address from JAL instruction. 
+    
+    \hfill \break
+    There is need to have some instructions that are gonna work with some big numbers. U-type of instructions work with them, constant field for them is set to 20bits. Instructions are next, they go together, one with another:
+    \textit{LUI} - load upper immediate - on upper 20bit destination register rd is set value from immediate field, lower 12bit is set to zero. 
+    The same problem is with call of procedure, what to do if they are out of range of JAL instruction. In this case we have instruction:
+    \textit{AUIPC} - add upper immediate to PC, first is made 32bit value by  20bit imm field and 12bit of zeros, this value is added with value of PC, and result is put to rd register. This instruction is used for PC-relative addressing in memory.   
+
+    \textbf{In this section needs to be added 10 more instructions,four instructions FENCE, FENCE.I, ECALL and EBREAK, and 6 instructions for control and status register CSR.}
     
     In next table we can see how this instructions are coded.       
-    \begin{table}[ht]
+    \begin{table}[htb!]
         \centering
         \begin{tabular}{|c|c|c|c|c|c|c|} \hline 
              Instr. & funct7 & rs2 & rs1 & funct3 & rd & opcode\\ \hline 
@@ -177,13 +213,260 @@ current instruction.
              SRA & 0b0100000 & rs2 & rs1 & 0b101 & rd & 0b0110011 \\ \hline 
              OR & 0b0000000 & rs2 & rs1 & 0b110 & rd & 0b0110011\\ \hline 
              AND & 0b0000000 & rs2 & rs1 & 0b111 & rd & 0b0110011\\ \hline
+             SB & imm[11:5] & rs2 & rs1 & 0b000 & imm[4:0] & 0b0100011\\ \hline 
+             SH & imm[11:5] & rs2 & rs1 & 0b001 & imm[4:0] & 0b0100011\\ \hline 
+             SW & imm[11:5] & rs2 & rs1 & 0b010 & imm[4:0] & 0b0100011\\ \hline
+             BEQ & imm[12;10:5] & rs2 & rs1 & 0b000 & imm[4:1;11] & 0b1100011\\ \hline 
+             BNE & imm[12;10:5] & rs2 & rs1 & 0b001 & imm[4:1;11] & 0b1100011\\ \hline 
+             BLT & imm[12;10:5] & rs2 & rs1 & 0b100 & imm[4:1;11] & 0b1100011\\ \hline
+             BGE & imm[12;10:5] & rs2 & rs1 & 0b101 & imm[4:1;11] & 0b1100011\\ \hline 
+             BLTU & imm[12;10:5] & rs2 & rs1 & 0b110 & imm[4:1;11] & 0b1100011\\ \hline 
+             BGEU & imm[12;10:5] & rs2 & rs1 & 0b111 & imm[4:1;11] & 0b1100011\\ \hline
+             ADDI & \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b000 & rd & 0b0010011\\ \hline 
+             SLTI &  \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b010 & rd & 0b0010011\\ \hline 
+             SLTIU & \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b011 & rd & 0b0010011\\ \hline 
+             XORI &  \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b100 & rd & 0b0010011\\ \hline 
+             ORI & \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b110 & rd & 0b0010011\\ \hline 
+             ANDI &  \multicolumn{2}{c|}{imm[11:0]}& rs1 & 0b111 & rd & 0b0010011\\ \hline
+             SRLI & 0b000000X & shamt & rs1 & 0b101 & rd & 0b0010011\\ \hline 
+             SRAI & 0b010000X & shamt & rs1 & 0b101 & rd & 0b0010011 \\ \hline 
+             SLLI & 0b000000X & shamt & rs1 & 0b001 & rd & 0b0010011\\ \hline
+             LB & \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b000 & rd & 0b0000011\\ \hline 
+             LH &  \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b001 & rd & 0b0000011\\ \hline 
+             LW & \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b010 & rd & 0b0000011\\ \hline 
+             LBU &  \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b100 & rd & 0b0000011\\ \hline 
+             LHU & \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b101 & rd & 0b0000011\\ \hline
         \end{tabular}
-        \caption{R-type instructions in RV32}
+        \caption{RV32I instructions}
         \label{tab:table}
     \end{table}
     \newline
-    
-    
+\hfill \break
+\hfill \break
+\hfill \break
+\hfill \break
+\hfill \break
+
+\subsection*{RV32M-type of instructions}
+This section describes the standard integer multiplication and division instruction extension, which
+is named “M” and contains instructions that multiply or divide values held in two integer registers.
+There is only 8 instruction in this group. Four of them are for multiplication and four is for division and remainder. All of them are R-type of instructions. 
+\hfill \break
+Descriptions of this instructions are:
+\begin{enumerate}
+        \item MUL - Multiply rs1 and rs2 and lower 32bit place in rd register.  
+        \item MULH - Multiply rs1 and rs2 and upper 32bit place in rd register. 
+        \item MULHSU - Multiply signed rs1 and unsigned rs2 and upper 32bit place in rd register. 
+        \item MULHU - Multiply unsigned rs1 and unsigned rs2 and upper 32bit place in rd register.
+        \item DIV - Divide signed. 
+        \item DIVU - Divide unsigned. 
+        \item REM - Remainder signed. 
+        \item REMU - Remainder unsigned. 
+\end{enumerate}
+
+How this instructions are encoded is represented in next table:
+\begin{table}[htb!]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|c|} \hline 
+             Instr. & funct7 & rs2 & rs1 & funct3 & rd & opcode\\ \hline 
+             MUL & 0b0000001 & rs2 & rs1 & 0b000 & rd & 0b0110011\\ \hline 
+             MULH & 0b0100001 & rs2 & rs1 & 0b001 & rd & 0b0110011\\ \hline 
+             MULHSU & 0b0000001 & rs2 & rs1 & 0b010 & rd & 0b0110011\\ \hline 
+             MULHU & 0b0000001 & rs2 & rs1 & 0b011 & rd & 0b0110011\\ \hline 
+             DIV & 0b0000001 & rs2 & rs1 & 0b100 & rd & 0b0110011\\ \hline 
+             DIVU & 0b0000001 & rs2 & rs1 & 0b101 & rd & 0b0110011\\ \hline 
+             REM & 0b0000001 & rs2 & rs1 & 0b110 & rd & 0b0110011\\ \hline 
+             REMU & 0b0100001 & rs2 & rs1 & 0b111 & rd & 0b0110011 \\ \hline  
+        \end{tabular}
+        \caption{RV32M instructions}
+        \label{tab:tableRV32M}
+    \end{table}
+
+\section*{Flow of implementation}
+
+This project represents implementation of 5-stage pipelined RV32IM processor. For purpose of better explanation flow of implementation is separated to stages. Processor contains two main part: \textit{datapath and controlpath}. Datapath is made of primary components needed for execution of instructions, each of this component is explained separately. Controlpath represents logic for control of datapath. First we explain system without pipeline, after implementation it is going to be explain why is better if system pipelined, and all problems that provides. 
+
+First thing needed to be described is memory for instruction. This memory has asynchronous read and it contains program needed to be executed. Which instruction is going to be executed depends on PC. PC generates value of next instruction. On image we can see we have adder, that is incremented with 4, that is because instructions length is 32bit, that is 4 locations. 
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\linewidth]{PC.png}
+    \caption{PC with instruction memory}
+    \label{fig:enter-label}
+\end{figure}
+\hfill \break
+
+After implementing logic for fetching instructions, we can expand implementation buy adding part of instruction decode, and instruction execution. In datapath instruction decode is done in register bank, and execution is done in arithmetic-logic unit (ALU). 
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1\linewidth]{REGandALU.png}
+    \caption{Adding register bank and ALU in datapath}
+    \label{fig:regandalu}
+\end{figure}
+
+\subsection*{Register bank}
+
+Register bank contains 32 registers with width 32bit. Communication with register bank is trough two interface for read and one for write. Reason for this type is because of format of instructions. For example, if we take R-type of instructions, they have three locations they access in the same time, two need to be read and one is written too. 
+Interface description: 
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             rs1-address & input & Input address from witch data is read. \\ \hline  
+             rs2-address & input & Input address from witch data is read.  \\ \hline
+             rs1-data & output & Data on output from rs1-address address. \\ \hline
+             rs2-data & output & Data on output from rs2-address address. \\ \hline
+             rd-address & input & Input address to witch data is written.  \\ \hline
+             rd-address & input & Data written to rd-address position.  \\ \hline
+             rd-we & input & Write enable signal giving permission to write data in register bank.  \\ \hline
+        \end{tabular}
+        \caption{Register bank interface}
+        \label{tab:Reg interface}
+    \end{table}
+    \hfill \break
+Reading data from register bank is done asynchronously and writing data is done synchronously. 
+
+\subsection*{ALU}
+Artihmetic logic unit, executes arithmetic and logic operations. Interface description:
+\begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             a-i & input & First operand in operation. \\ \hline  
+             b-i & input & Second operand in operation.  \\ \hline
+             alu-op & input & Selection signal telling what instruction is executing. \\ \hline
+             result & output & Result of operation. \\ \hline
+        \end{tabular}
+        \caption{ALU interface}
+        \label{tab:ALU interface}
+    \end{table}
+    \hfill \break
+Alu-op signal is from control path, telling us what operation, we need to execute in present cycle. 
+
+\subsection*{Data memory}
+For implementation of S-type of instruction, there needs to be implemented data memory. 
+Data memory interface that consist of next ports:
+\begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             data-address & input & Indicates from/to which address is read/write.  \\ \hline  
+             data-i & input & Input port for writing data.  \\ \hline
+             data-o & output & Output port for reading data. \\ \hline
+             data-we & input & Write enable signal indicating if we can write to memory. \\ \hline
+        \end{tabular}
+        \caption{Data interface}
+        \label{tab:Data interface}
+    \end{table}
+    \hfill \break
+Data-address port is connected to result signal of ALU, because it's calculated as add operation (rs1+imm). On data-i input is connected to rs2-data output of register bank. 
+
+\subsection*{Immediate}
+Immediate component role is to extend immediate from 12bits to 32bits. It extends upper bits with all zeros or ones by looking at 12th bit value and replicating it. This is done to save sign of constant. Extension is necessary because this value needs to be added with rs1 register number, so both value need to be 32bit width.
+\begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|} \hline 
+             "11111111111111111111" & immediate(11:0)  \\ \hline  
+        \end{tabular}
+        \caption{Immediate extended with ones if instruction(31)='1'}
+        \label{tab:Ones interface}
+    \end{table}
+
+\begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|} \hline 
+             "00000000000000000000" & immediate(11:0)  \\ \hline  
+        \end{tabular}
+        \caption{Immediate extended with zeros if instruction(31)='0'}
+        \label{tab:Zeros interface}
+    \end{table}
+    \hfill \break
+Interface description:
+\begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             instruction & input & Input instruction to understand how to make output.  \\ \hline  
+             immediate-extended & output & Extended immediate filed.  \\ \hline
+        \end{tabular}
+        \caption{Immediate interface}
+        \label{tab:Imm interface}
+    \end{table}
+    \hfill \break
+For different type of instruction, it's needed to differently concatenate immediate field with extension.
+Next image shows how this component are connected with previous component. There is also one multiplexer 2 on 1, with selection signal from control path alu-src-b, this indicates if we use value rs2 or immediate field. This depends only on type of instruction that needs to be execute. 
+To be able to execute load instructions, there needs to be put one more multiplexer 2 on 1, with selection signal mem-to-reg, indicating if write from ALU or taking data from memory. If signal is set to '0' we are taking result from ALU, otherwise for '1', load instruction is executed. 
+
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=1\linewidth]{Load.png}
+    \caption{Implemented store and load instructions}
+    \label{fig:Load&Store}
+\end{figure}
+\hfill \break
+\hfill \break
+\hfill \break
+\hfill \break
+\hfill \break
+\hfill \break
+\hfill \break
+\hfill \break
+\hfill \break
+\hfill \break
+
+\subsection*{Implementing conditional jump}
+
+Until now all time PC incremented only for four. Now, with adding conditional jump, PC can be incremented randomly. Rs1 and rs2 field are the one that are checked, and select signal of field funct3 tell what type of conditional jump we are checking. 
+After doing all concatenation and extension of immediate field, it's needed to be added shift left of that value and that is the change of PC. If this value is going to be forwarded to PC input, depends on selection signal on multiplexer 2 on 1. 
+Next image shows extension of datapath, with this is done first step in making RV32IM processor. 
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=1\linewidth]{Branch.png}
+    \caption{Datapath with branch conditions}
+    \label{fig:branch}
+\end{figure}
+
+\subsection*{Controlpath}
+Initial components in controlpath are: Control decoder and ALU decoder. 
+    \subsubsection*{ALU decoder}
+        ALU decoder is used to control ALU, it is used to tell what instruction ALU needs to execute. Interface description consist of:
+        \begin{table}[htb!]
+        \centering
+        \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             alu-2bit-op & input & Two bit input comming from control decoder. \\ \hline  
+             funct3 & input & Part of instructions bits 14:12.  \\ \hline
+             funct7 & input & Part of instructions bits 31:25. \\ \hline
+             alu-op & output & Five bit output port to control what is ALU unit executing.  \\ \hline
+        \end{tabular}
+        \caption{ALU decoder interface}
+        \label{tab:ALUdecoder}
+    \end{table}    
+
+    \subsubsection*{Control decoder}
+        Control decoder is used to generate control signals for control datapath components. Interface description is:
+         \begin{table}[htb!]
+        \centering
+        \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             opcode & input & Input port we get lower 7 bits from instruction. \\ \hline  
+             branch & input & Control signal set when instruction is B-type.  \\ \hline
+             rd-we & input & Control signal set when load instruction is executed. \\ \hline
+             alu-src-b & output & Control signal set when instruction has immediate field.  \\ \hline
+             data-mem-we & output & Control signal set when instruction is S-type.  \\ \hline
+             mem-to-reg & output & Control signal to know what data we load to register bank.\\ \hline
+             alu-2bit-op & output & Control for ALU decoder to know what instruction to execute. \\\hline
+             rd-mux-o & output & Control signal indicating what type of jump is executed.  \\ \hline
+             load-mux-o & output & Set to '1' when executing AUIPC instruction.  \\ \hline
+             rs1-in-use-o & output & Set to '1' when needed in execution phase.\\ \hline
+             rs2-in-use-o & output & Set to '1' when needed in execution phase.\\ \hline
+        \end{tabular}
+        \caption{Control decoder interface}
+        \label{tab:Controldecoder}
+    \end{table}
     
 \section*{Acronyms}
     Defining all acronyms in document. 
@@ -191,10 +474,10 @@ current instruction.
         \centering
         \begin{tabular}{|c|c|} \hline 
             HW & Hardware\\ \hline 
-            SW & Sowtware\\ \hline 
+            SW & Software\\ \hline 
             ISA & Instruction set architecture\\ \hline 
-             & \\ \hline 
-             & \\ \hline 
+            PC & Program counter\\ \hline 
+            ALU & Arithmetic logic unit\\ \hline 
              & \\ \hline
         \end{tabular}
         \caption{Acronyms}
