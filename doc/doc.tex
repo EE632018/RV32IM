@@ -8,11 +8,21 @@
 \begin{document}
 
 \maketitle
+\thispagestyle{empty}
+\tableofcontents
+\listoffigures
+\listoftables
+
+
+\addcontentsline{toc}{section}{Introduction}
+\newpage
 
 \section*{Introduction}
+\addcontentsline{toc}{subsection}{Scope}
 \subsection*{Scope}
 This document represents Implementation of RISC-V processor. It describes building blocks and their 
 connection and how together they work. It also covers the type of instructions that are implemented.
+\addcontentsline{toc}{subsection}{Document overview}
 \subsection*{Document overview}
 This document is composed of following items:
 \begin{itemize}
@@ -22,7 +32,10 @@ This document is composed of following items:
     \item Interface description. 
 \end{itemize}
 
+\addcontentsline{toc}{section}{RISC-V ISA}
+\newpage
 \section*{RISC-V ISA}
+    \addcontentsline{toc}{subsection}{Overview}
     \subsection*{Overview}
     - Instruction set architecture describe how processor works and what are processors capabilities. In ISA it is fully described how many registers has and all instructions it contains. Each instruction is fully described how it works and the way it's coded. ISA represents bridge between HW and SW. 
     - RISC-V is open-source ISA that uses different ideas form different architectures and combines them in one for getting the best results. Good side of this is also capability to make processor only for your needs, you can implement only instructions you need. 
@@ -41,7 +54,7 @@ This document is composed of following items:
     \end{itemize}
     After width of registers it goes set of instructions that are implemented in design, this is represented in next table:
     
-    \begin{table}[ht]
+    \begin{table}[htb!]
         \centering
         \begin{tabular}{|c|c|c|} \hline 
              n & Set of instructions & Description \\ \hline 
@@ -65,6 +78,8 @@ This document is composed of following items:
         \caption{Set of instructions in RISC-V}
         \label{tab:table1}
     \end{table}
+    \addcontentsline{toc}{subsection}{Format of instructions}
+    \newpage
     \subsection*{Format of instructions}
         Most of standard processor contain first five sets in there implementation. For example,if we have 32bit processor, this can be represented as RV32IMAFD. Because this is not readable convention is to write this as RV32G. 
         When we try to represent some instruction, we know that every instruction doesn't contain same number of operand. For example, instruction for add contains two operands, and some load instruction contains one operand and some constant value. From this case we can understand that representation of instruction is not the same in all cases. Therefore in RISC-V in I-type of instructions we have basic types of formats. In next table they are represented:
@@ -93,7 +108,7 @@ This document is composed of following items:
         \item  rd - result register
         \item  imm - immediate, constant filed
     \end{itemize}
-
+    \addcontentsline{toc}{subsection}{Register in RV32}
     \subsection*{Register in RV32}
     In processor there is 32 general purpose register, each 32 bit wide. They are represented as x0-x31. Register x0 is hardwired with all bits equal to 0. General purpose registers x1-x31 hold values that various instructions interpret as a collection of Boolean values, or as two's complement signed binary or unsigned binary integers. 
     There is one additional unprivileged register: the program counter pc holds the address of the
@@ -119,7 +134,8 @@ current instruction.
     \end{table}
 
     Even though registers are general purpose, it's decided that register x1 is return address register and is used for instructions like JAR and JALR ( \textit{further explained lather on}). Each program needs to save value stack pointer for proper execution of instructions push and pop. For this purpose it's reserved register x2, and his value is initialized on start of execution on appropriate value in memory representing top of the stack. Register x4 represents global pointer and is used to point to static variables in program. Register x5 is used to memories thread that is executed. Registers x5-x7 and x28-x31 are used for local variables that are not going to be saved, therefore they have spacial name \textit{temporary t0-t6}. Registers x8-x9 and x18-x27 are used for local variables that are going to be saved in call of the procedure, therefore have name \textit{saved s0-s11}. Last group are register x10-x17 and they are used to send arguments to procedure and for return value after executing the same.  
-    
+
+    \addcontentsline{toc}{subsection}{RV32I-type of instructions}
     \subsection*{RV32I-type of instructions}
     In this subsection is described all instruction in I-set. They are sorted in groups, depending on format of instruction they represent. There is 47 instructions in this set, they are divided in 6 types: 
     \begin{enumerate}
@@ -236,6 +252,10 @@ current instruction.
              LW & \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b010 & rd & 0b0000011\\ \hline 
              LBU &  \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b100 & rd & 0b0000011\\ \hline 
              LHU & \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b101 & rd & 0b0000011\\ \hline
+             JAL & \multicolumn{4}{c|}{imm[20;10:1;11;19:12]}& rd & 0b1101111\\ \hline
+             JALR & \multicolumn{2}{c|}{imm[11:0]} & rs1 & 0b000 & rd & 0b1100111\\ \hline
+             AUIPC & \multicolumn{4}{c|}{imm[31:12]}& rd & 0b0010111\\ \hline
+             LUI & \multicolumn{4}{c|}{imm[31:12]} & rd & 0b0110111\\ \hline
         \end{tabular}
         \caption{RV32I instructions}
         \label{tab:table}
@@ -247,6 +267,8 @@ current instruction.
 \hfill \break
 \hfill \break
 
+\addcontentsline{toc}{subsection}{RV32M-type of instructions}
+\newpage
 \subsection*{RV32M-type of instructions}
 This section describes the standard integer multiplication and division instruction extension, which
 is named “M” and contains instructions that multiply or divide values held in two integer registers.
@@ -281,7 +303,8 @@ How this instructions are encoded is represented in next table:
         \caption{RV32M instructions}
         \label{tab:tableRV32M}
     \end{table}
-
+\addcontentsline{toc}{section}{Flow of implementation}
+\newpage
 \section*{Flow of implementation}
 
 This project represents implementation of 5-stage pipelined RV32IM processor. For purpose of better explanation flow of implementation is separated to stages. Processor contains two main part: \textit{datapath and controlpath}. Datapath is made of primary components needed for execution of instructions, each of this component is explained separately. Controlpath represents logic for control of datapath. First we explain system without pipeline, after implementation it is going to be explain why is better if system pipelined, and all problems that provides. 
@@ -298,13 +321,14 @@ First thing needed to be described is memory for instruction. This memory has as
 
 After implementing logic for fetching instructions, we can expand implementation buy adding part of instruction decode, and instruction execution. In datapath instruction decode is done in register bank, and execution is done in arithmetic-logic unit (ALU). 
 
-\begin{figure}[ht]
+\begin{figure}[htb!]
     \centering
     \includegraphics[width=1\linewidth]{REGandALU.png}
     \caption{Adding register bank and ALU in datapath}
     \label{fig:regandalu}
 \end{figure}
-
+\addcontentsline{toc}{subsection}{Register bank}
+\newpage
 \subsection*{Register bank}
 
 Register bank contains 32 registers with width 32bit. Communication with register bank is trough two interface for read and one for write. Reason for this type is because of format of instructions. For example, if we take R-type of instructions, they have three locations they access in the same time, two need to be read and one is written too. 
@@ -326,7 +350,7 @@ Interface description:
     \end{table}
     \hfill \break
 Reading data from register bank is done asynchronously and writing data is done synchronously. 
-
+\addcontentsline{toc}{subsection}{ALU}
 \subsection*{ALU}
 Artihmetic logic unit, executes arithmetic and logic operations. Interface description:
 \begin{table}[ht]
@@ -343,7 +367,7 @@ Artihmetic logic unit, executes arithmetic and logic operations. Interface descr
     \end{table}
     \hfill \break
 Alu-op signal is from control path, telling us what operation, we need to execute in present cycle. 
-
+\addcontentsline{toc}{subsection}{Data memory}
 \subsection*{Data memory}
 For implementation of S-type of instruction, there needs to be implemented data memory. 
 Data memory interface that consist of next ports:
@@ -361,10 +385,10 @@ Data memory interface that consist of next ports:
     \end{table}
     \hfill \break
 Data-address port is connected to result signal of ALU, because it's calculated as add operation (rs1+imm). On data-i input is connected to rs2-data output of register bank. 
-
+\addcontentsline{toc}{subsection}{Immediate}
 \subsection*{Immediate}
 Immediate component role is to extend immediate from 12bits to 32bits. It extends upper bits with all zeros or ones by looking at 12th bit value and replicating it. This is done to save sign of constant. Extension is necessary because this value needs to be added with rs1 register number, so both value need to be 32bit width.
-\begin{table}[ht]
+\begin{table}[htb!]
         \centering
         \begin{tabular}{|c|c|} \hline 
              "11111111111111111111" & immediate(11:0)  \\ \hline  
@@ -373,7 +397,7 @@ Immediate component role is to extend immediate from 12bits to 32bits. It extend
         \label{tab:Ones interface}
     \end{table}
 
-\begin{table}[ht]
+\begin{table}[htb!]
         \centering
         \begin{tabular}{|c|c|} \hline 
              "00000000000000000000" & immediate(11:0)  \\ \hline  
@@ -383,7 +407,7 @@ Immediate component role is to extend immediate from 12bits to 32bits. It extend
     \end{table}
     \hfill \break
 Interface description:
-\begin{table}[ht]
+\begin{table}[htb!]
         \centering
         \begin{tabular}{|c|c|c|} \hline 
              Interface & I/O & Description \\ \hline  
@@ -394,6 +418,7 @@ Interface description:
         \label{tab:Imm interface}
     \end{table}
     \hfill \break
+    \newpage
 For different type of instruction, it's needed to differently concatenate immediate field with extension.
 Next image shows how this component are connected with previous component. There is also one multiplexer 2 on 1, with selection signal from control path alu-src-b, this indicates if we use value rs2 or immediate field. This depends only on type of instruction that needs to be execute. 
 To be able to execute load instructions, there needs to be put one more multiplexer 2 on 1, with selection signal mem-to-reg, indicating if write from ALU or taking data from memory. If signal is set to '0' we are taking result from ALU, otherwise for '1', load instruction is executed. 
@@ -415,7 +440,7 @@ To be able to execute load instructions, there needs to be put one more multiple
 \hfill \break
 \hfill \break
 \hfill \break
-
+\addcontentsline{toc}{subsection}{Implementing conditional jump}
 \subsection*{Implementing conditional jump}
 
 Until now all time PC incremented only for four. Now, with adding conditional jump, PC can be incremented randomly. Rs1 and rs2 field are the one that are checked, and select signal of field funct3 tell what type of conditional jump we are checking. 
@@ -428,9 +453,10 @@ Next image shows extension of datapath, with this is done first step in making R
     \caption{Datapath with branch conditions}
     \label{fig:branch}
 \end{figure}
-
+\addcontentsline{toc}{subsection}{Controlpath}
 \subsection*{Controlpath}
 Initial components in controlpath are: Control decoder and ALU decoder. 
+    \addcontentsline{toc}{subsubsection}{ALU decoder}
     \subsubsection*{ALU decoder}
         ALU decoder is used to control ALU, it is used to tell what instruction ALU needs to execute. Interface description consist of:
         \begin{table}[htb!]
@@ -445,7 +471,7 @@ Initial components in controlpath are: Control decoder and ALU decoder.
         \caption{ALU decoder interface}
         \label{tab:ALUdecoder}
     \end{table}    
-
+    \addcontentsline{toc}{subsubsection}{Control decoder}
     \subsubsection*{Control decoder}
         Control decoder is used to generate control signals for control datapath components. Interface description is:
          \begin{table}[htb!]
@@ -453,8 +479,8 @@ Initial components in controlpath are: Control decoder and ALU decoder.
         \begin{tabular}{|c|c|c|} \hline 
              Interface & I/O & Description \\ \hline  
              opcode & input & Input port we get lower 7 bits from instruction. \\ \hline  
-             branch & input & Control signal set when instruction is B-type.  \\ \hline
-             rd-we & input & Control signal set when load instruction is executed. \\ \hline
+             branch & output & Control signal set when instruction is B-type.  \\ \hline
+             rd-we & output & Control signal set when load instruction is executed. \\ \hline
              alu-src-b & output & Control signal set when instruction has immediate field.  \\ \hline
              data-mem-we & output & Control signal set when instruction is S-type.  \\ \hline
              mem-to-reg & output & Control signal to know what data we load to register bank.\\ \hline
@@ -467,7 +493,432 @@ Initial components in controlpath are: Control decoder and ALU decoder.
         \caption{Control decoder interface}
         \label{tab:Controldecoder}
     \end{table}
+Next image represents controlpath look in system. 
+
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=1\linewidth]{Controlpath.png}
+    \caption{Controlpath}
+    \label{fig:Controlpath}
+\end{figure}
+\hfill \break 
+\addcontentsline{toc}{subsection}{Extending to pipeline}
+\subsection*{Extending to pipeline}
+Previous implementation in today processor is inefficient, works on low frequency. Reason for this is every instruction needs one cycle to execute, so the slowest instructions is imposing frequency of hole system. In this particular case load instructions are slowest because it uses five functional units one after other. If you are making processor with low number of instruction then this is optional, but if you want to implement some complex instructions (F-set, D-set, etc.), this implementation is to slow. 
+Because of this reason it's necessary to have pipelined system. 
+    \subsubsection{Basic of pipeline}
+        Pipeline is technique implementation of processor where more instruction is executing at the same time. Most effective explanation is trough example. The pipelined approach takes much less time. As soon as the washer is finished with the first load and placed in the dryer, you load the washer with the second dirty load. When the first load is dry, you place it on the table to start folding, move the wet load to the dryer, and put the next dirty load into the washer.Next, you have your roommate put the first load away, you start folding the second load, the dryer has the third load, and you put the fourth load into the washer. At this point all steps—called stages in pipelining—are operating concurrently. As long as we have separate resources for each stage, we can pipeline the tasks.If all the stages take about the same amount of time and there is enough work to do, then the speed-up due to pipelining is equal to the number of stages in the pipeline, in this case four: washing, drying, folding, and putting away.[1]
+        \begin{figure}[htb!]
+            \centering
+            \includegraphics[width=1\linewidth]{Pipeline.PNG}
+            \caption{Landry analogy for pipelining}
+            \label{fig:Landry analogy for pipelining}
+        \end{figure}
+        \hfill \break
+        \hfill \break
+        \hfill \break
+        The same principles apply to processors where we pipeline instruction execution. RISC-V instructions classically take five steps:
+        \begin{enumerate}
+            \item Fetch instruction from memory.  
+            \item Read registers and decode the instruction. 
+            \item Execute the operation or calculate an address. 
+            \item Access an operand in data memory (if necessary).
+            \item Write the result into a register (if necessary). 
+        \end{enumerate}
+
+        Next image shows how single cycle is extended to five stage pipelined system. By making system pipelined it's necessary for instruction to go trough five stages before finishing. Register separate phases, enabling result of each phase to go trough on rising edge of clock. It's necessary to send instruction trough all phases, because we need to know on what address we need to write. In next section are exposed problem we get by implementing system in pipeline and how we need to change our design to resolve this problems.  
+        \begin{figure}[htb!]
+            \centering
+            \includegraphics[width=1\linewidth]{Pipelinesystem.PNG}
+            \caption{Datapath separated in five stage pipeline}
+            \label{fig:pipeline system}
+        \end{figure}
+        \addcontentsline{toc}{subsection}{Hazard in pipeline}
+        \newpage
+        \subsection*{Hazard in pipeline}
+        \subsubsection*{Data hazard with R-type of instructions}
+            This type of hazard is probably easy to occur. One example we can get is:
+            \begin{figure}[htb!]
+                \centering
+                \includegraphics[width=0.3\linewidth]{datahazard.PNG}
+                \caption{Example of data hazard}
+                \label{fig:datahazard}
+            \end{figure}
+            \hfill \break
+            We can see that in this example we have dependencies between first two instructions \textit{sub,and}. \textit{Sub} instruction changes value of register x2, \textit{and} instruction is trying to read this value, and can get previous value of register x2, and that is not good. 
+            One way to resolve this problem is putting \textit{nop} instructions between \textit{sub,and}. In this case we need to put two \textit{nop}, instruction. This is easiest way to resolve issue, but out throughput is lower. Better solution is implementing unit called \textit{Forwarding unit}. Next image illustrates this perfectly:
+            \begin{figure}[htb!]
+                \centering
+                \includegraphics[width=0.9\linewidth]{forwardingexample.PNG}
+                \caption{Example of forwarding}
+                \label{fig:Forwardingunit}
+            \end{figure}
+            \newpage
+            If there is data hazard, one instruction is depending result of previous, idea is that forwarding unit forward data from previous instruction when that data is necessary. In this example we can see that data needs to be forward two times, one time in \textit{EX} phase, and the other one in \textit{MEM} phase. 
+            \hfill \break
+            Controlpath is expanded with forwarding unit component and her role is to conclude is there dependence between instructions that are in pipe. To do that necessary information is:
+            \begin{enumerate}
+                \item Address of rs1 and rs2 registers from EX phase.  
+                \item Address of rd register from MEM phase. 
+                \item Signal rd-we also from MEM phase. 
+                \item Address rd register from WB phase.
+                \item Signal rd-we also from WB phase. 
+            \end{enumerate}
+            This unit has two output signals. Two for forwarding ALU. Interface description:
+             \begin{table}[htb!]
+                \centering
+                \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             rs1-address-id-i & input & Address of rs1 register from ID phase. \\ \hline  
+             rs2-address-id-i & input & Address of rs2 register from ID phase.  \\ \hline
+             rs1-address-ex-i & input & Address of rs1 register from EX phase. \\ \hline
+             rs2-address-ex-i & input & Address of rs2 register from EX phase. \\ \hline
+             rd-we-mem-i & input & Write enable signal from MEM phase. \\ \hline
+             rd-address-mem-i & input & Address of rs1 register from MEM phase. \\ \hline
+             rd-we-wb-i & input & Write enable signal from WB phase. \\ \hline
+             rd-address-wb-i & input & Address of rs1 register from WB phase. \\ \hline
+             alu-forward-a-o & output & Output signal telling if there is forward to ALU. \\ \hline
+             alu-forward-b-o & output & Output signal telling if there is forward to ALU. \\ \hline
+             %branch-forward-a-o & output & Output signal telling if there is forward to branch condition. \\ \hline
+             %branch-forward-a-o & output & Output signal telling if there is forward to branch condition. \\ \hline
+        \end{tabular}
+        \caption{Forwarding unit interface}
+        \label{tab:Forwarding}
+    \end{table}
+        \hfill \break
+        This output signals are two bit wide. Depending on value on this signal we know if there is need for forward or not. If there is need, we have difference from what phase it is forward. Value "00" tells there is no dependencies between instructions no need for forwarding. Value "01", there is dependence, it is necessary to forward result from WB phase. Value "10", there is dependence, it is necessary to forward result from MEM phase. 
+        \subsubsection*{Hazard with conditional jump}
+        In previous implementation problem of conditional jump isn't resolved. Next example shows situation in witch processor will not execute instruction of conditional jump in correct way, because of effect of data hazard. 
+        \begin{figure}[htb!]
+            \centering
+            \includegraphics[width=0.3\linewidth]{branchhazard.PNG}
+            \caption{Hazard because of conditional jump}
+            \label{fig:conditional jump}
+        \end{figure}
+        We assume that registers x10,x11,x12 and x13 are all set to zero before execution of this instructions.Expectation is to have value 10 written to all registers and when instruction \textit{beq} appears program jumps on L1 label. Unfortunately this is not the case, because value of register x11 is in MEM phase when \textit{beq} instruction is in ID phase, so it is again necessary to forward value back. This is resolved with implementing additional logic in forwarding unit. Two additional output signals are put in interface, Interface now looks:
+        \begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             rs1-address-id-i & input & Address of rs1 register from ID phase. \\ \hline  
+             rs2-address-id-i & input & Address of rs2 register from ID phase.  \\ \hline
+             rs1-address-ex-i & input & Address of rs1 register from EX phase. \\ \hline
+             rs2-address-ex-i & input & Address of rs2 register from EX phase. \\ \hline
+             rd-we-mem-i & input & Write enable signal from MEM phase. \\ \hline
+             rd-address-mem-i & input & Address of rs1 register from MEM phase. \\ \hline
+             rd-we-wb-i & input & Write enable signal from WB phase. \\ \hline
+             rd-address-wb-i & input & Address of rs1 register from WB phase. \\ \hline
+             alu-forward-a-o & output & Output signal telling if there is forward to ALU. \\ \hline
+             alu-forward-b-o & output & Output signal telling if there is forward to ALU. \\ \hline
+             branch-forward-a-o & output & Output signal telling if there is forward to branch condition. \\ \hline
+             branch-forward-a-o & output & Output signal telling if there is forward to branch condition. \\ \hline
+        \end{tabular}
+        \caption{Forwarding unit interface, added output signals for branch}
+        \label{tab:ForwardingB}
+    \end{table}
+    \hfill \break
+    \hfill \break
+    One important thing is to set flush signal on register ID-reg. This is necessary because instruction after branch is in IF phase so we need to flush it because it doesn't need to be executed. This inserts \textit{nop} instruction in pipe, so throughput is smaller. 
+    \subsubsection*{Stall of processor}
+    For some situations it's not enough just to forward data, so it's necessary to stall processor. Next example shows dependence where this is necessary. 
+    \begin{figure}[htb!]
+        \centering
+        \includegraphics[width=1\linewidth]{stall.PNG}
+        \caption{Sequence where stall is necessary}
+        \label{fig:stall}
+    \end{figure}
+
+    Istruction \textit{LW} executes reading data from data memory after that needs to place it in register bank. Next instruction has dependence with \textit{LW}, it needs accurate value. Problem here is \textit{LW} instruction will not update value until it's completely finish. Because of this in controlpath is added new implementation, \textit{hazard unit}. Job of this unit is: if there is this type of dependence between instructions, stall fetch of new instructions until this is finished. This is done by three control signals: \textit{pc-en, if-id-en, controll-pass}. First controls PC register, second IF-ID-register, by not letting them change they current value. Control-pass resets ID-EX-reg in controlpath, this is equivalent to inserting \textit{nop} instruction, but remembering next instruction in ID phase, because it's not good to lose some instruction in program. 
+    \hfill \break
     
+    Hazard unit will work correctly if it has next information:
+    \begin{enumerate}
+        \item Address of rs1 and rs2 registers from ID phase.
+        \item Address of rd register from EX phase.
+        \item Is instruction from EX phase executes write to register bank.
+        \item Is instruction from EX phase load instruction.
+        \item Is instruction in ID phase using register from register bank on address rs1 and rs2.
+    \end{enumerate}
+
+    Hazard unit interface is:
+    \begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             rs1-address-id-i & input & Address of rs1 register from ID phase. \\ \hline  
+             rs2-address-id-i & input & Address of rs2 register from ID phase.  \\ \hline
+             rs1-in-use-i & input & Instruction is using rs1 operand. \\ \hline
+             rs2-in-use-i & input & Instruction is using rs2 operand. \\ \hline
+             branch-id-i  & input & Indication if instruction is conditional jump. \\ \hline
+             rd-we-ex-i & input & Write enable signal from EX phase. \\ \hline
+             rd-address-ex-i & input & Address of rd register from EX phase. \\ \hline
+             rd-address-mem-i & input & Address of rd register from MEM phase. \\ \hline
+             mem-to-reg-ex-i & input & Indication if instruction load or uncoditional jump. \\ \hline
+             mem-to-reg-mem-i & input & Indication if instruction is load or uncoditional jump. \\ \hline
+             stall-i & input & Indication if instruction is executing more than one cycle. \\ \hline
+             pc-en-o & output & Enable of PC register. \\ \hline
+             if-id-en-o & output & Enable of IF-ID register. \\ \hline
+             control-pass-o & output & Inserting nop instruction and keeping previous instruction in ID phase. \\ \hline
+        \end{tabular}
+        \caption{Hazard unit interface}
+        \label{tab:Hazard}
+    \end{table}
+    \addcontentsline{toc}{subsection}{Additional logic}
+    \subsection*{Additional logic}
+    There is additional logic in datapath, in sight of mulitplexers.This mulitiplexers selection signals are all connected to control signals from controlpath. This logic is:
+    \begin{enumerate}
+        \item Logic for addition of PC, needed to be implemented because of conditional and unconditional jumps. \textit{rd-mux}
+        \item Logic implemented because of instruction AUIPC. \textit{load-mux}
+        \item Load and Store logic implemented because we have diffrent type of this instructions.
+        \item Additional signal towards controlpath, telling to stall next instructions because current instructions are more that one cycle executing. \textit{stall}
+        \item Logic for branch condition, because we have six different branch conditions, which one is necessary to watch is looked trough additional signal. 
+    \end{enumerate}
+
+    There is also logic inside ALU unit, for M-set of instructions. This logic is representing different algorithms for multiplication and division. Number of cycle needed to execute multiplication is three, and for division is thirty two. This was not necessary but better frequency and area used where in consideration so this was the path taken.
+    \newpage
+    \subsubsection*{RV32IM Top description}
+    System interface on top is represented on next image. For better understanding memory was drawn in system flow, they are not part of datapath and controlpath. Top representation:
+    \begin{figure}[htb!]
+        \centering
+        \includegraphics[width=1\linewidth]{Top.png}
+        \caption{Top interface}
+        \label{fig:top}
+    \end{figure}
+    \hfill \break
+    On this image we can see how hole system looks like. Next image is going to represent interface inside RV32IM block. To get better understanding how datapath and controlpath are connected. 
+    \begin{figure}[htb!]
+        \centering
+        \includegraphics[width=0.6\linewidth]{RV32IM.png}
+        \caption{RV32IM interface}
+        \label{fig:RV32IM}
+    \end{figure}
+
+\newpage
+\addcontentsline{toc}{section}{Branch prediction}
+\section*{Branch prediction}
+A pipelined machine achieves its maximum throughput when it is in the streaming mode. For the fetch stage, streaming mode implies the continuous fetching of instructions from sequential locations in the program memory. Whenever the control flow of the program deviates from the sequential path, potential disruption to the streaming mode can occur. For unconditional branches, subsequent instructions cannot be fetched until the target address of the branch is determined. For conditional branches, the machine must wait for the resolution of the branch condition, and if the branch is to be taken, it must further wait until the target address is available. For the PC-relative addressing mode, the branch target address can be generated during the fetch stage, resulting in a penalty of one cycle. If the register indirect addressing mode is used, the branch instruction must traverse the decode stage to access the register. In this case a two-cycle penalty is incurred. For register indirect with an offset addressing mode, the offset must be added after register access and a total three-cycle penalty can result. For unconditional branches, only the penalty due to target address generation is of concern. For conditional branches, branch condition resolution latency must also be considered. 
+\newline
+\newline
+To increase the number of instructions that execute in
+parallel, modern processors make a branch prediction and speculatively execute the instructions in the predicted path of program control flow. If the branch is discovered later on to have been mispredicted, actions are taken to recover the state of the processor to the point before the mispredicted branch, and execution is resumed along the correct path.
+\newline 
+\newline
+Predicting branch instruction can be separated in two parts: predicting the branch direction and predicting the branch target. For branch direction there are many algorithms implemented throughout history. In next section we will dive more into explanation of them. After that section containing explanation about branch target and branch target buffer. 
+
+\addcontentsline{toc}{subsection}{Branch predictors}
+\newpage
+\subsection*{Branch predictors}
+
+Branch predictors can be divided in three categories depending on how they make decisions. These three categories are:
+\begin{enumerate}
+    \item \textit{Static branch predictors} - predictors that do not make use of any run-time information about branch behavior. The advantage of static branch prediction techniques is that they are very simple to implement, and they require very little hardware resources. Some example of static branch predictors are: single-direction prediction, backwards taken/forward not taken (BTFNT), profile-based prediction. 
+    \item \textit{Dynamic branch predictors} - predictors that can monitor branch behavior while the program is running and make future predictions based on these observations. Some example of dynamic branch predictors are: Smith's algorithm, two level prediction tables, index-sharing predictor, perception predictor, Bi-mode predictor etc. These are just some of the algorithms that represent this group. 
+    \item \textit{Hybrid branch predictors} - predictors that combine the strengths of multiple simpler predictors to form a better overall predictor. Examples of hybrid predictors are: Tournament predictor, Multi-hybrid predictor.
+\end{enumerate}
+
+Branch predictor tells us if branch is taken or not, but this is only one half of a problem. After the direction of a branch is known, the actual target address of the next instruction along the predicted path must also be determined. If the branch is predicted to be not-taken, then the target address is simply the current branch’s address plus the size of an instruction word. If the branch is predicted to be taken, then the target will depend on the type of branch. Target prediction must also cover unconditional branches (branches that are always taken).There are two common types of branch targets. Branch targets may be PC relative, which means that the taken target is always at the current branch’s address plus a constant (the constant may be negative). A branch target can also be indirect, which means that the target is computed at run time. An indirect branch target is read from a register, sometimes with a constant offset added to the contents of the register. The target of a branch is usually predicted by a branch target buffer (BTB).The BTB is a cache-like structure that stores the last seen target address for a branch instruction. When making a branch prediction, the traditional branch predictor provides a predicted direction. In parallel, the processor uses the current branch’s PC to index into the BTB. If the branch predictor predicts not-taken, the target is simply the next sequential instruction. If the branch predictor predicts taken and there is a hit in the BTB, then the BTB’s prediction is used as the next instruction’s address. It is also possible that there is a taken-branch prediction, but there is a miss in the BTB. In this situation, the processor may stall fetching until the target is known. If the branch has a PC-relative target, then the fetch only stalls for a few cycles to wait for the completion of the instruction fetch from the instruction cache, the target offset extraction from the instruction word, and the addition of the offset to the current PC to generate the actual target. Another approach is to fall back to the not-taken target on a BTB miss.
+
+In this project we determine to implement hybrid branch predictor with BTB, to cover full implementation of advanced branch prediction system. 
+
+\addcontentsline{toc}{subsection}{Implementation of Branch predictor}
+\subsection*{Implementation of Branch predictor}
+
+There we represented different types of branch predictors in previous section. In this project we decided to implement multihybrid branch predictor. This predictor is from hybrid class of predictors. 
+\newline
+The multihybrid branch predictor does allow the dynamic selection between an arbitrary number of component predictors. The lower bits of the branch address are used to index into a table of prediction selection counters. Each entry in the table consists of n 2-bit saturating counters, c1, c2, . . . cn, where Ci is the counter corresponding to component predictor Pi. The components that have been predicting well have higher counter values. The meta-prediction is made by selecting the component whose counter value is 3 (the maximum) and a predetermined priority ordering is used to break ties. All counters are initialized to 3, and the update rules guarantee that at least one counter will have the value of 3. To update the counters, if at least one component with a counter value of 3 was correct, then the counter values corresponding to components that mispredicted are decremented (saturating at zero). Otherwise, the counters corresponding to components that predicted correctly are incremented (saturating at 3).
+\newline
+Figure illustrates the hardware organization for the multihybrid metapredictor with n component predictors. The branch address is used to look up an entry in the table of prediction selection counters, and each of the n counters is checked for a value of 3. A priority encoder generates the index for the component with a counter value of 3 and the highest priority in the case of a tie. The index signal is then forwarded to the final multiplexer that selects the final prediction.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\linewidth]{Multihybrid_prediction.png}
+    \caption{Multihybrid branch prediction}
+    \label{fig:Multihybrid branch prediction}
+\end{figure}
+\newline
+In this project we decide to make four dynamic branch predictors. Two of them are two-level predictors GAg and PAg. Two main component used in two-level branch predictor are \textit{branch history table} (BHT) and pattern history table (PHT). Upper case letter are used to describe type of BHT used in two-level branch predictor, and lower case letter are used to describe type of PHT used in predictor. The second two predictors are index type predictors, that represent same type as two-level predictors, except they use XOR function on BHT value and branch address value, they don't concatenate as two-level predictors. This predictors are called gshare and pshare predictors. Gshare predictor contains global BHT, and pshare contains local BHT. Next figure expands inside of Pi blocks and represent top model structure of branch predictor. 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1\linewidth]{Multihybrid_advanced.png}
+    \caption{Multihybrid branch prediction with predictors}
+    \label{fig:M2}
+\end{figure}
+
+\addcontentsline{toc}{subsubsection}{Implementation table of counters}
+\subsubsection*{Implementation table of counters}
+Implementation starts with implementing table of counter. This is different approach from other hybrid implementation where is used meta-predictor, where prediction is chosen statically. The multihybrid branch predictor does allow the dynamic selection between an arbitrary number of component predictors. Branch address uses lower bits to address row in table that contains n 2-bit saturating counters where each counter represents one predictor. In this case we have four 2-bit counters in each row. 
+To address row in table it is necessary to index lower bits of PC (branch address). In this project it is decided to use 4 lowest bits from PC. This was decided analyzing area that is necessary to implement this table, and also area of four different dynamic branch predictors. 
+This table has 16 rows of four 2-bit counters. All counters are initialized to three, after each iteration counter that is predicted correct is incremented (saturating at 3), and counters which component mispredicted are decremented (saturating at 0). 
+Next figure represents structure of this table. 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\linewidth]{tableofcounters.png}
+    \caption{Design structure - table of 2-bit counters}
+    \label{fig:c1}
+\end{figure}
+\newline
+\newline
+\newline
+\newline
+Interface for table of counters is described in next table.
+    \begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline  
+             cnt-one & output & Value of first counter in row.  \\ \hline
+             cnt-two & output & Value of second counter in row. \\ \hline
+             cnt-three & output & Value of third counter in row. \\ \hline
+             cnt-four & output & Value of fourth counter in row. \\ \hline
+        \end{tabular}
+        \caption{Table of 2-bit counters interface}
+        \label{tab:Ct}
+    \end{table}
+
+\addcontentsline{toc}{subsubsection}{Implementation Priority encoder}
+\subsubsection*{Implementation Priority encoder}
+Priority encoder generates the index for the component with the value of 3 and the highest priority in the case of a tie. To examine more about the tie case, the counter with lower index is the one that is going to be taken. There are other approaches to be taken in consideration for tie situation, but this is the most effective in area consumption. Next figure represents structure of priority encoder. 
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.3\linewidth]{Priorityecnoder.png}
+    \caption{Design Structure - Priority encoder}
+    \label{fig:Pe}
+\end{figure}
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+Interface description of priority encoder: 
+\begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             index-sel & output & Index with value 0-3 deciding which component to take. \\ \hline  
+             cnt-one & input & Value of first counter in row.  \\ \hline
+             cnt-two & input & Value of second counter in row. \\ \hline
+             cnt-three & input & Value of third counter in row. \\ \hline
+             cnt-four & input & Value of fourth counter in row. \\ \hline
+        \end{tabular}
+        \caption{Priority encoder interface}
+        \label{tab:PeI}
+    \end{table}
+\addcontentsline{toc}{subsubsection}{Implementation gshare branch predictor}
+\subsubsection*{Implementation gshare branch predictor}
+Gshare represent variation of a global-history two-level. The gshare algorithm attempts to make better use of the index bits by hashing the BHR and the PC together to select an entry from the PHT. The hashing function used is a bit-wise exclusive-OR operation. The combination of the BHR and PC tends to contain more information due to the nonuniform distribution of PC values and branch histories.
+The BHR is a shift register where the outcome of each branch is shifted into one end, and the oldest outcome is shifted out of the other end and discarded. The branch outcomes are represented by zeros and ones, which correspond to not-taken and taken, respectively. Therefore, an h-bit branch history register records the h most recent branch outcomes.
+PHT represents array of 2-bit counter where MSB is used to tell final decision, after that it's incremented if decision is correct, or decrement if there was a misprediction.
+In this project we use 4 lowest bits from branch address, so that indicates that BRH is 4-bit shift register, and address space for PHT is sixteen locations. 
+\newline
+Next figure represents gshare structure. 
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Gshare.png}
+    \caption{Design structure - Gshare branch predictor}
+    \label{fig:Gshare}
+\end{figure}
+\newline
+\newline
+\newline
+\newline
+Interface of gshare branch predictor is:
+\begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline  
+             gshare-pred & output & Output of gshare predictor indicating taken/not taken.  \\ \hline
+        \end{tabular}
+        \caption{Gshare branch predictor interface}
+        \label{tab:GshareI}
+    \end{table}
+\addcontentsline{toc}{subsubsection}{Implementation GAg branch predictor}
+\subsubsection*{Implementation GAg branch predictor}
+GAg represents one of nine variations of two-level branch predictor. Two main component in two-level branch predictor are BHR and PHT. BHR has three different variations and uses three different letters for annotation (G,P,S). PHT has also three different variations and uses three different letters for annotation (g,p,s). We can see that GAg represents GBHR and gPHT, that means that we have global BHR and PHT. 
+In this branch predictor there isn't operation between BHR and PC to get address of PHT, they are concatenating. In that case it is decided to have 3-bit wide BHR. BHR with 4-bit from PC give seven bit wide address signal of PHT, so there are 128 different locations in PHT. 
+Next figure represents structure of GAg. Concatenation is represented with circle with letter C. 
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{GAg.png}
+    \caption{Design structure - GAg branch predictor}
+    \label{fig:GAg}
+\end{figure}
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+Interface of GAg branch predictor is:
+\begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline  
+             GAg-pred & output & Output of GAg predictor indicating taken/not taken.  \\ \hline
+        \end{tabular}
+        \caption{GAg branch predictor interface}
+        \label{tab:GAgI}
+    \end{table}
+
+\addcontentsline{toc}{subsubsection}{Implementation pshare branch predictor}
+\subsubsection*{Implementation pshare branch predictor}
+Pshare represents a variation of gshare predictor and uses per-address branch history table to store local branch history. The pshare algorithm is the local-history analog of the gshare algorithm. The low-order bits of the branch address are used to index into the first-level BHT in the same fashion as the PAg/PAs/PAp two-level predictors. Then the contents of the indexed BHR are XORed with the branch address to form the PHT index.
+In this project branch history table is addressed with four lowest bits of PC, that indicates it has sixteen locations and each location has register wide 4 bits. PHT also has sixteen locations and each location has 2-bit counter. Next figure shows structure look of pshare predictor. 
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{pshare.png}
+    \caption{Design structure - pshare branch predictor}
+    \label{fig:pshare}
+\end{figure}
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+Interface of pshare branch predictor is:
+\begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline  
+             pshare-pred & output & Output of pshare predictor indicating taken/not taken.  \\ \hline
+        \end{tabular}
+        \caption{Pshare branch predictor interface}
+        \label{tab:pshareI}
+    \end{table}
+
+\addcontentsline{toc}{subsubsection}{Implementation PAp branch predictor}
+\subsubsection*{Implementation PAp branch predictor}
+PAp represents one of nine variations of two-level branch predictor. In this variation we have per-address branch history table, and per-address pattern history table. In this project each location in BHT is having 3-bit shift register, and because of 4-bit PC address we have sixteen PHT, with address span from 0-127. So design structure of PAp is represented on next figure. 
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{PAp.png}
+    \caption{Design structure - PAp branch predictor}
+    \label{fig:PAp}
+\end{figure}
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+Interface of a PAp branch predictor is: 
+\begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline  
+             PAp-pred & output & Output of pshare predictor indicating taken/not taken.  \\ \hline
+        \end{tabular}
+        \caption{PAp branch predictor interface}
+        \label{tab:PApI}
+    \end{table}
+The final component in sistem is multiplexer 4 on 1 that connects priority encoder and four branch predictors. Selection signal is index-sel output of priority encoder, and four inputs in multiplexer are prediction of each component. 
+\newpage
+\addcontentsline{toc}{section}{Acronyms} 
 \section*{Acronyms}
     Defining all acronyms in document. 
     \begin{table}[ht]
@@ -478,7 +929,11 @@ Initial components in controlpath are: Control decoder and ALU decoder.
             ISA & Instruction set architecture\\ \hline 
             PC & Program counter\\ \hline 
             ALU & Arithmetic logic unit\\ \hline 
-             & \\ \hline
+            BHR & Branch history register\\ \hline
+            BHT & Branch history table\\ \hline
+            PHT & Pattern history table\\ \hline
+            GAg & Global Adaptive branch prediction using one global PHT\\ \hline
+            PAp & Per-address Adaptive branch prediction using per-address PHT\\ \hline
         \end{tabular}
         \caption{Acronyms}
         \label{tab:table4}
