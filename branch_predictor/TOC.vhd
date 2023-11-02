@@ -47,7 +47,7 @@ entity TOC is
 end TOC;
 
 architecture Behavioral of TOC is
-    type table is array(0 to row-1, 0 to cols-1) of std_logic_vector(1 downto 0);
+    type table is array(0 to cols-1, 0 to rows-1) of std_logic_vector(1 downto 0);
     signal table_of_cnt: table := (others => (others => "11"));
 begin
         
