@@ -32,18 +32,19 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 entity BHR_local is
-    GENERIC(WIDTH:    natural    := 4);
+    GENERIC(WIDTH:    natural    := 4;
+            WIDTH_BHR:  natural  := 3);
     Port (clk                   : in STD_LOGIC;
           reset                 : in STD_LOGIC;
           -- bhr_i indicates taken/not taken value branch condition
           bhr_i                 : in STD_LOGIC;
           branch_addr_4bit      : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
-          bhr_o                 : out STD_LOGIC_VECTOR(WIDTH-1 downto 0)
+          bhr_o                 : out STD_LOGIC_VECTOR(WIDTH_BHR-1 downto 0)
           );
 end BHR_local;
 
 architecture Behavioral of BHR_local is
-    type bhr is array(0 to 2**WIDTH - 1) of std_logic_vector(WIDTH-1 downto 0);
+    type bhr is array(0 to 2**WIDTH - 1) of std_logic_vector(WIDTH_BHR-1 downto 0);
     signal pattern: bhr := (others => (others => '0'));
 begin
     shift_reg: process(clk, reset)
@@ -53,15 +54,15 @@ begin
                     elsif rising_edge(clk) then
                         -- Maybe it is neccasary to put enable signal, because this don't need to be changes each cycle
                         if bhr_i = '1' then
-                            pattern(to_integer(unsigned(branch_addr_4bit))) <=  pattern(to_integer(unsigned(branch_addr_4bit)))(WIDTH-2 downto 0) & bhr_i;       
+                            pattern(to_integer(unsigned(branch_addr_4bit))) <=  pattern(to_integer(unsigned(branch_addr_4bit)))(WIDTH_BHR-2 downto 0) & bhr_i;       
                         else
-                            pattern(to_integer(unsigned(branch_addr_4bit))) <=  pattern(to_integer(unsigned(branch_addr_4bit)))(WIDTH-2 downto 0) & bhr_i;
+                            pattern(to_integer(unsigned(branch_addr_4bit))) <=  pattern(to_integer(unsigned(branch_addr_4bit)))(WIDTH_BHR-2 downto 0) & bhr_i;
                         end if;    
                 end if;
     end process shift_reg;
                
     --output_val           
-    sel_bhr:process(branch_addr_4bit)
+    sel_bhr:process(branch_addr_4bit, pattern)
             begin
                 bhr_o <= pattern(to_integer(unsigned(branch_addr_4bit)));
             end process sel_bhr;

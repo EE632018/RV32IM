@@ -50,49 +50,48 @@ begin
                     
                     -- Check the input groups to determine the highest priority
                     if cnt_one > cnt_two and cnt_one > cnt_three and cnt_one > cnt_four then
-                        priority := "00";
+                        index_sel <= "00";
                     elsif cnt_two > cnt_one and cnt_two > cnt_three and cnt_two > cnt_four then
-                        priority := "01";
+                        index_sel <= "01";
                     elsif cnt_three > cnt_one and cnt_three > cnt_two and cnt_three > cnt_four then
-                        priority := "10";
+                        index_sel <= "10";
                     elsif cnt_four > cnt_one and cnt_four > cnt_two and cnt_four > cnt_three then
-                        priority := "11";
+                        index_sel <= "11";
                     end if;
             
                     -- If there's a tie in the highest value, choose the input with the lowest value, two cnt are same value
                     if cnt_one = cnt_two and cnt_one > cnt_three and cnt_one > cnt_four then
-                        priority := "00";
+                        index_sel <= "00";
                     elsif cnt_one = cnt_three and cnt_one > cnt_two and cnt_one > cnt_four then
-                        priority := "00";
+                        index_sel <= "00";
                     elsif cnt_one = cnt_four and cnt_one > cnt_two and cnt_one > cnt_three then
-                        priority := "00";
+                        index_sel <= "00";
                     elsif cnt_two = cnt_three and cnt_two > cnt_one and cnt_two > cnt_four then
-                        priority := "01";
+                        index_sel <= "01";
                     elsif cnt_two = cnt_four and cnt_two > cnt_one and cnt_two > cnt_three then
-                        priority := "01";
+                        index_sel <= "01";
                     elsif cnt_three = cnt_four and cnt_three > cnt_one and cnt_three > cnt_two then
-                        priority := "10";
+                        index_sel <= "10";
                     end if;
                     
                     -- If there's a tie in the highest value, choose the input with the lowest value, three cnt are same value
                     if cnt_one = cnt_two and cnt_one = cnt_three and cnt_one > cnt_four then
-                        priority := "00";
+                        index_sel <= "00";
                     elsif cnt_one = cnt_two and cnt_one > cnt_three and cnt_one = cnt_four then
-                        priority := "00";    
+                        index_sel <= "00";    
                     elsif cnt_one = cnt_three and cnt_one > cnt_two and cnt_one = cnt_four then
-                        priority := "00";
+                        index_sel <= "00";
                     elsif cnt_two = cnt_four and cnt_two > cnt_one and cnt_two = cnt_three then
-                        priority := "01";
+                        index_sel <= "01";
                     elsif cnt_three = cnt_four and cnt_three > cnt_one and cnt_three = cnt_two then
-                        priority := "10";
+                        index_sel <= "10";
                     end if;
                     
                     -- If all `cnt` values are the same
                     if cnt_one = cnt_two and cnt_one = cnt_three and cnt_one = cnt_four then
-                        priority := "00";
+                        index_sel <= "00";
                     end if;
-        
-                    index_sel <= priority;         
+                 
                   end process priority_enc;
     
 end Behavioral;

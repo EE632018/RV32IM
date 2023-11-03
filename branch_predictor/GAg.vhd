@@ -38,6 +38,7 @@ entity GAg is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          bhr_i                : in STD_LOGIC;
           GAg_pred             : out STD_LOGIC
           );
 end GAg;
@@ -69,10 +70,9 @@ architecture Behavioral of GAg is
     END COMPONENT;
     
     -- Signals
-    signal bhr_s            : std_logic;
+    signal en_s             : std_logic;
     signal GAg_bhr_s        : std_logic_vector(WIDTH_BHR-1 downto 0);
     signal pht_addr_7bit_s  : std_logic_vector(WIDTH_PHT-1 downto 0);
-    signal en_s             : std_logic;
 begin
 
     -- Instations of component
@@ -81,7 +81,7 @@ begin
              PORT MAP(
                        clk          => clk,
                        reset        => reset,
-                       bhr_i        => bhr_s,
+                       bhr_i        => bhr_i,
                        bhr_o        => GAg_bhr_s  
              );
     PHT_INST:PHT
@@ -89,7 +89,7 @@ begin
              PORT MAP(
                       clk           => clk,
                       reset         => reset,
-                      en_i          => en_s,  
+                      en_i          => bhr_i,  
                       pht_addr_4bit => pht_addr_7bit_s,
                       pred          => GAg_pred   
              );       

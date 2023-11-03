@@ -35,6 +35,7 @@ entity Gshare is
     GENERIC(WIDTH: NATURAL := 4);
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
+          bhr_i                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
           gshare_pred          : out STD_LOGIC
           );
@@ -67,7 +68,6 @@ architecture Behavioral of Gshare is
     END COMPONENT;
     
     -- Signals
-    signal bhr_s            : std_logic;
     signal gshare_bhr_s     : std_logic_vector(WIDTH-1 downto 0);
     signal pht_addr_4bit_s  : std_logic_vector(WIDTH-1 downto 0);
     signal en_s             : std_logic;
@@ -79,17 +79,17 @@ begin
              PORT MAP(
                        clk          => clk,
                        reset        => reset,
-                       bhr_i        => bhr_s,
+                       bhr_i        => bhr_i,
                        bhr_o        => gshare_bhr_s  
              );
     PHT_INST:PHT
-             GENERIC MAP(WIDTH      => WIDTH_PHT)
+             GENERIC MAP(WIDTH      => WIDTH)
              PORT MAP(
                       clk           => clk,
                       reset         => reset,
-                      en_i          => en_s,  
-                      pht_addr_4bit => pht_addr_7bit_s,
-                      pred          => GAg_pred   
+                      en_i          => bhr_i,  
+                      pht_addr_4bit => pht_addr_4bit_s,
+                      pred          => gshare_pred   
              );       
     -- XOR branch_add and gshare_bhr to get pht_addr
     pht_addr_4bit_s <= gshare_bhr_s xor branch_addr_4bit;

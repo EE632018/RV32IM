@@ -45,7 +45,7 @@ end PHT;
 
 architecture Behavioral of PHT is
     type pht is array(0 to 2**WIDTH - 1) of std_logic_vector(1 downto 0);
-    signal pattern: pht := (others => (others => '1'));
+    signal pattern_r, pattern_n: pht := (others => (others => '1'));
     signal final_pred   : std_logic;
     
     type fsm_state is (SN,WN,WT,ST); 
@@ -69,57 +69,63 @@ begin
     
     first_fsm: process(clk,reset)
                begin
-                    if reset = '1' then
+                    if reset = '0' then
                         state <= ST;
+                        pattern_r <= (others => "11");
                     elsif rising_edge(clk)then
-                        state <= state_n;    
+                        state <= state_n;
+                        pattern_r <= pattern_n;    
                     end if;
                end process first_fsm; 
     
-    next_output_fsm: process(state)
+    next_output_fsm: process(state,en_i, pht_addr_4bit, pattern_r)
                      begin
+                            pattern_n <= pattern_r;
                             case(state)is
                                 when SN =>
                                     if en_i = '1' then
                                         state_n <= WN;
-                                        pattern(to_integer(unsigned(pht_addr_4bit))) <= "01";
-                                        pred    <= '0';
+                                        pattern_n(to_integer(unsigned(pht_addr_4bit))) <= "01";
+                                        --pred    <= '0';
                                     else 
                                         state_n <= SN;
-                                        pattern(to_integer(unsigned(pht_addr_4bit))) <= "00";
-                                        pred    <= '0';    
+                                        pattern_n(to_integer(unsigned(pht_addr_4bit))) <= "00";
+                                        --pred    <= '0';    
                                     end if;      
                                 when WN =>
                                     if en_i = '1' then
                                         state_n <= WT;
-                                        pattern(to_integer(unsigned(pht_addr_4bit))) <= "10";
-                                        pred    <= '0';
+                                        pattern_n(to_integer(unsigned(pht_addr_4bit))) <= "10";
+                                        --pred    <= '0';
                                     else 
                                         state_n <= SN;
-                                        pattern(to_integer(unsigned(pht_addr_4bit))) <= "00";
-                                        pred    <= '0';    
+                                        pattern_n(to_integer(unsigned(pht_addr_4bit))) <= "00";
+                                        --pred    <= '0';    
                                     end if;
                                 when WT =>
                                     if en_i = '1' then
                                         state_n <= ST;
-                                        pattern(to_integer(unsigned(pht_addr_4bit))) <= "11";
-                                        pred    <= '1';
+                                        pattern_n(to_integer(unsigned(pht_addr_4bit))) <= "11";
+                                        --pred    <= '1';
                                     else 
                                         state_n <= WN;
-                                        pattern(to_integer(unsigned(pht_addr_4bit))) <= "01";
-                                        pred    <= '1';    
+                                        pattern_n(to_integer(unsigned(pht_addr_4bit))) <= "01";
+                                        --pred    <= '1';    
                                     end if;
                                 when ST =>  
                                     if en_i = '1' then
                                         state_n <= ST;
-                                        pattern(to_integer(unsigned(pht_addr_4bit))) <= "11";
-                                        pred    <= '1';
+                                        pattern_n(to_integer(unsigned(pht_addr_4bit))) <= "11";
+                                        --pred    <= '1';
                                     else 
                                         state_n <= WT;
-                                        pattern(to_integer(unsigned(pht_addr_4bit))) <= "10";
-                                        pred    <= '1';    
+                                        pattern_n(to_integer(unsigned(pht_addr_4bit))) <= "10";
+                                        --pred    <= '1';    
                                     end if;
                             end case;      
-                     end process next_output_fsm;   
+                     end process next_output_fsm;
+                     
+                     -- output pred
+                     pred <= pattern_r(to_integer(unsigned(pht_addr_4bit)))(1);   
 
 end Behavioral;
