@@ -42,7 +42,9 @@ entity TOC is
            cnt_two              : out STD_LOGIC_VECTOR(1 DOWNTO 0);
            cnt_three            : out STD_LOGIC_VECTOR(1 DOWNTO 0);
            cnt_four             : out STD_LOGIC_VECTOR(1 DOWNTO 0);
-           index_sel            : in STD_LOGIC_VECTOR(1 DOWNTO 0)
+           -- This index sel is not connected to index sel in priority encoder
+           branch_addr_prev_loc : in STD_LOGIC_VECTOR (3 DOWNTO 0);  
+           index_sel            : in STD_LOGIC_VECTOR (3 DOWNTO 0)
            );
 end TOC;
 
@@ -62,11 +64,7 @@ begin
                                     elsif rising_edge(clk) then
                                         for i in 0 to row-1 loop
                                             for j in 0 to cols-1 loop
-                                                if j /= to_integer(unsigned(branch_addr_4bit)) then
-                                                    table_of_cnt_r(j,i) <= table_of_cnt(j,i);
-                                                else
-                                                    table_of_cnt_r(to_integer(unsigned(branch_addr_4bit)),i)<= table_of_cnt(to_integer(unsigned(branch_addr_4bit)),i);    
-                                                end if;    
+                                                    table_of_cnt_r(j,i) <= table_of_cnt(j,i);      
                                             end loop;
                                         end loop;
                                     end if; 
@@ -82,110 +80,25 @@ begin
                         cnt_four    <= table_of_cnt_r(to_integer(unsigned(branch_addr_4bit)),3);    
                   end process output_cnt_p;  
 
-    process(index_sel,branch_addr_4bit,table_of_cnt_r,table_of_cnt)
+    process(index_sel,table_of_cnt_r,table_of_cnt,branch_addr_prev_loc)
     begin
-        case index_sel is
-            when "00" =>
-                -- cnt_one logic                                        
-                if table_of_cnt_r(to_integer(unsigned(branch_addr_4bit)),0) = "11" then
-                    table_of_cnt(0,0)<= "11";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)<= std_logic_vector( unsigned(table_of_cnt_r(to_integer(unsigned(branch_addr_4bit)),0)) + to_unsigned(1,2)); 
+        table_of_cnt <= table_of_cnt_r;
+        
+        for i in 0 to 3 loop
+           if index_sel(i) = '0' then
+                if table_of_cnt_r(to_integer(unsigned(branch_addr_prev_loc)),i) = "00" then
+                    table_of_cnt(to_integer(unsigned(branch_addr_prev_loc)),i) <= "00";
+                else
+                    table_of_cnt(to_integer(unsigned(branch_addr_prev_loc)),i) <= std_logic_vector( unsigned(table_of_cnt_r(to_integer(unsigned(branch_addr_prev_loc)),i)) - to_unsigned(1,2));
                 end if;
-                -- cnt_two logic
-                if table_of_cnt_r(to_integer(unsigned(branch_addr_4bit)),1) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)<= std_logic_vector( unsigned(table_of_cnt_r(to_integer(unsigned(branch_addr_4bit)),1)) - to_unsigned(1,2)); 
+           else
+                if table_of_cnt_r(to_integer(unsigned(branch_addr_prev_loc)),i) = "11" then
+                    table_of_cnt(to_integer(unsigned(branch_addr_prev_loc)),i) <= "11";
+                else
+                    table_of_cnt(to_integer(unsigned(branch_addr_prev_loc)),i) <= std_logic_vector( unsigned(table_of_cnt_r(to_integer(unsigned(branch_addr_prev_loc)),i)) + to_unsigned(1,2));    
                 end if;
-                -- cnt_three logic
-                if table_of_cnt_r(to_integer(unsigned(branch_addr_4bit)),2) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)) - to_unsigned(1,2)); 
-                end if;
-                -- cnt_four logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)) - to_unsigned(1,2)); 
-                end if;        
-            when "01" =>
-                -- cnt_one logic                                        
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)) - to_unsigned(1,2)); 
-                end if;
-                -- cnt_two logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1) = "11" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)<= "11";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)) + to_unsigned(1,2)); 
-                end if;
-                -- cnt_three logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)) - to_unsigned(1,2)); 
-                end if;
-                -- cnt_four logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)) - to_unsigned(1,2)); 
-                end if;
-              when "10" =>
-                -- cnt_one logic                                        
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)) - to_unsigned(1,2)); 
-                end if;
-                -- cnt_two logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)) - to_unsigned(1,2)); 
-                end if;
-                -- cnt_three logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2) = "11" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)<= "11";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)) + to_unsigned(1,2)); 
-                end if;
-                -- cnt_four logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)) - to_unsigned(1,2)); 
-                end if;
-              when "11" =>
-                -- cnt_one logic                                        
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),0)) - to_unsigned(1,2)); 
-                end if;
-                -- cnt_two logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),1)) - to_unsigned(1,2)); 
-                end if;
-                -- cnt_three logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2) = "00" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)<= "00";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),2)) - to_unsigned(1,2)); 
-                end if;
-                -- cnt_four logic
-                if table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3) = "11" then
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)<= "11";
-                else 
-                    table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)<= std_logic_vector( unsigned(table_of_cnt(to_integer(unsigned(branch_addr_4bit)),3)) + to_unsigned(1,2)); 
-                end if;           
-        end case;
+           end if;     
+        end loop;        
     end process;
 
 end Behavioral;

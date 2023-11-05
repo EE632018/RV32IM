@@ -77,7 +77,7 @@ begin
 
     -- Instations of component
     BHR_INST:BHR_local
-             GENERIC MAP(WIDTH              => WIDTH
+             GENERIC MAP(WIDTH              => WIDTH,
                          WIDTH_BHR          => WIDTH)
              PORT MAP(
                        clk                  => clk,

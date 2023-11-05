@@ -36,6 +36,8 @@ entity priority_encoder is
            cnt_two : in STD_LOGIC_VECTOR (1 downto 0);
            cnt_three : in STD_LOGIC_VECTOR (1 downto 0);
            cnt_four : in STD_LOGIC_VECTOR (1 downto 0);
+
+           -- This index sel is not connected to index_sel in TOC
            index_sel : out STD_LOGIC_VECTOR (1 downto 0));
 end priority_encoder;
 

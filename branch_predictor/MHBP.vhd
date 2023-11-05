@@ -40,6 +40,9 @@ entity MHBP is
   Port (    clk                  : in STD_LOGIC;
             reset                : in STD_LOGIC;
             branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            bhr_i                : in STD_LOGIC;
+            taken_pred           : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
             final_pred           : out STD_LOGIC 
             );
 end MHBP;
@@ -52,14 +55,16 @@ architecture Behavioral of MHBP is
     generic(row :   integer := 16;
             cols:   integer := 4);
     Port ( 
-           clk                  : in STD_LOGIC;
-           reset                : in STD_LOGIC;
-           branch_addr_4bit     : in STD_LOGIC_VECTOR (3 DOWNTO 0);
-           cnt_one              : out STD_LOGIC_VECTOR(1 DOWNTO 0);
-           cnt_two              : out STD_LOGIC_VECTOR(1 DOWNTO 0);
-           cnt_three            : out STD_LOGIC_VECTOR(1 DOWNTO 0);
-           cnt_four             : out STD_LOGIC_VECTOR(1 DOWNTO 0);
-           index_sel            : in STD_LOGIC_VECTOR(1 DOWNTO 0)
+            clk                  : in STD_LOGIC;
+            reset                : in STD_LOGIC;
+            branch_addr_4bit     : in STD_LOGIC_VECTOR (3 DOWNTO 0);
+            cnt_one              : out STD_LOGIC_VECTOR(1 DOWNTO 0);
+            cnt_two              : out STD_LOGIC_VECTOR(1 DOWNTO 0);
+            cnt_three            : out STD_LOGIC_VECTOR(1 DOWNTO 0);
+            cnt_four             : out STD_LOGIC_VECTOR(1 DOWNTO 0);
+            -- This index sel is not connected to index sel in priority encoder
+            branch_addr_prev_loc : in STD_LOGIC_VECTOR (3 DOWNTO 0);  
+            index_sel            : in STD_LOGIC_VECTOR (3 DOWNTO 0)
            );
     END COMPONENT;
 
@@ -79,6 +84,7 @@ architecture Behavioral of MHBP is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          bhr_i                : in STD_LOGIC; 
           gshare_pred          : out STD_LOGIC
           );
     END COMPONENT;
@@ -91,6 +97,7 @@ architecture Behavioral of MHBP is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          bhr_i                : in STD_LOGIC;
           GAg_pred             : out STD_LOGIC
           );
     END COMPONENT;
@@ -101,6 +108,7 @@ architecture Behavioral of MHBP is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          bhr_i                : in STD_LOGIC;
           pshare_pred          : out STD_LOGIC
           );
     END COMPONENT;
@@ -113,6 +121,7 @@ architecture Behavioral of MHBP is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          bhr_i                : in STD_LOGIC;
           PAp_pred          : out STD_LOGIC
           );
     END COMPONENT;
@@ -120,7 +129,7 @@ architecture Behavioral of MHBP is
     
     -- Signals for connectino
     signal cnt_one_s, cnt_two_s, cnt_three_s, cnt_four_s: std_logic_vector(1 downto 0);
-    signal index_sel_s: std_logic_vector(1 downto 0);
+    signal index_sel_s:  std_logic_vector (1 downto 0);
     signal gshare_pred_s, GAg_pred_s, pshare_pred_s, PAp_pred_s: std_logic;
     
 begin
@@ -128,16 +137,17 @@ begin
     -- Inst of component
     -- TOC - table of counters 
     TOC_INST: TOC
-    GENERIC MAP (row                => row,
-                 cols               => cols)
-    PORT MAP    (clk                => clk,
-                 reset              => reset,
-                 branch_addr_4bit   =>  branch_addr_4bit,   
-                 cnt_one            =>  cnt_one_s,
-                 cnt_two            =>  cnt_two_s,
-                 cnt_three          =>  cnt_three_s,
-                 cnt_four           =>  cnt_four_s,
-                 index_sel          =>  index_sel_s
+    GENERIC MAP (row                      =>  row,
+                 cols                     =>  cols)
+    PORT MAP    (clk                      =>  clk,
+                 reset                    =>  reset,
+                 branch_addr_4bit         =>  branch_addr_4bit,   
+                 cnt_one                  =>  cnt_one_s,
+                 cnt_two                  =>  cnt_two_s,
+                 cnt_three                =>  cnt_three_s,
+                 cnt_four                 =>  cnt_four_s,
+                 branch_addr_prev_loc     =>  branch_addr_prev_loc,
+                 index_sel                =>  taken_pred
                 );
     -- Priority encoder
     PE_INST:priority_encoder
@@ -153,7 +163,8 @@ begin
      GENERIC MAP    (WIDTH              => WIDTH)
      PORT MAP       (clk                => clk,
                      reset              => reset,
-                     branch_addr_4bit   => branch_addr_4bit,   
+                     branch_addr_4bit   => branch_addr_4bit,
+                     bhr_i              => bhr_i,       
                      gshare_pred        => gshare_pred_s
                      );
                      
@@ -165,6 +176,7 @@ begin
     PORT MAP       (clk                => clk,
                     reset              => reset,
                     branch_addr_4bit   => branch_addr_4bit,   
+                    bhr_i              => bhr_i,
                     GAg_pred           => GAg_pred_s
                     );
                     
@@ -174,6 +186,7 @@ begin
     PORT MAP       (clk                => clk,
                     reset              => reset,
                     branch_addr_4bit   => branch_addr_4bit,   
+                    bhr_i              => bhr_i,
                     pshare_pred        => pshare_pred_s
                     );
                     
@@ -185,13 +198,14 @@ begin
     PORT MAP       (clk                => clk,
                     reset              => reset,
                     branch_addr_4bit   => branch_addr_4bit,   
+                    bhr_i              => bhr_i,
                     PAp_pred           => PAp_pred_s
                     );
     
     -- Additional logic mux 4 on 1 choosing one of branch predictors for final prediction
     -- output final_pred
     
-    finale_prediction_process: process(index_sel_s)
+    finale_prediction_process: process(index_sel_s,gshare_pred_s,GAg_pred_s,pshare_pred_s,PAp_pred_s)
                                begin
                                     case(index_sel_s)is
                                         when "00" => final_pred <= gshare_pred_s;
