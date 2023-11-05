@@ -38,6 +38,8 @@ entity PAp is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
           PAp_pred             : out STD_LOGIC
           );
@@ -52,7 +54,9 @@ architecture Behavioral of PAp is
     Port (  clk                  : in STD_LOGIC;
             reset                : in STD_LOGIC;
             -- bhr_i indicates taken not taken value that is put to system
+            branch_inst          : in STD_LOGIC;
             bhr_i                : in STD_LOGIC;
+            branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
             branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
             bhr_o                : out STD_LOGIC_VECTOR(WIDTH_BHR-1 downto 0)
           );
@@ -62,12 +66,14 @@ architecture Behavioral of PAp is
     COMPONENT PHT
     GENERIC(WIDTH: NATURAL       := 7);
     Port ( 
-           clk                   : in STD_LOGIC;
-           reset                 : in STD_LOGIC;
+           clk              : in STD_LOGIC;
+           reset            : in STD_LOGIC;
            -- en signal indicates taken/not taken, '1' for taken and '0' for not taken
-           en_i                  : in STD_LOGIC; 
-           pht_addr_4bit         : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
-           pred                  : out STD_LOGIC       
+           en_i             : in STD_LOGIC; 
+           branch_inst      : in STD_LOGIC;
+           branch_addr_prev_loc : in STD_LOGIC_VECTOR (3 DOWNTO 0);
+           pht_addr_4bit    : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
+           pred             : out STD_LOGIC       
      );
     END COMPONENT;
     
@@ -75,6 +81,7 @@ architecture Behavioral of PAp is
     signal bhr_s            : std_logic;
     signal PAp_bhr_s        : std_logic_vector(WIDTH_BHR-1 downto 0);
     signal pht_addr_4bit_s  : std_logic_vector(WIDTH_PHT-1 downto 0);
+    --signal branch_addr_prev_loc  : std_logic_vector(WIDTH-1 downto 0);
     signal en_s             : std_logic;
 begin
 
@@ -86,18 +93,22 @@ begin
                        clk                  => clk,
                        reset                => reset,
                        bhr_i                => bhr_i,
+                       branch_inst   => branch_inst,
                        branch_addr_4bit     => branch_addr_4bit,
+                       branch_addr_prev_loc => branch_addr_prev_loc,
                        bhr_o                => PAp_bhr_s  
              );
-    PHT_INST:PHT 
-             GENERIC MAP(WIDTH             => WIDTH_PHT)
+    PHT_INST:PHT
+             GENERIC MAP(WIDTH      => WIDTH_PHT)
              PORT MAP(
-                      clk                  => clk,
-                      reset                => reset,
-                      en_i                 => bhr_i, 
-                      pht_addr_4bit        => pht_addr_4bit_s,
-                      pred                 => PAp_pred   
-             ); 
+                      clk           => clk,
+                      reset         => reset,
+                      en_i          => bhr_i,  
+                      pht_addr_4bit => pht_addr_4bit_s,
+                      branch_addr_prev_loc => branch_addr_prev_loc,
+                      branch_inst   => branch_inst,
+                      pred          => PAp_pred   
+             );  
     -- XOR branch_add and gshare_bhr to get pht_addr
     pht_addr_4bit_s <= PAp_bhr_s & branch_addr_4bit;
 end Behavioral;

@@ -37,6 +37,8 @@ entity Gshare is
           reset                : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_inst          : in STD_LOGIC;
           gshare_pred          : out STD_LOGIC
           );
 end Gshare;
@@ -50,6 +52,7 @@ architecture Behavioral of Gshare is
             reset       : in STD_LOGIC;
             -- bhr_i indicates taken not taken value that is put to system
             bhr_i       : in STD_LOGIC;
+            branch_inst : in STD_LOGIC;
             bhr_o       : out STD_LOGIC_VECTOR(WIDTH-1 downto 0)
           );
     end component;
@@ -58,19 +61,22 @@ architecture Behavioral of Gshare is
     COMPONENT PHT
     GENERIC(WIDTH: NATURAL  := 4);
     Port ( 
-        clk              : in STD_LOGIC;
-        reset            : in STD_LOGIC;
-        -- en signal indicates taken/not taken, '1' for taken and '0' for not taken
-        en_i             : in STD_LOGIC; 
-        pht_addr_4bit    : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
-        pred             : out STD_LOGIC       
-    );
+           clk              : in STD_LOGIC;
+           reset            : in STD_LOGIC;
+           -- en signal indicates taken/not taken, '1' for taken and '0' for not taken
+           en_i             : in STD_LOGIC; 
+           branch_inst      : in STD_LOGIC;
+           branch_addr_prev_loc : in STD_LOGIC_VECTOR (3 DOWNTO 0);
+           pht_addr_4bit    : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
+           pred             : out STD_LOGIC       
+     );
     END COMPONENT;
     
     -- Signals
     signal gshare_bhr_s     : std_logic_vector(WIDTH-1 downto 0);
     signal pht_addr_4bit_s  : std_logic_vector(WIDTH-1 downto 0);
     signal en_s             : std_logic;
+    
 begin
 
     -- Instations of component
@@ -80,6 +86,7 @@ begin
                        clk          => clk,
                        reset        => reset,
                        bhr_i        => bhr_i,
+                       branch_inst   => branch_inst,
                        bhr_o        => gshare_bhr_s  
              );
     PHT_INST:PHT
@@ -89,6 +96,8 @@ begin
                       reset         => reset,
                       en_i          => bhr_i,  
                       pht_addr_4bit => pht_addr_4bit_s,
+                      branch_addr_prev_loc => branch_addr_prev_loc,
+                      branch_inst   => branch_inst,
                       pred          => gshare_pred   
              );       
     -- XOR branch_add and gshare_bhr to get pht_addr

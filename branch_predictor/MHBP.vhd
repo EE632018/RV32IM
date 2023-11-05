@@ -41,8 +41,9 @@ entity MHBP is
             reset                : in STD_LOGIC;
             branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
             branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            branch_inst          : in STD_LOGIC;
             bhr_i                : in STD_LOGIC;
-            taken_pred           : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            taken_pred           : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0); -- signal telling if predictor was correct
             final_pred           : out STD_LOGIC 
             );
 end MHBP;
@@ -84,6 +85,8 @@ architecture Behavioral of MHBP is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC; 
           gshare_pred          : out STD_LOGIC
           );
@@ -97,6 +100,8 @@ architecture Behavioral of MHBP is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
           GAg_pred             : out STD_LOGIC
           );
@@ -108,6 +113,8 @@ architecture Behavioral of MHBP is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
           pshare_pred          : out STD_LOGIC
           );
@@ -121,6 +128,8 @@ architecture Behavioral of MHBP is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
           PAp_pred          : out STD_LOGIC
           );
@@ -164,6 +173,8 @@ begin
      PORT MAP       (clk                => clk,
                      reset              => reset,
                      branch_addr_4bit   => branch_addr_4bit,
+                     branch_addr_prev_loc     =>  branch_addr_prev_loc,
+                     branch_inst        => branch_inst,
                      bhr_i              => bhr_i,       
                      gshare_pred        => gshare_pred_s
                      );
@@ -175,7 +186,9 @@ begin
                     WIDTH_PHT          => WIDTH_PHT)
     PORT MAP       (clk                => clk,
                     reset              => reset,
-                    branch_addr_4bit   => branch_addr_4bit,   
+                    branch_addr_4bit   => branch_addr_4bit,
+                    branch_addr_prev_loc     =>  branch_addr_prev_loc,   
+                    branch_inst        => branch_inst,
                     bhr_i              => bhr_i,
                     GAg_pred           => GAg_pred_s
                     );
@@ -185,7 +198,9 @@ begin
     GENERIC MAP    (WIDTH              => WIDTH)
     PORT MAP       (clk                => clk,
                     reset              => reset,
-                    branch_addr_4bit   => branch_addr_4bit,   
+                    branch_addr_4bit   => branch_addr_4bit,
+                    branch_addr_prev_loc     =>  branch_addr_prev_loc,
+                    branch_inst        => branch_inst,   
                     bhr_i              => bhr_i,
                     pshare_pred        => pshare_pred_s
                     );
@@ -197,7 +212,9 @@ begin
                     WIDTH_PHT          => WIDTH_PHT)
     PORT MAP       (clk                => clk,
                     reset              => reset,
-                    branch_addr_4bit   => branch_addr_4bit,   
+                    branch_addr_4bit   => branch_addr_4bit,
+                    branch_addr_prev_loc     =>  branch_addr_prev_loc,
+                    branch_inst        => branch_inst,   
                     bhr_i              => bhr_i,
                     PAp_pred           => PAp_pred_s
                     );

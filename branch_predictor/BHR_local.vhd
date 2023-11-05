@@ -38,6 +38,8 @@ entity BHR_local is
           reset                 : in STD_LOGIC;
           -- bhr_i indicates taken/not taken value branch condition
           bhr_i                 : in STD_LOGIC;
+          branch_inst           : in STD_LOGIC;
+          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
           branch_addr_4bit      : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
           bhr_o                 : out STD_LOGIC_VECTOR(WIDTH_BHR-1 downto 0)
           );
@@ -53,10 +55,10 @@ begin
                         pattern <= (others => (others => '0'));
                     elsif rising_edge(clk) then
                         -- Maybe it is neccasary to put enable signal, because this don't need to be changes each cycle
-                        if bhr_i = '1' then
-                            pattern(to_integer(unsigned(branch_addr_4bit))) <=  pattern(to_integer(unsigned(branch_addr_4bit)))(WIDTH_BHR-2 downto 0) & bhr_i;       
+                        if branch_inst = '1' then
+                            pattern(to_integer(unsigned(branch_addr_prev_loc))) <=  pattern(to_integer(unsigned(branch_addr_prev_loc)))(WIDTH_BHR-2 downto 0) & bhr_i;       
                         else
-                            pattern(to_integer(unsigned(branch_addr_4bit))) <=  pattern(to_integer(unsigned(branch_addr_4bit)))(WIDTH_BHR-2 downto 0) & bhr_i;
+                            pattern(to_integer(unsigned(branch_addr_prev_loc))) <=  pattern(to_integer(unsigned(branch_addr_prev_loc)));
                         end if;    
                 end if;
     end process shift_reg;

@@ -36,6 +36,8 @@ entity pshare is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
           pshare_pred          : out STD_LOGIC
           );
@@ -51,7 +53,9 @@ architecture Behavioral of pshare is
             reset                : in STD_LOGIC;
             -- bhr_i indicates taken not taken value that is put to system
             bhr_i                : in STD_LOGIC;
+            branch_inst      : in STD_LOGIC;
             branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
             bhr_o                : out STD_LOGIC_VECTOR(WIDTH-1 downto 0)
           );
     end component;
@@ -64,12 +68,15 @@ architecture Behavioral of pshare is
            reset            : in STD_LOGIC;
            -- en signal indicates taken/not taken, '1' for taken and '0' for not taken
            en_i             : in STD_LOGIC; 
+           branch_inst      : in STD_LOGIC;
+           branch_addr_prev_loc : in STD_LOGIC_VECTOR (3 DOWNTO 0);
            pht_addr_4bit    : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
            pred             : out STD_LOGIC       
      );
     END COMPONENT;
     
     -- Signals
+    --signal branch_addr_prev_loc  : std_logic_vector(WIDTH-1 downto 0);
     signal en_s             : std_logic;
     signal pshare_bhr_s     : std_logic_vector(WIDTH-1 downto 0);
     signal pht_addr_4bit_s  : std_logic_vector(WIDTH-1 downto 0);
@@ -83,6 +90,8 @@ begin
                        clk                  => clk,
                        reset                => reset,
                        bhr_i                => bhr_i,
+                       branch_inst   => branch_inst,
+                       branch_addr_prev_loc => branch_addr_prev_loc,
                        branch_addr_4bit     => branch_addr_4bit,
                        bhr_o                => pshare_bhr_s  
              );
@@ -93,6 +102,8 @@ begin
                       reset         => reset,
                       en_i          => bhr_i,  
                       pht_addr_4bit => pht_addr_4bit_s,
+                      branch_addr_prev_loc => branch_addr_prev_loc,
+                      branch_inst   => branch_inst,
                       pred          => pshare_pred   
              );       
     -- XOR branch_add and gshare_bhr to get pht_addr

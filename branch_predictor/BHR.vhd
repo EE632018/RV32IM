@@ -37,6 +37,7 @@ entity BHR is
         reset       : in STD_LOGIC;
         -- bhr_i indicates taken/not taken value branch condition
         bhr_i       : in STD_LOGIC;
+        branch_inst : in STD_LOGIC;
         bhr_o       : out STD_LOGIC_VECTOR(WIDTH-1 downto 0)
         );
 end BHR;
@@ -49,10 +50,10 @@ begin
                     if reset = '0' then
                         gshare_r <= (others => '0');
                     elsif rising_edge(clk) then
-                        if bhr_i = '1' then    
+                        if branch_inst = '1' then    
                             gshare_r <= gshare_r(WIDTH-2 downto 0) & bhr_i;
                         else
-                            gshare_r <= gshare_r(WIDTH-2 downto 0) & bhr_i;
+                            gshare_r <= gshare_r;
                         end if;               
                     end if;
                end process shift_reg;
