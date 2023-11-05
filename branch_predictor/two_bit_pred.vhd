@@ -49,7 +49,7 @@ begin
     first_fsm: process(clk,reset)
                begin
                     if reset = '0' then
-                        state <= ST;
+                        state <= WN;
                     elsif rising_edge(clk)then
                         state <= state_n;  
                     end if;
@@ -84,7 +84,6 @@ begin
                                     when WT =>
                                         if en_i = '1' then
                                             state_n <= ST;
-    
                                             --pred    <= '1';
                                         else 
                                             state_n <= WN;
