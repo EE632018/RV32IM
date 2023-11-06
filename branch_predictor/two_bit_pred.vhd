@@ -60,46 +60,46 @@ begin
                      begin
                             if (branch_inst = '0') then
                                 state_n <= state;
-                                pred    <= '0';
                             else 
                                 case(state)is
                                     when SN =>
                                         if en_i = '1' then
                                             state_n <= WN;
-                                            --pred    <= '0';
                                         else 
-                                            state_n <= SN;
-                                            --pred    <= '0';    
-                                        end if; 
-                                        pred <= '0';     
+                                            state_n <= SN;   
+                                        end if;    
                                     when WN =>
                                         if en_i = '1' then
                                             state_n <= WT;
-                                            --pred    <= '0';
                                         else 
-                                            state_n <= SN;
-                                            --pred    <= '0';    
+                                            state_n <= SN;    
                                         end if;
-                                        pred <= '0';
                                     when WT =>
                                         if en_i = '1' then
                                             state_n <= ST;
-                                            --pred    <= '1';
                                         else 
-                                            state_n <= WN;
-                                            --pred    <= '1';    
+                                            state_n <= WN;    
                                         end if;
-                                        pred <= '1';
                                     when ST =>  
                                         if en_i = '1' then
                                             state_n <= ST;
-                                            --pred    <= '1';
                                         else 
-                                            state_n <= WT;
-                                            --pred    <= '1';    
+                                            state_n <= WT;    
                                         end if;
-                                        pred <= '1';
                                 end case;
                             end if;      
                      end process next_output_fsm;
+
+      output_logic: process(state)begin
+            case(state)is
+                                    when SN =>
+                                        pred <= '0';     
+                                    when WN =>
+                                        pred <= '0';
+                                    when WT =>
+                                        pred <= '1';
+                                    when ST =>  
+                                        pred <= '1';
+                                end case;
+      end process output_logic;             
 end Behavioral;
