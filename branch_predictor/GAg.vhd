@@ -39,6 +39,7 @@ entity GAg is
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
           branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          pht_addr_4bit        : out STD_LOGIC_VECTOR(WIDTH_PHT-1 DOWNTO 0);
           branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
           GAg_pred             : out STD_LOGIC
@@ -105,4 +106,5 @@ begin
              );       
     -- Concatenation branch_add and gshare_bhr to get pht_addr
     pht_addr_7bit_s <= GAg_bhr_s & branch_addr_4bit;
+    pht_addr_4bit   <= pht_addr_7bit_s;
 end Behavioral;
