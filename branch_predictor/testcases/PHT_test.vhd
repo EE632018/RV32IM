@@ -41,17 +41,21 @@ architecture Behavioral of PHT_test is
     GENERIC(WIDTH: NATURAL  := 4);
     Port ( 
         clk              : in STD_LOGIC;
-        reset            : in STD_LOGIC;
-        -- en signal indicates taken/not taken, '1' for taken and '0' for not taken
-        en_i             : in STD_LOGIC; 
-        pht_addr_4bit    : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
-        pred             : out STD_LOGIC       
+           reset            : in STD_LOGIC;
+           -- en signal indicates taken/not taken, '1' for taken and '0' for not taken
+           en_i             : in STD_LOGIC; 
+           branch_inst      : in STD_LOGIC;
+           branch_addr_prev_loc : in STD_LOGIC_VECTOR (3 DOWNTO 0);
+           pht_addr_4bit    : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
+           pred             : out STD_LOGIC       
     );
     END COMPONENT;
 
     signal clk, reset, bhr_s: std_logic;
     signal pht_addr_4bit_s : std_logic_vector(3 downto 0);
     signal gshare_pred: std_logic;
+    signal branch_inst_s: std_logic;
+    signal branch_addr_prev_loc_s: std_logic_vector(3 downto 0);
     constant  period : time := 20ns;
     
 begin
@@ -60,11 +64,13 @@ begin
     PHT_INST:PHT
              GENERIC MAP(WIDTH      => 4)
              PORT MAP(
-                      clk           => clk,
-                      reset         => reset,
-                      en_i          => bhr_s,  
-                      pht_addr_4bit => pht_addr_4bit_s,
-                      pred          => gshare_pred   
+                      clk                  => clk,
+                      reset                => reset,
+                      en_i                 => bhr_s,  
+                      pht_addr_4bit        => pht_addr_4bit_s,
+                      branch_inst          => branch_inst_s,
+                      branch_addr_prev_loc => branch_addr_prev_loc_s,
+                      pred                 => gshare_pred   
              );
 
     process
@@ -86,6 +92,7 @@ begin
     process
     begin
 --        bhr_s <= '0';
+        branch_inst_s     <= '1'; 
         pht_addr_4bit_s <= (others => '0');
         wait until reset = '1';
         for i in 0 to 100 loop
@@ -98,6 +105,9 @@ begin
 --            end if;    */
 
             pht_addr_4bit_s <= std_logic_vector(to_unsigned(i,4));
+            if i > 2 then
+                branch_addr_prev_loc_s <= std_logic_vector(to_unsigned(i,4) - to_unsigned(2,4));
+            end if;
             wait until rising_edge(clk);   
         end loop;
     
@@ -109,12 +119,7 @@ begin
     begin
         bhr_s <= '0';
         wait until reset = '1';
-        for i in 1 to 100 loop
         bhr_s <= not bhr_s;
-        wait until rising_edge(clk);
-        wait until rising_edge(clk);
-        end loop;
-        
         wait;
     end process;
 
