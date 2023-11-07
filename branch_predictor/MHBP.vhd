@@ -35,8 +35,8 @@ entity MHBP is
   GENERIC(  WIDTH:      NATURAL := 4;
             WIDTH_BHR:  NATURAL := 3;
             WIDTH_PHT:  NATURAL := 7;
-            row :       integer := 16;
-            cols:       integer := 4);
+            row :       integer := 4;
+            cols:       integer := 16);
   Port (    clk                         : in STD_LOGIC;
             reset                       : in STD_LOGIC;
             branch_addr_4bit            : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
@@ -60,8 +60,8 @@ architecture Behavioral of MHBP is
     -- Instance of components
     -- 1 TOC
     COMPONENT TOC
-    generic(row :   integer := 16;
-            cols:   integer := 4);
+    generic(row :   integer := 4;
+            cols:   integer := 16);
     Port ( 
             clk                  : in STD_LOGIC;
             reset                : in STD_LOGIC;
