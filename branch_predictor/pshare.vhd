@@ -37,6 +37,7 @@ entity pshare is
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
           branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc_local : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
           pht_addr_4bit        : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
           branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
@@ -91,8 +92,8 @@ begin
                        clk                  => clk,
                        reset                => reset,
                        bhr_i                => bhr_i,
-                       branch_inst   => branch_inst,
-                       branch_addr_prev_loc => branch_addr_prev_loc,
+                       branch_inst          => branch_inst,
+                       branch_addr_prev_loc => branch_addr_prev_loc_local,
                        branch_addr_4bit     => branch_addr_4bit,
                        bhr_o                => pshare_bhr_s  
              );

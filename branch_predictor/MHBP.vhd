@@ -40,11 +40,16 @@ entity MHBP is
   Port (    clk                         : in STD_LOGIC;
             reset                       : in STD_LOGIC;
             branch_addr_4bit            : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
-            branch_addr_prev_loc        : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
-            branch_addr_prev_loc_local  : in STD_LOGIC_VECTOR (WIDTH_PHT-1 DOWNTO 0);
+            branch_addr_bhr_local       : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            branch_addr_pht_gshare      : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            branch_addr_pht_pshare      : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            branch_addr_pht_GAg         : in STD_LOGIC_VECTOR (WIDTH_PHT-1 DOWNTO 0);
+            branch_addr_pht_PAp         : in STD_LOGIC_VECTOR (WIDTH_PHT-1 DOWNTO 0);
+            
             branch_inst                 : in STD_LOGIC;
             bhr_i                       : in STD_LOGIC;
             taken_pred                  : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0); -- signal telling if predictor was correct
+            predictions                 : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
             final_pred                  : out STD_LOGIC;
             
             -- pht
@@ -117,12 +122,13 @@ architecture Behavioral of MHBP is
     END COMPONENT;
     
     -- 5 pshare
-    COMPONENT pshare
+    COMPONENT pshare 
     GENERIC(WIDTH: NATURAL := 4);
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
           branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc_local : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
           pht_addr_4bit        : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
           branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
@@ -168,7 +174,7 @@ begin
                  cnt_two                  =>  cnt_two_s,
                  cnt_three                =>  cnt_three_s,
                  cnt_four                 =>  cnt_four_s,
-                 branch_addr_prev_loc     =>  branch_addr_prev_loc,
+                 branch_addr_prev_loc     =>  branch_addr_bhr_local,
                  index_sel                =>  taken_pred
                 );
     -- Priority encoder
@@ -186,7 +192,7 @@ begin
      PORT MAP       (clk                => clk,
                      reset              => reset,
                      branch_addr_4bit   => branch_addr_4bit,
-                     branch_addr_prev_loc     =>  branch_addr_prev_loc,
+                     branch_addr_prev_loc     =>  branch_addr_pht_gshare,
                      pht_addr_4bit      => pht_addr_4bit_gshare_s,
                      branch_inst        => branch_inst,
                      bhr_i              => bhr_i,       
@@ -201,7 +207,7 @@ begin
     PORT MAP       (clk                => clk,
                     reset              => reset,
                     branch_addr_4bit   => branch_addr_4bit,
-                    branch_addr_prev_loc     =>  branch_addr_prev_loc_local,
+                    branch_addr_prev_loc     =>  branch_addr_pht_GAg,
                     pht_addr_4bit      => pht_addr_4bit_GAg_s,   
                     branch_inst        => branch_inst,
                     bhr_i              => bhr_i,
@@ -214,7 +220,8 @@ begin
     PORT MAP       (clk                => clk,
                     reset              => reset,
                     branch_addr_4bit   => branch_addr_4bit,
-                    branch_addr_prev_loc     =>  branch_addr_prev_loc,
+                    branch_addr_prev_loc     =>  branch_addr_pht_pshare,
+                    branch_addr_prev_loc_local => branch_addr_bhr_local,
                     pht_addr_4bit      => pht_addr_4bit_pshare_s,
                     branch_inst        => branch_inst,   
                     bhr_i              => bhr_i,
@@ -229,8 +236,8 @@ begin
     PORT MAP       (clk                => clk,
                     reset              => reset,
                     branch_addr_4bit   => branch_addr_4bit,
-                    branch_addr_prev_loc     =>  branch_addr_prev_loc,
-                    branch_addr_prev_loc_local => branch_addr_prev_loc_local,
+                    branch_addr_prev_loc     =>  branch_addr_bhr_local,
+                    branch_addr_prev_loc_local => branch_addr_pht_PAp,
                     pht_addr_4bit      => pht_addr_4bit_PAp_s,
                     branch_inst        => branch_inst,   
                     bhr_i              => bhr_i,
@@ -254,5 +261,11 @@ begin
                                         when "10" => final_pred <= pshare_pred_s;
                                         when "11" => final_pred <= PAp_pred_s;
                                     end case;
-                               end process finale_prediction_process;                                                
+                               end process finale_prediction_process;
+                               
+     predictions <= gshare_pred_s & GAg_pred_s & pshare_pred_s & PAp_pred_s;                                                       
 end Behavioral;
+
+
+
+
