@@ -37,20 +37,21 @@ entity MHBP is
             WIDTH_PHT:  NATURAL := 7;
             row :       integer := 16;
             cols:       integer := 4);
-  Port (    clk                  : in STD_LOGIC;
-            reset                : in STD_LOGIC;
-            branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
-            branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
-            branch_inst          : in STD_LOGIC;
-            bhr_i                : in STD_LOGIC;
-            taken_pred           : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0); -- signal telling if predictor was correct
-            final_pred           : out STD_LOGIC;
+  Port (    clk                         : in STD_LOGIC;
+            reset                       : in STD_LOGIC;
+            branch_addr_4bit            : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            branch_addr_prev_loc        : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+            branch_addr_prev_loc_local  : in STD_LOGIC_VECTOR (WIDTH_PHT-1 DOWNTO 0);
+            branch_inst                 : in STD_LOGIC;
+            bhr_i                       : in STD_LOGIC;
+            taken_pred                  : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0); -- signal telling if predictor was correct
+            final_pred                  : out STD_LOGIC;
             
             -- pht
-            pht_addr_4bit_gshare     : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
-            pht_addr_4bit_GAg        : out STD_LOGIC_VECTOR(WIDTH_PHT-1 DOWNTO 0);
-            pht_addr_4bit_pshare     : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
-            pht_addr_4bit_PAp        : out STD_LOGIC_VECTOR(WIDTH_PHT-1 DOWNTO 0)
+            pht_addr_4bit_gshare        : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
+            pht_addr_4bit_GAg           : out STD_LOGIC_VECTOR(WIDTH_PHT-1 DOWNTO 0);
+            pht_addr_4bit_pshare        : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
+            pht_addr_4bit_PAp           : out STD_LOGIC_VECTOR(WIDTH_PHT-1 DOWNTO 0)
             );
 end MHBP;
 
@@ -107,7 +108,7 @@ architecture Behavioral of MHBP is
     Port (clk                  : in STD_LOGIC;
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
-          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH_PHT-1 DOWNTO 0);
           pht_addr_4bit        : out STD_LOGIC_VECTOR(WIDTH_PHT-1 DOWNTO 0);
           branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
@@ -138,6 +139,7 @@ architecture Behavioral of MHBP is
           reset                : in STD_LOGIC;
           branch_addr_4bit     : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
           branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
+          branch_addr_prev_loc_local : in STD_LOGIC_VECTOR (WIDTH_PHT-1 DOWNTO 0);
           pht_addr_4bit        : out STD_LOGIC_VECTOR(WIDTH_PHT-1 DOWNTO 0);
           branch_inst          : in STD_LOGIC;
           bhr_i                : in STD_LOGIC;
@@ -199,7 +201,7 @@ begin
     PORT MAP       (clk                => clk,
                     reset              => reset,
                     branch_addr_4bit   => branch_addr_4bit,
-                    branch_addr_prev_loc     =>  branch_addr_prev_loc,
+                    branch_addr_prev_loc     =>  branch_addr_prev_loc_local,
                     pht_addr_4bit      => pht_addr_4bit_GAg_s,   
                     branch_inst        => branch_inst,
                     bhr_i              => bhr_i,
@@ -228,6 +230,7 @@ begin
                     reset              => reset,
                     branch_addr_4bit   => branch_addr_4bit,
                     branch_addr_prev_loc     =>  branch_addr_prev_loc,
+                    branch_addr_prev_loc_local => branch_addr_prev_loc_local,
                     pht_addr_4bit      => pht_addr_4bit_PAp_s,
                     branch_inst        => branch_inst,   
                     bhr_i              => bhr_i,

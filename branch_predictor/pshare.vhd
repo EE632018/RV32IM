@@ -70,7 +70,7 @@ architecture Behavioral of pshare is
            -- en signal indicates taken/not taken, '1' for taken and '0' for not taken
            en_i             : in STD_LOGIC; 
            branch_inst      : in STD_LOGIC;
-           branch_addr_prev_loc : in STD_LOGIC_VECTOR (3 DOWNTO 0);
+           branch_addr_prev_loc : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
            pht_addr_4bit    : in STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
            pred             : out STD_LOGIC       
      );
