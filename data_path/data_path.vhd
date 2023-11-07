@@ -51,6 +51,7 @@ architecture Behavioral of data_path is
    signal pc_next_if_s            : std_logic_vector (31 downto 0) := (others=>'0');
    signal pc_adder_if_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal instruction_if_s        : std_logic_vector (31 downto 0) := (others=>'0');
+   signal immediate_extended_if_s : std_logic_vector (31 downto 0) := (others=>'0');
 
    signal  pht_addr_4bit_gshare_if_s, pht_addr_4bit_gshare_next_if_s : std_logic_vector(3 downto 0);        
    signal  pht_addr_4bit_pshare_if_s, pht_addr_4bit_pshare_next_if_s : std_logic_vector(3 downto 0);
@@ -101,7 +102,8 @@ architecture Behavioral of data_path is
    signal branch_adder_ex_s       : std_logic_vector (31 downto 0) := (others=>'0');
 
    signal  branch_inst_ex_s, bhr_ex_s: std_logic;
-   signal  taken_pred: std_logic_vector(3 downto 0); 
+   signal  taken_pred: std_logic_vector(3 downto 0);
+   signal  branch_condition_s: std_logic; 
 
    signal  pht_addr_4bit_gshare_id_s: std_logic_vector(3 downto 0);        
    signal  pht_addr_4bit_pshare_id_s: std_logic_vector(3 downto 0);
@@ -166,6 +168,12 @@ begin
       if (rising_edge(clk)) then
          if (reset = '0')then
             pc_reg_if_s <= (others => '0');
+            pht_addr_4bit_gshare_if_s <= (others => '0');       
+            pht_addr_4bit_pshare_if_s <= (others => '0');
+            pht_addr_4bit_GAg_if_s <= (others => '0');
+            pht_addr_4bit_PAp_if_s <= (others => '0');
+            predictions_if_s <= (others => '0');
+            final_pred_if_s <= (others => '0');
          elsif (pc_en_i = '1') then
             pc_reg_if_s <= pc_next_if_s;
             pht_addr_4bit_gshare_if_s <= pht_addr_4bit_gshare_next_if_s;       
@@ -187,10 +195,18 @@ begin
                pc_reg_id_s      <= (others => '0');
                pc_adder_id_s    <= (others => '0');
                instruction_id_s <= (others => '0');
+               immediate_extended_id_s <= (others => '0');
+               pht_addr_4bit_gshare_id_s <= (others => '0');       
+               pht_addr_4bit_pshare_id_s <= (others => '0');
+               pht_addr_4bit_GAg_id_s <= (others => '0');
+               pht_addr_4bit_PAp_id_s <= (others => '0');
+               predictions_id_s <= (others => '0');
+               final_pred_id_s <= (others => '0');
             else
                pc_reg_id_s      <= pc_reg_if_s;
                pc_adder_id_s    <= pc_adder_if_s;
                instruction_id_s <= instruction_if_s;
+               immediate_extended_id_s <= immediate_extended_if_s;
                pht_addr_4bit_gshare_id_s <= pht_addr_4bit_gshare_if_s;       
                pht_addr_4bit_pshare_id_s <= pht_addr_4bit_pshare_if_s;
                pht_addr_4bit_GAg_id_s <= pht_addr_4bit_GAg_if_s;
@@ -215,7 +231,13 @@ begin
                 rd_address_ex_s         <= (others => '0');
                 pc_reg_ex_s             <= (others => '0');
                 instruction_ex_s        <= (others => '0');
-             else
+                pht_addr_4bit_gshare_ex_s <= (others => '0');       
+                pht_addr_4bit_pshare_ex_s <= (others => '0');
+                pht_addr_4bit_GAg_ex_s    <= (others => '0');
+                pht_addr_4bit_PAp_ex_s    <= (others => '0');
+                predictions_ex_s          <= (others => '0');
+                final_pred_ex_s           <= (others => '0');
+            else
                 pc_reg_ex_s               <= pc_reg_id_s;
                 pc_adder_ex_s             <= pc_adder_id_s;
                 rs1_data_ex_s             <= rs1_data_id_s;
@@ -292,57 +314,67 @@ begin
             case funct3_ex_i is
                 when "000" => 
                     if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
-                         branch_condition_o <= '1';
+                         branch_condition_s <= '1';
                     else
-                        branch_condition_o <= '0';
+                        branch_condition_s <= '0';
                     end if;
                 when "001" =>
                     if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
-                         branch_condition_o <= '0';
+                         branch_condition_s <= '0';
                     else
-                        branch_condition_o <= '1';
+                        branch_condition_s <= '1';
                     end if;             
                 when "100" => 
                     if (signed(alu_forward_a_ex_s) < signed(alu_forward_b_ex_s)) then
-                        branch_condition_o <= '1';
+                        branch_condition_s <= '1';
                     else
-                        branch_condition_o <= '0';
+                        branch_condition_s <= '0';
                     end if;
                 when "101" => 
                     if  (signed(alu_forward_a_ex_s) >= signed(alu_forward_b_ex_s)) then
-                         branch_condition_o <= '1';
+                         branch_condition_s <= '1';
                     else
-                        branch_condition_o <= '0';
+                        branch_condition_s <= '0';
                     end if;                
                 when "110" =>
                     if  (unsigned(alu_forward_a_ex_s) < unsigned(alu_forward_b_ex_s)) then
-                         branch_condition_o <= '1';
+                         branch_condition_s <= '1';
                     else
-                        branch_condition_o <= '0';
+                        branch_condition_s <= '0';
                     end if;    
                  when "111" =>
                     if (unsigned(alu_forward_a_ex_s) >= unsigned(alu_forward_b_ex_s)) then
-                         branch_condition_o <= '1';
+                         branch_condition_s <= '1';
                     else
-                        branch_condition_o <= '0';
+                        branch_condition_s <= '0';
                     end if;
                  when others =>
                     if  (signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) then
-                         branch_condition_o <= '1';
+                         branch_condition_s <= '1';
                     else
-                        branch_condition_o <= '0';
+                        branch_condition_s <= '0';
                     end if;       
             end case;
         elsif(instruction_ex_s(6 downto 0) = "1101111") then
-            branch_condition_o <= '1';
+            branch_condition_s <= '1';
         elsif(instruction_ex_s(6 downto 0) = "1100111") then
-            branch_condition_o <= '1';
+            branch_condition_s <= '1';
         else
-            branch_condition_o <= '0';
+            branch_condition_s <= '0';
         end if;
    end process;
    
-   
+   process(branch_condition_s, final_pred_ex_s)
+   begin
+         if branch_condition_s = final_pred_ex_s then
+            branch_condition_o <= '0';
+         else
+            branch_condition_o <= '1';         
+         end if;
+   end process;
+
+
+
    --branch_condition_o <= '1' when (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) else
      --                    '0';
 
@@ -454,8 +486,8 @@ begin
    -- Jedinice za prosirivanje konstante (immediate)
    immediate_1 : entity work.immediate
       port map (
-         instruction_i        => instruction_id_s,
-         immediate_extended_o => immediate_extended_id_s);
+         instruction_i        => instruction_if_s,
+         immediate_extended_o => immediate_extended_if_s);
 
    -- ALU jedinica
    ALU_1 : entity work.ALU
