@@ -130,7 +130,7 @@ architecture Behavioral of data_path is
    signal data_mem_read_wb_s      : std_logic_vector (31 downto 0) := (others=>'0');
 
    -- Instanca branch predictora MDBP
-   COMPONENT MDBP
+   COMPONENT MHBP
    GENERIC( WIDTH:      NATURAL := 4;
             WIDTH_BHR:  NATURAL := 3;
             WIDTH_PHT:  NATURAL := 7;
@@ -173,7 +173,7 @@ begin
             pht_addr_4bit_GAg_if_s <= (others => '0');
             pht_addr_4bit_PAp_if_s <= (others => '0');
             predictions_if_s <= (others => '0');
-            final_pred_if_s <= (others => '0');
+            final_pred_if_s <= '0';
          elsif (pc_en_i = '1') then
             pc_reg_if_s <= pc_next_if_s;
             pht_addr_4bit_gshare_if_s <= pht_addr_4bit_gshare_next_if_s;       
@@ -201,7 +201,7 @@ begin
                pht_addr_4bit_GAg_id_s <= (others => '0');
                pht_addr_4bit_PAp_id_s <= (others => '0');
                predictions_id_s <= (others => '0');
-               final_pred_id_s <= (others => '0');
+               final_pred_id_s <= '0';
             else
                pc_reg_id_s      <= pc_reg_if_s;
                pc_adder_id_s    <= pc_adder_if_s;
@@ -236,7 +236,7 @@ begin
                 pht_addr_4bit_GAg_ex_s    <= (others => '0');
                 pht_addr_4bit_PAp_ex_s    <= (others => '0');
                 predictions_ex_s          <= (others => '0');
-                final_pred_ex_s           <= (others => '0');
+                final_pred_ex_s           <= '0';
             else
                 pc_reg_ex_s               <= pc_reg_id_s;
                 pc_adder_ex_s             <= pc_adder_id_s;
@@ -506,16 +506,16 @@ begin
          );
    
    -- MDBP 
-   MDBP_INST: MDBP
+   MDBP_INST: MHBP
    GENERIC MAP(   WIDTH       => 4,
                   WIDTH_BHR   => 3,
                   WIDTH_PHT   => 7,
                   row         => 4,
-                  cols        => 16);
-  Port (    clk                        => clk,
+                  cols        => 16)
+  Port MAP(    clk                        => clk,
             reset                      => reset,
-            branch_addr_4bit           => pc_reg_if_s(WIDTH-1 downto 0),
-            branch_addr_bhr_local      => pc_reg_ex_s(WIDTH-1 downto 0),
+            branch_addr_4bit           => pc_reg_if_s(3 downto 0),
+            branch_addr_bhr_local      => pc_reg_ex_s(3 downto 0),
             branch_addr_pht_gshare     => pht_addr_4bit_gshare_ex_s,
             branch_addr_pht_pshare     => pht_addr_4bit_pshare_ex_s, 
             branch_addr_pht_GAg        => pht_addr_4bit_GAg_ex_s,

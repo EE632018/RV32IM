@@ -13,7 +13,8 @@ cd [getScriptDirectory]
 set resultDir .\/RV32IM
 file mkdir $resultDir
 create_project RV32IM_tcl $resultDir -part xc7z010clg400-1 -force
-set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
+#set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
+#set_property board_part em.avnet.com:zed:part0:2.0 [current_project]
 set_property target_language VHDL [current_project]
 
 add_files -norecurse ../packages/alu_ops_pkg.vhd
@@ -29,6 +30,17 @@ add_files -norecurse ../data_path/ALU_simple.vhd
 add_files -norecurse ../data_path/immediate.vhd
 add_files -norecurse ../data_path/register_bank.vhd
 add_files -norecurse ../data_path/data_path.vhd
+add_files -norecurse ../branch_predictor/BHR.vhd
+add_files -norecurse ../branch_predictor/BHR_local.vhd
+add_files -norecurse ../branch_predictor/PHT.vhd
+add_files -norecurse ../branch_predictor/TOC.vhd
+add_files -norecurse ../branch_predictor/priority_encoder.vhd
+add_files -norecurse ../branch_predictor/two_bit_pred.vhd
+add_files -norecurse ../branch_predictor/Gshare.vhd
+add_files -norecurse ../branch_predictor/GAg.vhd
+add_files -norecurse ../branch_predictor/pshare.vhd
+add_files -norecurse ../branch_predictor/PAp.vhd
+add_files -norecurse ../branch_predictor/MHBP.vhd
 add_files -norecurse ../division_u.vhd
 add_files -norecurse ../multiply.vhd
 add_files -norecurse ../TOP_RISCV.vhd
