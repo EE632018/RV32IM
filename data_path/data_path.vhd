@@ -53,12 +53,12 @@ architecture Behavioral of data_path is
    signal instruction_if_s        : std_logic_vector (31 downto 0) := (others=>'0');
    signal immediate_extended_if_s : std_logic_vector (31 downto 0) := (others=>'0');
 
-   signal  pht_addr_4bit_gshare_if_s, pht_addr_4bit_gshare_next_if_s : std_logic_vector(3 downto 0);        
-   signal  pht_addr_4bit_pshare_if_s, pht_addr_4bit_pshare_next_if_s : std_logic_vector(3 downto 0);
-   signal  pht_addr_4bit_GAg_if_s, pht_addr_4bit_GAg_next_if_s : std_logic_vector(6 downto 0);
-   signal  pht_addr_4bit_PAp_if_s, pht_addr_4bit_PAp_next_if_s : std_logic_vector(6 downto 0);
-   signal  predictions_next_if_s, predictions_if_s: std_logic_vector(3 downto 0);
-   signal  final_pred_next_if_s, final_pred_if_s: std_logic;
+   signal  pht_addr_4bit_gshare_if_s, pht_addr_4bit_gshare_next_if_s : std_logic_vector(3 downto 0) := (others=>'0');        
+   signal  pht_addr_4bit_pshare_if_s, pht_addr_4bit_pshare_next_if_s : std_logic_vector(3 downto 0) := (others=>'0');
+   signal  pht_addr_4bit_GAg_if_s, pht_addr_4bit_GAg_next_if_s : std_logic_vector(6 downto 0) := (others=>'0');
+   signal  pht_addr_4bit_PAp_if_s, pht_addr_4bit_PAp_next_if_s : std_logic_vector(6 downto 0) := (others=>'0');
+   signal  predictions_next_if_s, predictions_if_s: std_logic_vector(3 downto 0) := (others=>'0');
+   signal  final_pred_next_if_s, final_pred_if_s: std_logic := '0';
    --*********  INSTRUCTION DECODE **************
    signal instruction_id_s        : std_logic_vector (31 downto 0) := (others=>'0');
    signal pc_adder_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
@@ -77,13 +77,13 @@ architecture Behavioral of data_path is
    signal funct3_id_s	           : std_logic_vector(2 downto 0) := (others=>'0');
    signal rd_mux_s                : std_logic_vector(1 downto 0) := (others=>'0');
 
-   signal  pht_addr_4bit_gshare_ex_s: std_logic_vector(3 downto 0);        
-   signal  pht_addr_4bit_pshare_ex_s: std_logic_vector(3 downto 0);
-   signal  pht_addr_4bit_GAg_ex_s: std_logic_vector(6 downto 0);
-   signal  pht_addr_4bit_PAp_ex_s: std_logic_vector(6 downto 0);
+   signal  pht_addr_4bit_gshare_ex_s: std_logic_vector(3 downto 0) := (others=>'0');        
+   signal  pht_addr_4bit_pshare_ex_s: std_logic_vector(3 downto 0) := (others=>'0');
+   signal  pht_addr_4bit_GAg_ex_s: std_logic_vector(6 downto 0) := (others=>'0');
+   signal  pht_addr_4bit_PAp_ex_s: std_logic_vector(6 downto 0) := (others=>'0');
 
-   signal predictions_id_s: std_logic_vector(3 downto 0);
-   signal final_pred_id_s: std_logic;
+   signal predictions_id_s: std_logic_vector(3 downto 0) := (others=>'0');
+   signal final_pred_id_s: std_logic := '0';
    --*********       EXECUTE       **************
    signal instruction_ex_s        : std_logic_vector (31 downto 0) := (others=>'0');
    signal pc_adder_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
@@ -101,16 +101,16 @@ architecture Behavioral of data_path is
    signal pc_reg_ex_s             : std_logic_vector (31 downto 0) := (others=>'0');
    signal branch_adder_ex_s       : std_logic_vector (31 downto 0) := (others=>'0');
 
-   signal  branch_inst_ex_s, bhr_ex_s: std_logic;
-   signal  taken_pred: std_logic_vector(3 downto 0);
-   signal  branch_condition_s: std_logic; 
+   signal  branch_inst_ex_s, bhr_ex_s: std_logic := '0';
+   signal  taken_pred: std_logic_vector(3 downto 0) := (others=>'0');
+   signal  branch_condition_s: std_logic := '0'; 
 
-   signal  pht_addr_4bit_gshare_id_s: std_logic_vector(3 downto 0);        
-   signal  pht_addr_4bit_pshare_id_s: std_logic_vector(3 downto 0);
-   signal  pht_addr_4bit_GAg_id_s: std_logic_vector(6 downto 0);
-   signal  pht_addr_4bit_PAp_id_s: std_logic_vector(6 downto 0);
-   signal  final_pred_ex_s: std_logic;
-   signal  predictions_ex_s: std_logic_vector(3 downto 0);
+   signal  pht_addr_4bit_gshare_id_s: std_logic_vector(3 downto 0) := (others=>'0');        
+   signal  pht_addr_4bit_pshare_id_s: std_logic_vector(3 downto 0) := (others=>'0');
+   signal  pht_addr_4bit_GAg_id_s: std_logic_vector(6 downto 0) := (others=>'0');
+   signal  pht_addr_4bit_PAp_id_s: std_logic_vector(6 downto 0) := (others=>'0');
+   signal  final_pred_ex_s: std_logic := '0';
+   signal  predictions_ex_s: std_logic_vector(3 downto 0) := (others=>'0');
    --*********       MEMORY        **************
    signal pc_adder_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
    signal alu_result_mem_s        : std_logic_vector(31 downto 0) := (others=>'0');
