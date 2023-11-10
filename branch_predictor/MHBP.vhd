@@ -260,7 +260,7 @@ begin
                                         when "01" => final_pred <= GAg_pred_s;
                                         when "10" => final_pred <= pshare_pred_s;
                                         when "11" => final_pred <= PAp_pred_s;
-                                        when others => final_pred <= gshare_pred_s;
+                                        when others => final_pred <= GAg_pred_s;
                                     end case;
                                end process finale_prediction_process;
                                

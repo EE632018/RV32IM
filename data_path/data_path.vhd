@@ -363,16 +363,6 @@ begin
             branch_condition_s <= '0';
         end if;
    end process;
-   
-   
-   --branch_condition_o <= '1' when (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) else
-     --                    '0';
-
-   -- multiplekser za azuriranje programskog brojaca
-   
---   with pc_next_sel_i select
---      pc_next_if_s <= pc_adder_if_s         when '0',
---                      branch_adder_ex_s     when others;
 
    -- multiplekseri za prosledjivanje operanada iz kasnijih faza pajplajna
    alu_forward_a_ex_s <= rd_data_wb_s when alu_forward_a_i = "01" else
