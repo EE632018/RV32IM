@@ -42,7 +42,7 @@ architecture structural of TOP_RISCV is
    signal rd_mux_s           : std_logic_vector(1 downto 0);
    signal load_mux_s         : std_logic;
    signal stall_s            : std_logic;      
-   
+            
 begin
    -- Instanca datapath-a
    data_path_1: entity work.data_path
