@@ -52,13 +52,16 @@ architecture Behavioral of data_path is
    signal pc_adder_if_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal instruction_if_s        : std_logic_vector (31 downto 0) := (others=>'0');
    signal immediate_extended_if_s : std_logic_vector (31 downto 0) := (others=>'0');
-
+   
    signal  pht_addr_4bit_gshare_if_s, pht_addr_4bit_gshare_next_if_s : std_logic_vector(3 downto 0) := (others=>'0');        
    signal  pht_addr_4bit_pshare_if_s, pht_addr_4bit_pshare_next_if_s : std_logic_vector(3 downto 0) := (others=>'0');
    signal  pht_addr_4bit_GAg_if_s, pht_addr_4bit_GAg_next_if_s : std_logic_vector(6 downto 0) := (others=>'0');
    signal  pht_addr_4bit_PAp_if_s, pht_addr_4bit_PAp_next_if_s : std_logic_vector(6 downto 0) := (others=>'0');
    signal  predictions_next_if_s, predictions_if_s: std_logic_vector(3 downto 0) := (others=>'0');
-   signal  final_pred_next_if_s, final_pred_if_s: std_logic := '0';
+   signal  final_pred_next_if_s, final_pred_if_s ,final_pred_s: std_logic := '0';
+   signal  branch_inst_if_s: std_logic := '0';
+   signal branch_adder_if_s       : std_logic_vector (31 downto 0) := (others=>'0');
+   
    --*********  INSTRUCTION DECODE **************
    signal instruction_id_s        : std_logic_vector (31 downto 0) := (others=>'0');
    signal pc_adder_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
@@ -83,7 +86,10 @@ architecture Behavioral of data_path is
    signal  pht_addr_4bit_PAp_ex_s: std_logic_vector(6 downto 0) := (others=>'0');
 
    signal predictions_id_s: std_logic_vector(3 downto 0) := (others=>'0');
-   signal final_pred_id_s: std_logic := '0';
+   signal final_pred_id_s: std_logic := '0'; 
+   signal  branch_inst_id_s: std_logic := '0';
+   
+    
    --*********       EXECUTE       **************
    signal instruction_ex_s        : std_logic_vector (31 downto 0) := (others=>'0');
    signal pc_adder_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
@@ -111,6 +117,7 @@ architecture Behavioral of data_path is
    signal  pht_addr_4bit_PAp_id_s: std_logic_vector(6 downto 0) := (others=>'0');
    signal  final_pred_ex_s: std_logic := '0';
    signal  predictions_ex_s: std_logic_vector(3 downto 0) := (others=>'0');
+
    --*********       MEMORY        **************
    signal pc_adder_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
    signal alu_result_mem_s        : std_logic_vector(31 downto 0) := (others=>'0');
@@ -129,9 +136,9 @@ architecture Behavioral of data_path is
    signal rd_address_wb_s         : std_logic_vector (4 downto 0) := (others=>'0');
    signal data_mem_read_wb_s      : std_logic_vector (31 downto 0) := (others=>'0');
 
-   -- Instanca branch predictora MDBP
-   COMPONENT MHBP
-   GENERIC( WIDTH:      NATURAL := 4;
+   
+    COMPONENT MHBP
+     GENERIC(  WIDTH:      NATURAL := 4;
             WIDTH_BHR:  NATURAL := 3;
             WIDTH_PHT:  NATURAL := 7;
             row :       integer := 4;
@@ -144,6 +151,7 @@ architecture Behavioral of data_path is
             branch_addr_pht_pshare      : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0);
             branch_addr_pht_GAg         : in STD_LOGIC_VECTOR (WIDTH_PHT-1 DOWNTO 0);
             branch_addr_pht_PAp         : in STD_LOGIC_VECTOR (WIDTH_PHT-1 DOWNTO 0);
+            
             branch_inst                 : in STD_LOGIC;
             bhr_i                       : in STD_LOGIC;
             taken_pred                  : in STD_LOGIC_VECTOR (WIDTH-1 DOWNTO 0); -- signal telling if predictor was correct
@@ -156,8 +164,7 @@ architecture Behavioral of data_path is
             pht_addr_4bit_pshare        : out STD_LOGIC_VECTOR(WIDTH-1 DOWNTO 0);
             pht_addr_4bit_PAp           : out STD_LOGIC_VECTOR(WIDTH_PHT-1 DOWNTO 0)
             );
-   END COMPONENT;
-
+  END COMPONENT;  
     
 begin
 
@@ -168,20 +175,8 @@ begin
       if (rising_edge(clk)) then
          if (reset = '0')then
             pc_reg_if_s <= (others => '0');
-            pht_addr_4bit_gshare_if_s <= (others => '0');       
-            pht_addr_4bit_pshare_if_s <= (others => '0');
-            pht_addr_4bit_GAg_if_s <= (others => '0');
-            pht_addr_4bit_PAp_if_s <= (others => '0');
-            predictions_if_s <= (others => '0');
-            final_pred_if_s <= '0';
          elsif (pc_en_i = '1') then
             pc_reg_if_s <= pc_next_if_s;
-            pht_addr_4bit_gshare_if_s <= pht_addr_4bit_gshare_next_if_s;       
-            pht_addr_4bit_pshare_if_s <= pht_addr_4bit_pshare_next_if_s;
-            pht_addr_4bit_GAg_if_s <= pht_addr_4bit_GAg_next_if_s;
-            pht_addr_4bit_PAp_if_s <= pht_addr_4bit_PAp_next_if_s;
-            predictions_if_s <= predictions_next_if_s;
-            final_pred_if_s <= final_pred_next_if_s;
          end if;
       end if;
    end process;
@@ -202,6 +197,7 @@ begin
                pht_addr_4bit_PAp_id_s <= (others => '0');
                predictions_id_s <= (others => '0');
                final_pred_id_s <= '0';
+               branch_inst_id_s <= '0';
             else
                pc_reg_id_s      <= pc_reg_if_s;
                pc_adder_id_s    <= pc_adder_if_s;
@@ -213,6 +209,7 @@ begin
                pht_addr_4bit_PAp_id_s <= pht_addr_4bit_PAp_if_s;
                predictions_id_s <= predictions_if_s;
                final_pred_id_s <= final_pred_if_s;
+               branch_inst_id_s <= branch_inst_if_s;
             end if;
          end if;
       end if;
@@ -237,6 +234,7 @@ begin
                 pht_addr_4bit_PAp_ex_s    <= (others => '0');
                 predictions_ex_s          <= (others => '0');
                 final_pred_ex_s           <= '0';
+                branch_inst_ex_s          <= '0';  
             else
                 pc_reg_ex_s               <= pc_reg_id_s;
                 pc_adder_ex_s             <= pc_adder_id_s;
@@ -251,10 +249,12 @@ begin
                 pht_addr_4bit_PAp_ex_s    <= pht_addr_4bit_PAp_id_s;
                 predictions_ex_s          <= predictions_id_s;
                 final_pred_ex_s           <= final_pred_id_s;
+                branch_inst_ex_s          <= branch_inst_id_s;  
              end if;
           end if;
       end if;
    end process;
+
 
    --EX/MEM registar
    ex_mem : process (clk) is
@@ -364,25 +364,15 @@ begin
         end if;
    end process;
    
-   process(branch_condition_s, final_pred_ex_s)
-   begin
-         if branch_condition_s = final_pred_ex_s then
-            branch_condition_o <= '0';
-         else
-            branch_condition_o <= '1';         
-         end if;
-   end process;
-
-
-
+   
    --branch_condition_o <= '1' when (signed(branch_condition_a_ex_s) = signed(branch_condition_b_ex_s)) else
      --                    '0';
 
    -- multiplekser za azuriranje programskog brojaca
    
-   with pc_next_sel_i select
-      pc_next_if_s <= pc_adder_if_s         when '0',
-                      branch_adder_ex_s     when others;
+--   with pc_next_sel_i select
+--      pc_next_if_s <= pc_adder_if_s         when '0',
+--                      branch_adder_ex_s     when others;
 
    -- multiplekseri za prosledjivanje operanada iz kasnijih faza pajplajna
    alu_forward_a_ex_s <= rd_data_wb_s when alu_forward_a_i = "01" else
@@ -408,7 +398,139 @@ begin
    rs1_address_id_s <= instruction_id_s(19 downto 15);
    rs2_address_id_s <= instruction_id_s(24 downto 20);
    rd_address_id_s  <= instruction_id_s(11 downto 7);
-   stall_o <= stall_s;
+   
+
+   --***********  Instanciranje modula ***********
+   -- Registarska banka
+   register_bank_1 : entity work.register_bank
+      generic map (
+         WIDTH => 32)
+      port map (
+         clk           => clk,
+         reset         => reset,
+         rd_we_i       => rd_we_i,
+         rs1_address_i => rs1_address_id_s,
+         rs2_address_i => rs2_address_id_s,
+         rs1_data_o    => rs1_data_id_s,
+         rs2_data_o    => rs2_data_id_s,
+         rd_address_i  => rd_address_wb_s,
+         rd_data_i     => rd_data_wb_s);
+
+   -- Jedinice za prosirivanje konstante (immediate)
+   immediate_1 : entity work.immediate
+      port map (
+         instruction_i        => instruction_if_s,
+         immediate_extended_o => immediate_extended_if_s);
+
+   -- ALU jedinica
+   ALU_1 : entity work.ALU
+      generic map (
+         WIDTH => 32)
+      port map (
+         clk    => clk,
+         reset  => reset,
+         a_i    => a_ex_s,
+         b_i    => b_ex_s,
+         op_i   => alu_op_i,
+         res_o  => alu_result_ex_s,
+         stall_o=> stall_s
+         --zero_o => alu_zero_ex_s,
+         --of_o   => alu_of_ex_s
+         );
+
+    MHBP_INST:MHBP
+    GENERIC MAP(WIDTH       => 4,
+                WIDTH_BHR   => 3,
+                WIDTH_PHT   => 7,
+                row         => 4,
+                cols        => 16)
+    PORT MAP    (clk        => clk,
+                 reset      => reset,
+                 branch_addr_4bit           => pc_reg_if_s(3 downto 0),
+                 branch_addr_bhr_local      => pc_reg_ex_s(3 downto 0),
+                 branch_addr_pht_gshare     => pht_addr_4bit_gshare_ex_s,
+                 branch_addr_pht_pshare     => pht_addr_4bit_pshare_ex_s, 
+                 branch_addr_pht_GAg        => pht_addr_4bit_GAg_ex_s,
+                 branch_addr_pht_PAp        => pht_addr_4bit_PAp_ex_s,
+                 branch_inst                => branch_inst_ex_s,
+                 bhr_i                      => branch_condition_s,
+                 taken_pred                 => taken_pred, -- signal telling if predictor was correct, this needs additional logic in data path
+                 predictions                => predictions_if_s,
+                 final_pred                 => final_pred_s,
+            -- pht
+                 pht_addr_4bit_gshare       => pht_addr_4bit_gshare_if_s, 
+                 pht_addr_4bit_GAg          => pht_addr_4bit_GAg_if_s, 
+                 pht_addr_4bit_pshare       => pht_addr_4bit_pshare_if_s, 
+                 pht_addr_4bit_PAp          => pht_addr_4bit_PAp_if_s
+                 );            
+    process(final_pred_s, branch_inst_if_s)
+    begin
+        if branch_inst_if_s = '1' then
+            final_pred_if_s <= final_pred_s;
+        else
+            final_pred_if_s <= '0';
+        end if; 
+    end process;
+
+    process(predictions_ex_s,branch_condition_s,branch_inst_ex_s)
+    begin
+        for i in 0 to 3 loop
+            if branch_inst_ex_s = '1' then
+                if predictions_ex_s(i) = branch_condition_s then
+                    taken_pred(i) <= '1'; 
+                else
+                    taken_pred(i) <= '0';
+                end if;
+            else
+                taken_pred(i) <= '0';
+            end if;          
+        end loop;
+    end process;
+
+    process(instruction_if_s, immediate_extended_if_s, pc_reg_if_s)
+    begin
+        branch_adder_if_s <= std_logic_vector(signed(immediate_extended_if_s) + signed(pc_reg_if_s));
+        branch_inst_if_s <= '0';
+        if instruction_if_s(6 downto 0) = "1100011" then
+            branch_inst_if_s <= '1';
+            branch_adder_if_s <= std_logic_vector(signed(immediate_extended_if_s) + signed(pc_reg_if_s));
+        end if;
+        if instruction_if_s(6 downto 0) = "1101111" then
+            branch_inst_if_s <= '1';
+            branch_adder_if_s <= std_logic_vector(signed(immediate_extended_if_s) + signed(pc_reg_if_s));
+        end if;
+--        if instruction_if_s(6 downto 0) = "1100111" then
+--            branch_inst_if_s <= '1';
+--        end if; 
+    end process;
+
+    process(branch_condition_s, final_pred_ex_s)
+    begin
+        if branch_condition_s = final_pred_ex_s then
+            branch_condition_o <= '0';
+        else
+            branch_condition_o <= '1';
+        end if;
+    end process;
+    
+    process(pc_next_sel_i, final_pred_if_s, branch_condition_s, branch_adder_ex_s, pc_adder_ex_s, branch_adder_if_s, pc_adder_if_s)
+    begin
+        if pc_next_sel_i = '1' then
+            if branch_condition_s = '1' then
+                pc_next_if_s <= branch_adder_ex_s;
+            else
+                pc_next_if_s <= pc_adder_ex_s;
+            end if;
+        else
+            if final_pred_if_s = '1' then
+                pc_next_if_s <= branch_adder_if_s;
+            else
+                pc_next_if_s <= pc_adder_if_s;
+            end if;
+        end if;
+    end process;
+    
+    stall_o <= stall_s;
 
 
    --***********  Ulazi/Izlazi  ***************
@@ -423,6 +545,9 @@ begin
    data_mem_read_mem_s <= data_mem_read_i;
    funct3_mem_s        <= funct3_mem_i;
    rd_mux_s            <= rd_mux_i;
+   
+
+   
    -- Logika koja nam multipleksira koji tip Load instrukcije cemo raditi u sistemu
    process(funct3_mem_s,data_mem_read_mem_s)
    begin
@@ -464,73 +589,8 @@ begin
         end case;
    end process;
 
-   immediate_extended_id_s2 <= std_logic_vector(signed(immediate_extended_id_s) + signed(pc_reg_id_s)) when load_mux_i = '1' else
-                               std_logic_vector(signed(immediate_extended_id_s));
-
-   --***********  Instanciranje modula ***********
-   -- Registarska banka
-   register_bank_1 : entity work.register_bank
-      generic map (
-         WIDTH => 32)
-      port map (
-         clk           => clk,
-         reset         => reset,
-         rd_we_i       => rd_we_i,
-         rs1_address_i => rs1_address_id_s,
-         rs2_address_i => rs2_address_id_s,
-         rs1_data_o    => rs1_data_id_s,
-         rs2_data_o    => rs2_data_id_s,
-         rd_address_i  => rd_address_wb_s,
-         rd_data_i     => rd_data_wb_s);
-
-   -- Jedinice za prosirivanje konstante (immediate)
-   immediate_1 : entity work.immediate
-      port map (
-         instruction_i        => instruction_if_s,
-         immediate_extended_o => immediate_extended_if_s);
-
-   -- ALU jedinica
-   ALU_1 : entity work.ALU
-      generic map (
-         WIDTH => 32)
-      port map (
-         clk    => clk,
-         reset  => reset,
-         a_i    => a_ex_s,
-         b_i    => b_ex_s,
-         op_i   => alu_op_i,
-         res_o  => alu_result_ex_s,
-         stall_o=> stall_s
-         --zero_o => alu_zero_ex_s,
-         --of_o   => alu_of_ex_s
-         );
-   
-   -- MDBP 
-   MDBP_INST: MHBP
-   GENERIC MAP(   WIDTH       => 4,
-                  WIDTH_BHR   => 3,
-                  WIDTH_PHT   => 7,
-                  row         => 4,
-                  cols        => 16)
-  Port MAP(    clk                        => clk,
-            reset                      => reset,
-            branch_addr_4bit           => pc_reg_if_s(3 downto 0),
-            branch_addr_bhr_local      => pc_reg_ex_s(3 downto 0),
-            branch_addr_pht_gshare     => pht_addr_4bit_gshare_ex_s,
-            branch_addr_pht_pshare     => pht_addr_4bit_pshare_ex_s, 
-            branch_addr_pht_GAg        => pht_addr_4bit_GAg_ex_s,
-            branch_addr_pht_PAp        => pht_addr_4bit_PAp_ex_s,
-            branch_inst                => branch_inst_ex_s,
-            bhr_i                      => bhr_ex_s,
-            taken_pred                 => taken_pred, -- signal telling if predictor was correct, this needs additional logic in data path
-            predictions                => predictions_next_if_s,
-            final_pred                 => final_pred_next_if_s,
-            -- pht
-            pht_addr_4bit_gshare       => pht_addr_4bit_gshare_next_if_s, 
-            pht_addr_4bit_GAg          => pht_addr_4bit_GAg_next_if_s, 
-            pht_addr_4bit_pshare       => pht_addr_4bit_pshare_next_if_s, 
-            pht_addr_4bit_PAp          => pht_addr_4bit_PAp_next_if_s   
-            );
+    immediate_extended_id_s2 <= std_logic_vector(signed(immediate_extended_id_s) + signed(pc_reg_id_s)) when load_mux_i = '1' else
+                                std_logic_vector(signed(immediate_extended_id_s));
 end architecture;
 
 

@@ -44,21 +44,7 @@ architecture behavioral of control_path is
    --********** REGISTER CONTROL ***************
    signal if_id_en_s        : std_logic := '0';   
    signal if_id_flush_s     : std_logic := '0';   
-   signal rs1_address_if_s  : std_logic_vector (4 downto 0) := (others=>'0');  
-   signal rs2_address_if_s  : std_logic_vector (4 downto 0) := (others=>'0');  
-   signal rd_address_if_s  : std_logic_vector (4 downto 0) := (others=>'0');  
-   signal funct7_if_s       : std_logic_vector(6 downto 0) := (others=>'0');
-   signal funct3_if_s       : std_logic_vector(2 downto 0) := (others=>'0');
-   signal branch_if_s       : std_logic := '0';
-   signal mem_to_reg_if_s   : std_logic_vector(1 downto 0) := (others=>'0');
-   signal data_mem_we_if_s  : std_logic := '0';
-   signal alu_src_b_if_s    : std_logic := '0';
-   signal rd_we_if_s        : std_logic := '0';
-   signal rs1_in_use_if_s   : std_logic := '0';
-   signal rs2_in_use_if_s   : std_logic := '0';
-   signal rd_mux_if_s       : std_logic_vector (1 downto 0) := (others=>'0');
-   signal load_mux_if_s     : std_logic  := '0';
-   signal alu_2bit_op_if_s  : std_logic_vector(1 downto 0) := (others=>'0');
+   signal id_ex_flush_s     : std_logic := '0';   
    
    --*********  INSTRUCTION DECODE **************
    signal branch_id_s       : std_logic := '0';
@@ -76,9 +62,8 @@ architecture behavioral of control_path is
    signal rs2_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_id_s   : std_logic_vector (4 downto 0) := (others=>'0');
    signal bcc_id_s          : std_logic := '0';
-   signal rd_mux_id_s       : std_logic_vector (1 downto 0) := (others=>'0');
-   signal load_mux_id_s     : std_logic  := '0';
-   signal id_ex_flush_s     : std_logic := '0'; 
+   signal rd_mux_s          : std_logic_vector (1 downto 0) := (others=>'0');
+   signal load_mux_s        : std_logic  := '0';
 
    --*********       EXECUTE       **************
    signal branch_ex_s       : std_logic := '0';
@@ -109,20 +94,18 @@ architecture behavioral of control_path is
    signal mem_to_reg_wb_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_wb_s   : std_logic_vector (4 downto 0) := (others=>'0');
 
-
-
 begin
 
 
    --*********** Kombinaciona logika ******************
 
    -- izdvoji adrese operanada iz instrukcije
-   rs1_address_if_s <= instruction_i(19 downto 15);
-   rs2_address_if_s <= instruction_i(24 downto 20);
-   rd_address_if_s  <= instruction_i(11 downto 7);
+   rs1_address_id_s <= instruction_i(19 downto 15);
+   rs2_address_id_s <= instruction_i(24 downto 20);
+   rd_address_id_s  <= instruction_i(11 downto 7);
 
-   funct7_if_s <= instruction_i(31 downto 25);
-   funct3_if_s <= instruction_i(14 downto 12);
+   funct7_id_s <= instruction_i(31 downto 25);
+   funct3_id_s <= instruction_i(14 downto 12);
 
    -- signal upisa 32-bitnog podatka u memoriju se prosiruje na cetiri 
    -- memorija je bajt-adresibilna pa postoji we signal za svaki bajt na lokaciji sirine 32 bita  
@@ -147,45 +130,6 @@ begin
 
 
    --*********** Sekvencijalna logika ******************
-   if_id: process(clk) is 
-   begin
-      if(rising_edge(clk))then
-        if (reset = '0' or control_pass_s = '0' or if_id_flush_s = '1')then
-            rs1_address_id_s <= (others => '0');
-            rs2_address_id_s <= (others => '0');
-            rd_address_id_s <= (others => '0');
-            funct7_id_s <= (others => '0');
-            funct3_id_s <= (others => '0');
-            branch_id_s <= '0';
-            mem_to_reg_id_s <= (others => '0');
-            data_mem_we_id_s <= '0';
-            alu_src_b_id_s <=  '0';
-            rd_we_id_s <= '0';
-            rs1_in_use_id_s <= '0';
-            rs2_in_use_id_s <= '0';
-            rd_mux_id_s <= (others => '0');
-            load_mux_id_s <= '0';
-            alu_2bit_op_id_s <= (others => '0');
-        else
-            rs1_address_id_s <= rs1_address_if_s;
-            rs2_address_id_s <= rs2_address_if_s;
-            rd_address_id_s <= rd_address_if_s;
-            funct7_id_s <= funct7_if_s;
-            funct3_id_s <= funct3_if_s;
-            branch_id_s <= branch_if_s;
-            mem_to_reg_id_s <= mem_to_reg_if_s;
-            data_mem_we_id_s <= data_mem_we_if_s;
-            alu_src_b_id_s <= alu_src_b_if_s;
-            rd_we_id_s <= rd_we_if_s; 
-            rs1_in_use_id_s <= rs1_in_use_if_s;
-            rs2_in_use_id_s <= rs2_in_use_if_s;
-            rd_mux_id_s <= rd_mux_if_s;
-            load_mux_id_s <= load_mux_if_s;
-            alu_2bit_op_id_s <= alu_2bit_op_if_s;           
-        end if;
-      end if;
-   end process;
-    
    --ID/EX registar
    id_ex : process (clk) is
    begin
@@ -203,23 +147,19 @@ begin
             rd_mux_ex_s      <= (others => '0');
             rd_we_ex_s       <= '0';
             data_mem_we_ex_s <= '0';
-
          else
-            rd_mux_ex_s      <= rd_mux_id_s;
+            rd_mux_ex_s      <= rd_mux_s;
             branch_ex_s      <= branch_id_s;
             funct7_ex_s      <= funct7_id_s;
             funct3_ex_s      <= funct3_id_s;
             alu_src_b_ex_s   <= alu_src_b_id_s;
             mem_to_reg_ex_s  <= mem_to_reg_id_s;
             alu_2bit_op_ex_s <= alu_2bit_op_id_s;
-            rs1_address_ex_s <= rs1_address_id_s; 
-            rs2_address_ex_s <= rs2_address_id_s;
+            rs1_address_ex_s <= rs1_address_id_s; rs2_address_ex_s <= rs2_address_id_s;
             rd_address_ex_s  <= rd_address_id_s;
             rd_we_ex_s       <= rd_we_id_s;
             data_mem_we_ex_s <= data_mem_we_id_s;
-
          end if;
-         
       end if;
    end process;
 
@@ -267,16 +207,16 @@ begin
    ctrl_dec : entity work.ctrl_decoder(behavioral)
       port map(
          opcode_i      => instruction_i(6 downto 0),
-         branch_o      => branch_if_s,
-         mem_to_reg_o  => mem_to_reg_if_s,
-         data_mem_we_o => data_mem_we_if_s,
-         alu_src_b_o   => alu_src_b_if_s,
-         rd_we_o       => rd_we_if_s,
-         rs1_in_use_o  => rs1_in_use_if_s,
-         rs2_in_use_o  => rs2_in_use_if_s,
-         rd_mux_o      => rd_mux_if_s,
-         load_mux_o    => load_mux_if_s,
-         alu_2bit_op_o => alu_2bit_op_if_s);
+         branch_o      => branch_id_s,
+         mem_to_reg_o  => mem_to_reg_id_s,
+         data_mem_we_o => data_mem_we_id_s,
+         alu_src_b_o   => alu_src_b_id_s,
+         rd_we_o       => rd_we_id_s,
+         rs1_in_use_o  => rs1_in_use_id_s,
+         rs2_in_use_o  => rs2_in_use_id_s,
+         rd_mux_o      => rd_mux_s,
+         load_mux_o    => load_mux_s,
+         alu_2bit_op_o => alu_2bit_op_id_s);
 
    -- Dekoder za ALU operaciju
    alu_dec : entity work.alu_decoder(behavioral)
@@ -335,7 +275,7 @@ begin
    if_id_flush_o <= if_id_flush_s;
    funct3_mem_o  <= funct3_mem_s;
    rd_mux_o      <= rd_mux_ex_s;
-   load_mux_o    <= load_mux_id_s;
+   load_mux_o    <= load_mux_s;
    funct3_ex_o   <= funct3_ex_s;
 
 end architecture;

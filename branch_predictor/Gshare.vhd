@@ -76,7 +76,6 @@ architecture Behavioral of Gshare is
     -- Signals
     signal gshare_bhr_s     : std_logic_vector(WIDTH-1 downto 0);
     signal pht_addr_4bit_s  : std_logic_vector(WIDTH-1 downto 0);
-    signal en_s             : std_logic;
     
 begin
 
