@@ -46,6 +46,7 @@ add_files -norecurse ../multiply.vhd
 add_files -norecurse ../TOP_RISCV.vhd
 add_files -norecurse ../RISCV_tb/BRAM_byte_addressable.vhd
 add_files -fileset sim_1 ../RISCV_tb/TOP_RISCV_tb.vhd
+add_files -fileset constrs_1 -norecurse ../constraints/clk_constraint.xdc
 
 update_compile_order -fileset sources_1
 
