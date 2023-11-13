@@ -1,0 +1,16 @@
+li x7 100
+li x31 1
+li x30 0
+li x9 0
+P3:li x8 100
+
+P1:add x9 x9 x8
+sub x8 x8 x31
+beq x8 x30 P2
+jal P1
+
+P2:sub x7 x7 x31
+beq x7 x30 P4
+jal P3
+
+P4:li x10 60

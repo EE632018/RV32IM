@@ -94,8 +94,6 @@ architecture behavioral of control_path is
    signal mem_to_reg_wb_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_wb_s   : std_logic_vector (4 downto 0) := (others=>'0');
 
-
-
 begin
 
 
