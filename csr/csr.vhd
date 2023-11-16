@@ -20,6 +20,9 @@ end entity;
 architecture Behavioral of csr is
    type reg_bank is array (0 to 2**WIDTH_ADDR - 1) of std_logic_vector(WIDTH - 1 downto 0);
    signal reg_bank_s: reg_bank;
+   
+   attribute ram_style:string;
+   attribute ram_style of reg_bank_s: signal is "block";
 begin
 
    -- sinhroni upis

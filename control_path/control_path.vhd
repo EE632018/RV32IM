@@ -82,7 +82,6 @@ architecture behavioral of control_path is
    signal data_mem_we_ex_s  : std_logic := '0';
    signal rd_we_ex_s        : std_logic := '0';
    signal rd_csr_we_ex_s    : std_logic := '0';
-   signal csr_int_mux_ex_s  : std_logic := '0'; 
    signal mem_to_reg_ex_s   : std_logic_vector(1 downto 0) := (others=>'0');
 
 
@@ -97,7 +96,6 @@ architecture behavioral of control_path is
    signal data_mem_we_mem_s : std_logic := '0';
    signal rd_we_mem_s       : std_logic := '0';
    signal rd_csr_we_mem_s    : std_logic := '0';
-   signal csr_int_mux_mem_s  : std_logic := '0'; 
    signal mem_to_reg_mem_s  : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_mem_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal funct3_mem_s       : std_logic_vector(2 downto 0) := (others=>'0');
@@ -105,7 +103,6 @@ architecture behavioral of control_path is
    --*********      WRITEBACK      **************
    signal rd_we_wb_s        : std_logic := '0';
    signal rd_csr_we_wb_s    : std_logic := '0'; 
-   signal csr_int_mux_wb_s  : std_logic := '0';
    signal mem_to_reg_wb_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_wb_s   : std_logic_vector (4 downto 0) := (others=>'0');
 
@@ -171,8 +168,7 @@ begin
             rd_address_ex_s  <= (others => '0');
             rd_mux_ex_s      <= (others => '0');
             rd_we_ex_s       <= '0';
-            rd_csr_we_ex_s   <= '0';
-            csr_int_mux_ex_s <= '0'; 
+            rd_csr_we_ex_s   <= '0'; 
             data_mem_we_ex_s <= '0';
             imm_clr_ex_s     <= '0';
          else
@@ -187,7 +183,6 @@ begin
             rd_address_ex_s  <= rd_address_id_s;
             rd_we_ex_s       <= rd_we_id_s;
             rd_csr_we_ex_s   <= rd_csr_we_id_s;
-            csr_int_mux_ex_s <= csr_int_mux_id_s;
             data_mem_we_ex_s <= data_mem_we_id_s;
             imm_clr_ex_s     <= imm_clr_id_s;
          end if;
@@ -202,7 +197,6 @@ begin
             data_mem_we_mem_s <= '0';
             rd_we_mem_s       <= '0';
             rd_csr_we_mem_s   <= '0';
-            csr_int_mux_mem_s <= '0';
             mem_to_reg_mem_s  <= (others => '0');
             funct3_mem_s      <= (others => '0');  
             rd_address_mem_s  <= (others => '0');
@@ -210,7 +204,6 @@ begin
             data_mem_we_mem_s <= data_mem_we_ex_s;
             rd_we_mem_s       <= rd_we_ex_s;
             rd_csr_we_mem_s   <= rd_csr_we_ex_s;
-            csr_int_mux_mem_s <= csr_int_mux_ex_s;
             funct3_mem_s      <= funct3_ex_s;
             mem_to_reg_mem_s  <= mem_to_reg_ex_s;
             rd_address_mem_s  <= rd_address_ex_s;
@@ -225,13 +218,11 @@ begin
          if (reset = '0')then
             rd_we_wb_s      <= '0';
             rd_csr_we_wb_s   <= '0';
-            csr_int_mux_wb_s <= '0';
             mem_to_reg_wb_s <= (others => '0');
             rd_address_wb_s <= (others => '0');
          else
             rd_we_wb_s      <= rd_we_mem_s;
             rd_csr_we_wb_s   <= rd_csr_we_mem_s;
-            csr_int_mux_wb_s <= csr_int_mux_mem_s;
             mem_to_reg_wb_s <= mem_to_reg_mem_s;
             rd_address_wb_s <= rd_address_mem_s;
          end if;
@@ -324,7 +315,9 @@ begin
    rd_mux_o      <= rd_mux_ex_s;
    load_mux_o    <= load_mux_s;
    funct3_ex_o   <= funct3_ex_s;
-   imm_clr_o     <= imm_clr_ex_s; 
+   imm_clr_o     <= imm_clr_ex_s;
+   rd_csr_we_o   <= rd_csr_we_wb_s;
+   csr_int_mux_o <= csr_int_mux_id_s; 
 
 end architecture;
 
