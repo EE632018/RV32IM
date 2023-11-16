@@ -31,11 +31,14 @@ entity control_path is
       if_id_en_o         : out std_logic;
       funct3_ex_o        : out std_logic_vector(2 downto 0);
       rd_mux_o           : out std_logic_vector(1 downto 0);
-      rd_csr_we_o        : out std_logic;
-      csr_int_mux_o      : out std_logic;
       funct3_mem_o       : out std_logic_vector(2 downto 0);
       load_mux_o         : out std_logic;
-      stall_i            : in std_logic
+      stall_i            : in std_logic;
+      -- csr contorl signals
+      csr_op_o           : out std_logic_vector(2 downto 0);
+      imm_clr_o          : out std_logic;
+      rd_csr_we_o        : out std_logic;
+      csr_int_mux_o      : out std_logic  
       );
 end entity;
 
@@ -68,6 +71,7 @@ architecture behavioral of control_path is
    signal bcc_id_s          : std_logic := '0';
    signal rd_mux_s          : std_logic_vector (1 downto 0) := (others=>'0');
    signal load_mux_s        : std_logic  := '0';
+   signal imm_clr_id_s      : std_logic  := '0';
 
    --*********       EXECUTE       **************
    signal branch_ex_s       : std_logic := '0';
@@ -87,6 +91,7 @@ architecture behavioral of control_path is
    signal rd_address_ex_s   : std_logic_vector (4 downto 0) := (others=>'0');
    
    signal rd_mux_ex_s       : std_logic_vector(1 downto 0) := (others=>'0');
+   signal imm_clr_ex_s      : std_logic  := '0';
 
    --*********       MEMORY        **************
    signal data_mem_we_mem_s : std_logic := '0';
@@ -104,6 +109,16 @@ architecture behavioral of control_path is
    signal mem_to_reg_wb_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_wb_s   : std_logic_vector (4 downto 0) := (others=>'0');
 
+
+   component csr_decoder
+   port (
+      -- opcode instrukcije
+      opcode_i      : in  std_logic_vector (6 downto 0);
+      funct3_i      : in  std_logic_vector (2 downto 0);
+      csr_op_o      : out std_logic_vector (2 downto 0);
+      imm_clr_o     : out std_logic  
+      );
+   end component;
 begin
 
 
@@ -159,6 +174,7 @@ begin
             rd_csr_we_ex_s   <= '0';
             csr_int_mux_ex_s <= '0'; 
             data_mem_we_ex_s <= '0';
+            imm_clr_ex_s     <= '0';
          else
             rd_mux_ex_s      <= rd_mux_s;
             branch_ex_s      <= branch_id_s;
@@ -173,6 +189,7 @@ begin
             rd_csr_we_ex_s   <= rd_csr_we_id_s;
             csr_int_mux_ex_s <= csr_int_mux_id_s;
             data_mem_we_ex_s <= data_mem_we_id_s;
+            imm_clr_ex_s     <= imm_clr_id_s;
          end if;
       end if;
    end process;
@@ -287,7 +304,13 @@ begin
          control_pass_o => control_pass_s,
          stall_i        => stall_i);
 
-
+   crs_decoder_inst: csr_decoder
+   port map(
+      opcode_i => instruction_i(6 downto 0),
+      funct3_i => funct3_id_s,
+      csr_op_o => csr_op_o,
+      imm_clr_o => imm_clr_id_s  
+      );
 
    --********** Izlazi **************
 
@@ -301,6 +324,7 @@ begin
    rd_mux_o      <= rd_mux_ex_s;
    load_mux_o    <= load_mux_s;
    funct3_ex_o   <= funct3_ex_s;
+   imm_clr_o     <= imm_clr_ex_s; 
 
 end architecture;
 

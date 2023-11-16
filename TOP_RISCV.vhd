@@ -43,7 +43,9 @@ architecture structural of TOP_RISCV is
    signal load_mux_s         : std_logic;
    signal stall_s            : std_logic;   
    signal csr_int_mux_s      : std_logic; 
-   signal rd_csr_we_s        : std_logic;  
+   signal rd_csr_we_s        : std_logic;
+   signal csr_op_s           : std_logic_vector(2 downto 0);
+   signal imm_clr_s          : std_logic;  
             
 begin
    -- Instanca datapath-a
@@ -83,7 +85,9 @@ begin
          if_id_en_i          => if_id_en_s,
          load_mux_i          => load_mux_s,
          funct3_ex_i         => funct3_ex_s,
-         stall_o             => stall_s
+         stall_o             => stall_s,
+         csr_op_i            => csr_op_s,
+         imm_clr_i           => imm_clr_s
          ); 
 
 
@@ -119,7 +123,9 @@ begin
          funct3_ex_o         => funct3_ex_s,
          if_id_en_o          => if_id_en_s,
          load_mux_o          => load_mux_s,
-         stall_i             => stall_s
+         stall_i             => stall_s,
+         csr_op_o            => csr_op_s,
+         imm_clr_o           => imm_clr_s
          );
    
 end architecture;

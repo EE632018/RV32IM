@@ -42,6 +42,7 @@ add_files -norecurse ../branch_predictor/pshare.vhd
 add_files -norecurse ../branch_predictor/PAp.vhd
 add_files -norecurse ../branch_predictor/MHBP.vhd
 add_files -norecurse ../csr/csr.vhd
+add_files -norecurse ../control_path/csr_decoder.vhd
 add_files -norecurse ../division_u.vhd
 add_files -norecurse ../multiply.vhd
 add_files -norecurse ../TOP_RISCV.vhd

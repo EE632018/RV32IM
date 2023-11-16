@@ -11,18 +11,19 @@ end entity;
 
 architecture Behavioral of immediate is
    signal opcode           : std_logic_vector(6 downto 0);
-   signal instruction_type : std_logic_vector(2 downto 0);
+   signal instruction_type : std_logic_vector(3 downto 0);
    signal funct3           : std_logic_vector(2 downto 0);
    signal extension        : std_logic_vector(19 downto 0);
    
-   constant r_type_instruction : std_logic_vector(2 downto 0):= "000";
-   constant i_type_instruction : std_logic_vector(2 downto 0):= "001";
-   constant s_type_instruction : std_logic_vector(2 downto 0):= "010";
-   constant b_type_instruction : std_logic_vector(2 downto 0):= "011";
-   constant u_type_instruction : std_logic_vector(2 downto 0):= "100";
-   constant j_type_instruction : std_logic_vector(2 downto 0):= "101";
-   constant shamt_instruction  : std_logic_vector(2 downto 0):= "110"; 
-   constant fence_ecall_ebreak : std_logic_vector(2 downto 0):= "111";
+   constant r_type_instruction : std_logic_vector(3 downto 0):= "0000";
+   constant i_type_instruction : std_logic_vector(3 downto 0):= "0001";
+   constant s_type_instruction : std_logic_vector(3 downto 0):= "0010";
+   constant b_type_instruction : std_logic_vector(3 downto 0):= "0011";
+   constant u_type_instruction : std_logic_vector(3 downto 0):= "0100";
+   constant j_type_instruction : std_logic_vector(3 downto 0):= "0101";
+   constant shamt_instruction  : std_logic_vector(3 downto 0):= "0110"; 
+   constant fence_ecall_ebreak : std_logic_vector(3 downto 0):= "0111";
+   constant csr_type_instruction : std_logic_vector(3 downto 0):= "1000";
 
 begin
 
@@ -55,7 +56,9 @@ begin
          when "00101" => -- AUIPC instrukcija
             instruction_type <= u_type_instruction;   
          when "11011" =>
-            instruction_type <= j_type_instruction;        
+            instruction_type <= j_type_instruction; 
+         when "11100" =>
+            instruction_type <= csr_type_instruction;       
          when others =>
             instruction_type <= fence_ecall_ebreak;
       end case;
@@ -78,7 +81,9 @@ begin
             immediate_extended_o <= instruction_i(31 downto 12) & std_logic_vector(to_unsigned(0,12));
          when j_type_instruction =>
             immediate_extended_o <= extension(10 downto 0) & instruction_i(31) & instruction_i(19 downto 12) & instruction_i(20)
-                                    & instruction_i(30 downto 21) & '0';                      
+                                    & instruction_i(30 downto 21) & '0';   
+         when csr_type_instruction => 
+            immediate_extended_o <= std_logic_vector(to_unsigned(0,27)) & instruction_i(19 downto 15);            
          when others =>
             immediate_extended_o <= (others =>'0');
       end case;

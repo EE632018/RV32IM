@@ -40,7 +40,9 @@ entity data_path is
       load_mux_i          : in  std_logic;
       funct3_mem_i        : in  std_logic_vector(2 downto 0);
       funct3_ex_i         : in  std_logic_vector(2 downto 0);
-      stall_o             : out std_logic
+      stall_o             : out std_logic;
+      csr_op_i            : in std_logic_vector(2 downto 0);
+      imm_clr_i           : in std_logic
       );
 
 end entity;
@@ -100,6 +102,7 @@ architecture Behavioral of data_path is
    signal instruction_ex_s        : std_logic_vector (31 downto 0) := (others=>'0');
    signal pc_adder_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal immediate_extended_ex_s : std_logic_vector (31 downto 0) := (others=>'0');
+   signal immediate_extended_ex_s2 : std_logic_vector (31 downto 0) := (others=>'0');
    signal alu_forward_a_ex_s      : std_logic_vector(31 downto 0) := (others=>'0');
    signal alu_forward_b_ex_s      : std_logic_vector(31 downto 0) := (others=>'0');
    signal alu_zero_ex_s           : std_logic := '0';
@@ -184,11 +187,11 @@ architecture Behavioral of data_path is
     port   (clk            : in std_logic;
             reset          : in std_logic;
 
-            rs1_address_i  : in std_logic_vector(WIDTH_ADDR downto 0);
+            rs1_address_i  : in std_logic_vector(WIDTH_ADDR - 1 downto 0);
             rs1_data_o     : out std_logic_vector(WIDTH - 1 downto 0);
 
             rd_we_i        : in std_logic;
-            rd_address_i   : in std_logic_vector(WIDTH_ADDR downto 0);
+            rd_address_i   : in std_logic_vector(WIDTH_ADDR - 1 downto 0);
             rd_data_i      : in std_logic_vector(WIDTH - 1 downto 0));
   end component;
     
@@ -413,7 +416,7 @@ begin
                          rs2_data_ex_s;
 
    -- multiplekser za biranje 'b' operanda alu jedinice
-   b_ex_s <= immediate_extended_ex_s when alu_src_b_i = '1' else
+   b_ex_s <= immediate_extended_ex_s2 when alu_src_b_i = '1' else
              alu_forward_b_ex_s;
 
    a_ex_s <= alu_forward_a_ex_s;
@@ -423,7 +426,7 @@ begin
                    pc_adder_wb_s      when mem_to_reg_i = "10" else
                    alu_result_wb_s;
    -- Ovo je podatak koji vracamo na csr registarsku banku, write faza izvrsavanja         
-   rd_data_csr_id_s <= instruction_id_s(19 downto 15); 
+   --rd_data_csr_id_s <= rs1_data_id_s; 
 
    -- izdvoji adrese opereanada iz 32-bitne instrukcije
    rs1_address_id_s <= instruction_id_s(19 downto 15);
@@ -497,9 +500,9 @@ begin
                  ); 
     
     CSR_INST: csr
-    generic map(WIDTH       => 32;
-                WIDTH_ADDR  => 12);
-    port   (clk  => clk,
+    generic map(WIDTH       => 32,
+                WIDTH_ADDR  => 12)
+    port  map (clk  => clk,
             reset => reset,
 
             rs1_address_i  => csr_address_id_s,
@@ -516,7 +519,7 @@ begin
     -- *******************************************************************        
     --       MUX INDICATING IF WE TAKE VALUE FOR REG_BANK OR CSR_BANK             
     -- *******************************************************************   
-    process(csr_int_mux_i)
+    process(csr_int_mux_i,rs1_data_id_s,rs1_csr_data_id_s)
     begin
         if csr_int_mux_i = '0' then
             rs1_data_mux_id_s <= rs1_data_id_s;
@@ -525,7 +528,42 @@ begin
         end if;
     end process;
 
+    -- *******************************************************************        
+    --       MUX INDICATING SET/CLEAR IMM in EX phase             
+    -- *******************************************************************          
 
+    process(immediate_extended_ex_s, imm_clr_i)
+    begin
+        if imm_clr_i = '1' then
+            immediate_extended_ex_s2 <= (others => '0');
+        else
+            immediate_extended_ex_s2 <= immediate_extended_ex_s;
+        end if;
+    end process;
+    
+    -- *******************************************************************        
+    --       MUX INDICATING WHAT value will be written to CSR             
+    -- ******************************************************************* 
+
+    process(csr_op_i, rs1_data_id_s, rs1_csr_data_id_s, immediate_extended_id_s)
+    begin
+        case csr_op_i is
+            when "000" =>
+                rd_data_csr_id_s <= rs1_data_id_s;
+            when "001" =>
+                rd_data_csr_id_s <= rs1_data_id_s or rs1_csr_data_id_s;
+            when "010" =>
+                rd_data_csr_id_s <= not(rs1_data_id_s) and rs1_csr_data_id_s;
+            when "011" =>
+                rd_data_csr_id_s <= immediate_extended_id_s;
+            when "100" =>
+                rd_data_csr_id_s <= immediate_extended_id_s or rs1_csr_data_id_s;
+            when "101" =>
+                rd_data_csr_id_s <= not(immediate_extended_id_s) and rs1_csr_data_id_s;
+            when others =>    
+                rd_data_csr_id_s <= rs1_data_id_s;
+        end case;
+    end process;
 
     process(final_pred_s, branch_inst_if_s)
     begin
