@@ -31,6 +31,8 @@ entity control_path is
       if_id_en_o         : out std_logic;
       funct3_ex_o        : out std_logic_vector(2 downto 0);
       rd_mux_o           : out std_logic_vector(1 downto 0);
+      rd_csr_we_o        : out std_logic;
+      csr_int_mux_o      : out std_logic;
       funct3_mem_o       : out std_logic_vector(2 downto 0);
       load_mux_o         : out std_logic;
       stall_i            : in std_logic
@@ -57,6 +59,8 @@ architecture behavioral of control_path is
    signal alu_src_b_id_s    : std_logic := '0';
    signal data_mem_we_id_s  : std_logic := '0';
    signal rd_we_id_s        : std_logic := '0';
+   signal rd_csr_we_id_s    : std_logic := '0'; 
+   signal csr_int_mux_id_s  : std_logic := '0'; 
    signal mem_to_reg_id_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rs1_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rs2_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
@@ -73,6 +77,8 @@ architecture behavioral of control_path is
    signal alu_src_b_ex_s    : std_logic := '0';
    signal data_mem_we_ex_s  : std_logic := '0';
    signal rd_we_ex_s        : std_logic := '0';
+   signal rd_csr_we_ex_s    : std_logic := '0';
+   signal csr_int_mux_ex_s  : std_logic := '0'; 
    signal mem_to_reg_ex_s   : std_logic_vector(1 downto 0) := (others=>'0');
 
 
@@ -85,12 +91,16 @@ architecture behavioral of control_path is
    --*********       MEMORY        **************
    signal data_mem_we_mem_s : std_logic := '0';
    signal rd_we_mem_s       : std_logic := '0';
+   signal rd_csr_we_mem_s    : std_logic := '0';
+   signal csr_int_mux_mem_s  : std_logic := '0'; 
    signal mem_to_reg_mem_s  : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_mem_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal funct3_mem_s       : std_logic_vector(2 downto 0) := (others=>'0');
 	
    --*********      WRITEBACK      **************
    signal rd_we_wb_s        : std_logic := '0';
+   signal rd_csr_we_wb_s    : std_logic := '0'; 
+   signal csr_int_mux_wb_s  : std_logic := '0';
    signal mem_to_reg_wb_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_wb_s   : std_logic_vector (4 downto 0) := (others=>'0');
 
@@ -146,6 +156,8 @@ begin
             rd_address_ex_s  <= (others => '0');
             rd_mux_ex_s      <= (others => '0');
             rd_we_ex_s       <= '0';
+            rd_csr_we_ex_s   <= '0';
+            csr_int_mux_ex_s <= '0'; 
             data_mem_we_ex_s <= '0';
          else
             rd_mux_ex_s      <= rd_mux_s;
@@ -158,6 +170,8 @@ begin
             rs1_address_ex_s <= rs1_address_id_s; rs2_address_ex_s <= rs2_address_id_s;
             rd_address_ex_s  <= rd_address_id_s;
             rd_we_ex_s       <= rd_we_id_s;
+            rd_csr_we_ex_s   <= rd_csr_we_id_s;
+            csr_int_mux_ex_s <= csr_int_mux_id_s;
             data_mem_we_ex_s <= data_mem_we_id_s;
          end if;
       end if;
@@ -170,12 +184,16 @@ begin
          if (reset = '0' or id_ex_flush_s = '1')then
             data_mem_we_mem_s <= '0';
             rd_we_mem_s       <= '0';
+            rd_csr_we_mem_s   <= '0';
+            csr_int_mux_mem_s <= '0';
             mem_to_reg_mem_s  <= (others => '0');
             funct3_mem_s      <= (others => '0');  
             rd_address_mem_s  <= (others => '0');
          else
             data_mem_we_mem_s <= data_mem_we_ex_s;
             rd_we_mem_s       <= rd_we_ex_s;
+            rd_csr_we_mem_s   <= rd_csr_we_ex_s;
+            csr_int_mux_mem_s <= csr_int_mux_ex_s;
             funct3_mem_s      <= funct3_ex_s;
             mem_to_reg_mem_s  <= mem_to_reg_ex_s;
             rd_address_mem_s  <= rd_address_ex_s;
@@ -189,10 +207,14 @@ begin
       if (rising_edge(clk)) then
          if (reset = '0')then
             rd_we_wb_s      <= '0';
+            rd_csr_we_wb_s   <= '0';
+            csr_int_mux_wb_s <= '0';
             mem_to_reg_wb_s <= (others => '0');
             rd_address_wb_s <= (others => '0');
          else
             rd_we_wb_s      <= rd_we_mem_s;
+            rd_csr_we_wb_s   <= rd_csr_we_mem_s;
+            csr_int_mux_wb_s <= csr_int_mux_mem_s;
             mem_to_reg_wb_s <= mem_to_reg_mem_s;
             rd_address_wb_s <= rd_address_mem_s;
          end if;
@@ -212,6 +234,8 @@ begin
          data_mem_we_o => data_mem_we_id_s,
          alu_src_b_o   => alu_src_b_id_s,
          rd_we_o       => rd_we_id_s,
+         rd_csr_we_o   => rd_csr_we_id_s,
+         csr_int_mux_o => csr_int_mux_id_s,
          rs1_in_use_o  => rs1_in_use_id_s,
          rs2_in_use_o  => rs2_in_use_id_s,
          rd_mux_o      => rd_mux_s,

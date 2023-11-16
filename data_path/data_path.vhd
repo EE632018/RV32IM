@@ -23,6 +23,8 @@ entity data_path is
       alu_src_b_i         : in  std_logic;
       pc_next_sel_i       : in  std_logic;
       rd_we_i             : in  std_logic;
+      rd_csr_we_i         : in  std_logic;
+      csr_int_mux_i       : in  std_logic;
       branch_condition_o  : out std_logic;
       -- kontrolni signali za prosledjivanje operanada u ranije faze protocne obrade
       alu_forward_a_i     : in  std_logic_vector (1 downto 0);
@@ -67,6 +69,8 @@ architecture Behavioral of data_path is
    signal pc_adder_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal pc_reg_id_s             : std_logic_vector (31 downto 0) := (others=>'0');
    signal rs1_data_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal rs1_data_mux_id_s       : std_logic_vector (31 downto 0) := (others=>'0');  
+   signal rs1_csr_data_id_s       : std_logic_vector (31 downto 0) := (others=>'0');
    signal rs2_data_id_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal immediate_extended_id_s : std_logic_vector (31 downto 0) := (others=>'0');
    signal immediate_extended_id_s2 : std_logic_vector (31 downto 0) := (others=>'0');
@@ -76,6 +80,8 @@ architecture Behavioral of data_path is
    signal rs1_address_id_s        : std_logic_vector (4 downto 0) := (others=>'0');
    signal rs2_address_id_s        : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_id_s         : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rd_data_csr_id_s        : std_logic_vector (31 downto 0) := (others=>'0');
+   signal csr_address_id_s        : std_logic_vector (11 downto 0) := (others => '0');
    signal if_id_reg_flush_s       : std_logic := '0';
    signal funct3_id_s	           : std_logic_vector(2 downto 0) := (others=>'0');
    signal rd_mux_s                : std_logic_vector(1 downto 0) := (others=>'0');
@@ -102,7 +108,9 @@ architecture Behavioral of data_path is
    signal alu_result_ex_s         : std_logic_vector(31 downto 0) := (others=>'0');
    signal rs1_data_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal rs2_data_ex_s           : std_logic_vector (31 downto 0) := (others=>'0');
+   signal rd_data_csr_ex_s        : std_logic_vector (31 downto 0) := (others=>'0');
    signal rd_address_ex_s         : std_logic_vector (4 downto 0) := (others=>'0');
+   signal csr_address_ex_s        : std_logic_vector (11 downto 0) := (others => '0');
    signal stall_s                 : std_logic;
    signal pc_reg_ex_s             : std_logic_vector (31 downto 0) := (others=>'0');
    signal branch_adder_ex_s       : std_logic_vector (31 downto 0) := (others=>'0');
@@ -122,6 +130,8 @@ architecture Behavioral of data_path is
    signal pc_adder_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
    signal alu_result_mem_s        : std_logic_vector(31 downto 0) := (others=>'0');
    signal rd_address_mem_s        : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rd_data_csr_mem_s        : std_logic_vector (31 downto 0) := (others=>'0');
+   signal csr_address_mem_s        : std_logic_vector (11 downto 0) := (others => '0');
    signal rs2_data_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
    signal data_mem_read_mem_s     : std_logic_vector (31 downto 0) := (others=>'0');
    signal funct3_mem_s		   : std_logic_vector (2 downto 0) := (others => '0');
@@ -133,7 +143,9 @@ architecture Behavioral of data_path is
    signal pc_adder_wb_s           : std_logic_vector (31 downto 0) := (others=>'0');
    signal alu_result_wb_s         : std_logic_vector(31 downto 0) := (others=>'0');
    signal rd_data_wb_s            : std_logic_vector (31 downto 0) := (others=>'0');
+   signal rd_data_csr_wb_s        : std_logic_vector (31 downto 0) := (others=>'0');  
    signal rd_address_wb_s         : std_logic_vector (4 downto 0) := (others=>'0');
+   signal csr_address_wb_s        : std_logic_vector (11 downto 0) := (others => '0');
    signal data_mem_read_wb_s      : std_logic_vector (31 downto 0) := (others=>'0');
 
    
@@ -165,6 +177,20 @@ architecture Behavioral of data_path is
             pht_addr_4bit_PAp           : out STD_LOGIC_VECTOR(WIDTH_PHT-1 DOWNTO 0)
             );
   END COMPONENT;  
+
+  component csr
+    generic(WIDTH:      positive := 32;
+            WIDTH_ADDR: positive := 12);
+    port   (clk            : in std_logic;
+            reset          : in std_logic;
+
+            rs1_address_i  : in std_logic_vector(WIDTH_ADDR downto 0);
+            rs1_data_o     : out std_logic_vector(WIDTH - 1 downto 0);
+
+            rd_we_i        : in std_logic;
+            rd_address_i   : in std_logic_vector(WIDTH_ADDR downto 0);
+            rd_data_i      : in std_logic_vector(WIDTH - 1 downto 0));
+  end component;
     
 begin
 
@@ -224,8 +250,10 @@ begin
                 pc_adder_ex_s           <= (others => '0');
                 rs1_data_ex_s           <= (others => '0');
                 rs2_data_ex_s           <= (others => '0');
+                rd_data_csr_ex_s        <= (others => '0');
                 immediate_extended_ex_s <= (others => '0');
                 rd_address_ex_s         <= (others => '0');
+                csr_address_ex_s        <= (others => '0');
                 pc_reg_ex_s             <= (others => '0');
                 instruction_ex_s        <= (others => '0');
                 pht_addr_4bit_gshare_ex_s <= (others => '0');       
@@ -238,10 +266,12 @@ begin
             else
                 pc_reg_ex_s               <= pc_reg_id_s;
                 pc_adder_ex_s             <= pc_adder_id_s;
-                rs1_data_ex_s             <= rs1_data_id_s;
+                rs1_data_ex_s             <= rs1_data_mux_id_s;
                 rs2_data_ex_s             <= rs2_data_id_s;
+                rd_data_csr_ex_s          <= rd_data_csr_id_s;  
                 immediate_extended_ex_s   <= immediate_extended_id_s2;
                 rd_address_ex_s           <= rd_address_id_s;
+                csr_address_ex_s          <= csr_address_id_s;
                 instruction_ex_s          <= instruction_id_s;
                 pht_addr_4bit_gshare_ex_s <= pht_addr_4bit_gshare_id_s;       
                 pht_addr_4bit_pshare_ex_s <= pht_addr_4bit_pshare_id_s;
@@ -265,11 +295,15 @@ begin
             alu_forward_b_mem_s   <= (others => '0');
             pc_adder_mem_s   <= (others => '0');
             rd_address_mem_s <= (others => '0');
+            csr_address_mem_s <= (others => '0');
+            rd_data_csr_mem_s <= (others => '0');  
          else
             alu_result_mem_s <= alu_result_ex_s;
             alu_forward_b_mem_s   <= alu_forward_b_ex_s;
             pc_adder_mem_s   <= pc_adder_ex_s;
             rd_address_mem_s <= rd_address_ex_s;
+            rd_data_csr_mem_s          <= rd_data_csr_ex_s; 
+            csr_address_mem_s <= csr_address_ex_s;
          end if;
       end if;
    end process;
@@ -282,11 +316,15 @@ begin
             alu_result_wb_s    <= (others => '0');
             pc_adder_wb_s      <= (others => '0');
             rd_address_wb_s    <= (others => '0');
+            csr_address_wb_s   <= (others => '0');
+            rd_data_csr_wb_s <= (others => '0');
             data_mem_read_wb_s <= (others => '0');
          else
             alu_result_wb_s    <= alu_result_mem_s;
             pc_adder_wb_s      <= pc_adder_mem_s;
             rd_address_wb_s    <= rd_address_mem_s;
+            rd_data_csr_wb_s          <= rd_data_csr_mem_s;
+            csr_address_wb_s <= csr_address_mem_s;
             data_mem_read_wb_s <= data_mem_read_mem_s2;
          end if;
       end if;
@@ -371,6 +409,7 @@ begin
                          rs1_data_ex_s;
    alu_forward_b_ex_s <= rd_data_wb_s when alu_forward_b_i = "01" else
                          alu_result_mem_s when alu_forward_b_i = "10" else
+                         (others => '0') when alu_forward_b_i = "11" else
                          rs2_data_ex_s;
 
    -- multiplekser za biranje 'b' operanda alu jedinice
@@ -383,11 +422,14 @@ begin
    rd_data_wb_s <= data_mem_read_wb_s when mem_to_reg_i = "01" else
                    pc_adder_wb_s      when mem_to_reg_i = "10" else
                    alu_result_wb_s;
+   -- Ovo je podatak koji vracamo na csr registarsku banku, write faza izvrsavanja         
+   rd_data_csr_id_s <= instruction_id_s(19 downto 15); 
 
    -- izdvoji adrese opereanada iz 32-bitne instrukcije
    rs1_address_id_s <= instruction_id_s(19 downto 15);
    rs2_address_id_s <= instruction_id_s(24 downto 20);
    rd_address_id_s  <= instruction_id_s(11 downto 7);
+   csr_address_id_s <= instruction_id_s(31 downto 20);
    
 
    --***********  Instanciranje modula ***********
@@ -452,7 +494,39 @@ begin
                  pht_addr_4bit_GAg          => pht_addr_4bit_GAg_if_s, 
                  pht_addr_4bit_pshare       => pht_addr_4bit_pshare_if_s, 
                  pht_addr_4bit_PAp          => pht_addr_4bit_PAp_if_s
-                 );            
+                 ); 
+    
+    CSR_INST: csr
+    generic map(WIDTH       => 32;
+                WIDTH_ADDR  => 12);
+    port   (clk  => clk,
+            reset => reset,
+
+            rs1_address_i  => csr_address_id_s,
+            rs1_data_o     => rs1_csr_data_id_s,
+
+            rd_we_i        => rd_csr_we_i,
+            rd_address_i   => csr_address_wb_s,
+            rd_data_i      => rd_data_csr_wb_s);
+                 
+    -- *******************************************************************        
+    --                          ENDCOMPONENT             
+    -- *******************************************************************   
+    
+    -- *******************************************************************        
+    --       MUX INDICATING IF WE TAKE VALUE FOR REG_BANK OR CSR_BANK             
+    -- *******************************************************************   
+    process(csr_int_mux_i)
+    begin
+        if csr_int_mux_i = '0' then
+            rs1_data_mux_id_s <= rs1_data_id_s;
+        else
+            rs1_data_mux_id_s <= rs1_csr_data_id_s;
+        end if;
+    end process;
+
+
+
     process(final_pred_s, branch_inst_if_s)
     begin
         if branch_inst_if_s = '1' then

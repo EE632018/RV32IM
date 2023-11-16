@@ -41,7 +41,9 @@ architecture structural of TOP_RISCV is
    signal funct3_ex_s        : std_logic_vector(2 downto 0);
    signal rd_mux_s           : std_logic_vector(1 downto 0);
    signal load_mux_s         : std_logic;
-   signal stall_s            : std_logic;      
+   signal stall_s            : std_logic;   
+   signal csr_int_mux_s      : std_logic; 
+   signal rd_csr_we_s        : std_logic;  
             
 begin
    -- Instanca datapath-a
@@ -76,6 +78,8 @@ begin
          pc_en_i             => pc_en_s,
          funct3_mem_i        => funct3_mem_s,
          rd_mux_i            => rd_mux_s,
+         rd_csr_we_i         => rd_csr_we_s,
+         csr_int_mux_i       => csr_int_mux_s,
          if_id_en_i          => if_id_en_s,
          load_mux_i          => load_mux_s,
          funct3_ex_i         => funct3_ex_s,
@@ -109,6 +113,8 @@ begin
          -- kontrolni signali za zaustavljanje protocne obrade
          pc_en_o             => pc_en_s,
          rd_mux_o            => rd_mux_s,
+         rd_csr_we_o         => rd_csr_we_s,
+         csr_int_mux_o       => csr_int_mux_s,
          funct3_mem_o        => funct3_mem_s,
          funct3_ex_o         => funct3_ex_s,
          if_id_en_o          => if_id_en_s,
