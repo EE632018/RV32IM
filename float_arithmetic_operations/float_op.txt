@@ -1,0 +1,1 @@
+In this folder, we define float arithmetic operations. There are 24 different instructions.In excel file they are described.
