@@ -24,7 +24,7 @@ END ALU_float;
 
 ARCHITECTURE behavioral OF ALU_float IS
 
-
+    
 begin
 
 
