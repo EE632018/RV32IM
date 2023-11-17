@@ -22,13 +22,16 @@ add_files -norecurse ../packages/controlpath_signals_pkg.vhd
 add_files -norecurse ../packages/datapath_signals_pkg.vhd
 add_files -norecurse ../packages/txt_util.vhd
 add_files -norecurse ../control_path/alu_decoder.vhd
+add_files -norecurse ../control_path/alu_decoder_float.vhd
 add_files -norecurse ../control_path/ctrl_decoder.vhd
 add_files -norecurse ../control_path/forwarding_unit.vhd
 add_files -norecurse ../control_path/hazard_unit.vhd
 add_files -norecurse ../control_path/control_path.vhd
 add_files -norecurse ../data_path/ALU_simple.vhd
+add_files -norecurse ../data_path/ALU_float.vhd
 add_files -norecurse ../data_path/immediate.vhd
 add_files -norecurse ../data_path/register_bank.vhd
+add_files -norecurse ../data_path/register_bank_float.vhd
 add_files -norecurse ../data_path/data_path.vhd
 add_files -norecurse ../branch_predictor/BHR.vhd
 add_files -norecurse ../branch_predictor/BHR_local.vhd

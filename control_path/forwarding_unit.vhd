@@ -8,9 +8,11 @@ entity forwarding_unit is
       -- ulazi iz ID faze
       rs1_address_id_i   : in  std_logic_vector(4 downto 0);
       rs2_address_id_i   : in  std_logic_vector(4 downto 0);
+      rs3_address_id_i   : in  std_logic_vector(4 downto 0);
       -- ulazi iz EX faze
       rs1_address_ex_i   : in  std_logic_vector(4 downto 0);
       rs2_address_ex_i   : in  std_logic_vector(4 downto 0);
+      rs3_address_ex_i   : in  std_logic_vector(4 downto 0);
       -- ulazi iz MEM faze
       rd_we_mem_i        : in  std_logic;
       rd_address_mem_i   : in  std_logic_vector(4 downto 0);
@@ -20,6 +22,7 @@ entity forwarding_unit is
       -- izlazi za prosledjivanje operanada ALU jedinici
       alu_forward_a_o    : out std_logic_vector (1 downto 0);
       alu_forward_b_o    : out std_logic_vector(1 downto 0);
+      alu_forward_c_o    : out std_logic_vector(1 downto 0);
       -- izlazi za prosledjivanje operanada komparatoru za odredjivanje uslova skoka
       branch_forward_a_o : out std_logic;
       branch_forward_b_o : out std_logic);
@@ -33,10 +36,11 @@ begin
    -- prosledjivanje iz MEM faze ima veci prioritet od prosledjivanja iz WB faze,
    -- zato sto je vrednost novija ('svezija')
    forward_proc : process(rd_we_mem_i, rd_address_mem_i, rd_we_wb_i, rd_address_wb_i,
-                          rs1_address_ex_i, rs2_address_ex_i)is
+                          rs1_address_ex_i, rs2_address_ex_i, rs3_address_ex_i)is
    begin
       alu_forward_a_o <= "00";
       alu_forward_b_o <= "00";
+      alu_forward_c_o <= "00";
       -- prosledjivanje signala iz WB faze
       if (rd_we_wb_i = '1' and rd_address_wb_i /= zero_c)then
          if (rd_address_wb_i = rs1_address_ex_i)then
@@ -44,6 +48,9 @@ begin
          end if;
          if(rd_address_wb_i = rs2_address_ex_i)then
             alu_forward_b_o <= "01";
+         end if;
+         if(rd_address_wb_i = rs3_address_ex_i)then
+            alu_forward_c_o <= "01";
          end if;
       end if;
       -- prosledjivanje signala iz MEM faze
@@ -53,6 +60,9 @@ begin
          end if;
          if (rd_address_mem_i = rs2_address_ex_i)then
             alu_forward_b_o <= "10";
+         end if;
+         if (rd_address_mem_i = rs3_address_ex_i)then
+            alu_forward_c_o <= "10";
          end if;
       end if;
    end process;

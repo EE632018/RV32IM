@@ -15,13 +15,17 @@ entity control_path is
       -- kontrolni signali koji se prosledjiuju u datapath
       mem_to_reg_o       : out std_logic_vector(1 downto 0);
       alu_op_o           : out std_logic_vector(4 downto 0);
+      alu_op_f_o         : out std_logic_vector(4 downto 0);
+      alu_mux_o          : out std_logic;
       alu_src_b_o        : out std_logic;
       rd_we_o            : out std_logic;
+      rd_we_f_o          : out std_logic;
       pc_next_sel_o      : out std_logic;
       data_mem_we_o      : out std_logic_vector(3 downto 0);
       -- kontrolni signali za prosledjivanje operanada u ranije faze protocne obrade
       alu_forward_a_o    : out std_logic_vector (1 downto 0);
       alu_forward_b_o    : out std_logic_vector (1 downto 0);
+      alu_forward_c_o    : out std_logic_vector (1 downto 0);
       branch_forward_a_o : out std_logic;  -- mux a 
       branch_forward_b_o : out std_logic;   -- mux b
       -- kontrolni signal za resetovanje if/id registra
@@ -38,7 +42,7 @@ entity control_path is
       csr_op_o           : out std_logic_vector(2 downto 0);
       imm_clr_o          : out std_logic;
       rd_csr_we_o        : out std_logic;
-      csr_int_mux_o      : out std_logic  
+      csr_int_mux_o      : out std_logic
       );
 end entity;
 
@@ -62,16 +66,20 @@ architecture behavioral of control_path is
    signal alu_src_b_id_s    : std_logic := '0';
    signal data_mem_we_id_s  : std_logic := '0';
    signal rd_we_id_s        : std_logic := '0';
+   signal rd_we_f_id_s        : std_logic := '0';
    signal rd_csr_we_id_s    : std_logic := '0'; 
    signal csr_int_mux_id_s  : std_logic := '0'; 
    signal mem_to_reg_id_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rs1_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rs2_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rs3_address_id_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_id_s   : std_logic_vector (4 downto 0) := (others=>'0');
    signal bcc_id_s          : std_logic := '0';
    signal rd_mux_s          : std_logic_vector (1 downto 0) := (others=>'0');
    signal load_mux_s        : std_logic  := '0';
    signal imm_clr_id_s      : std_logic  := '0';
+   signal alu_mux_id_s      : std_logic  := '0';
+   signal alu_f_bit_op_id_s : std_logic_vector(2 downto 0) := (others => '0');
 
    --*********       EXECUTE       **************
    signal branch_ex_s       : std_logic := '0';
@@ -81,20 +89,25 @@ architecture behavioral of control_path is
    signal alu_src_b_ex_s    : std_logic := '0';
    signal data_mem_we_ex_s  : std_logic := '0';
    signal rd_we_ex_s        : std_logic := '0';
+   signal rd_we_f_ex_s        : std_logic := '0';
    signal rd_csr_we_ex_s    : std_logic := '0';
    signal mem_to_reg_ex_s   : std_logic_vector(1 downto 0) := (others=>'0');
 
 
    signal rs1_address_ex_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rs2_address_ex_s  : std_logic_vector (4 downto 0) := (others=>'0');
+   signal rs3_address_ex_s  : std_logic_vector (4 downto 0) := (others=>'0');
    signal rd_address_ex_s   : std_logic_vector (4 downto 0) := (others=>'0');
    
    signal rd_mux_ex_s       : std_logic_vector(1 downto 0) := (others=>'0');
    signal imm_clr_ex_s      : std_logic  := '0';
 
+   signal alu_mux_ex_s      : std_logic  := '0';
+   signal alu_f_bit_op_ex_s : std_logic_vector(2 downto 0) := (others => '0');
    --*********       MEMORY        **************
    signal data_mem_we_mem_s : std_logic := '0';
    signal rd_we_mem_s       : std_logic := '0';
+   signal rd_we_f_mem_s       : std_logic := '0';
    signal rd_csr_we_mem_s    : std_logic := '0';
    signal mem_to_reg_mem_s  : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_mem_s  : std_logic_vector (4 downto 0) := (others=>'0');
@@ -102,6 +115,7 @@ architecture behavioral of control_path is
 	
    --*********      WRITEBACK      **************
    signal rd_we_wb_s        : std_logic := '0';
+   signal rd_we_f_wb_s        : std_logic := '0';
    signal rd_csr_we_wb_s    : std_logic := '0'; 
    signal mem_to_reg_wb_s   : std_logic_vector(1 downto 0) := (others=>'0');
    signal rd_address_wb_s   : std_logic_vector (4 downto 0) := (others=>'0');
@@ -116,6 +130,17 @@ architecture behavioral of control_path is
       imm_clr_o     : out std_logic  
       );
    end component;
+
+   component alu_decoder_float
+   port ( 
+      -- from data_path
+      alu_f_bit_op_i : in std_logic_vector(2 downto 0);
+      funct3_i       : in std_logic_vector (2 downto 0);
+      funct5_i       : in std_logic_vector (4 downto 0);
+      rs2_i          : in std_logic_vector (4 downto 0);
+      -- to data_path
+      alu_op_f_o       : out std_logic_vector(4 downto 0)); 
+   end component; 
 begin
 
 
@@ -124,6 +149,7 @@ begin
    -- izdvoji adrese operanada iz instrukcije
    rs1_address_id_s <= instruction_i(19 downto 15);
    rs2_address_id_s <= instruction_i(24 downto 20);
+   rs3_address_id_s <= instruction_i(31 downto 27);
    rd_address_id_s  <= instruction_i(11 downto 7);
 
    funct7_id_s <= instruction_i(31 downto 25);
@@ -165,12 +191,16 @@ begin
             alu_2bit_op_ex_s <= (others => '0');
             rs1_address_ex_s <= (others => '0');
             rs2_address_ex_s <= (others => '0');
+            rs3_address_ex_s <= (others => '0');
             rd_address_ex_s  <= (others => '0');
             rd_mux_ex_s      <= (others => '0');
             rd_we_ex_s       <= '0';
+            rd_we_f_ex_s       <= '0';
             rd_csr_we_ex_s   <= '0'; 
             data_mem_we_ex_s <= '0';
             imm_clr_ex_s     <= '0';
+            alu_mux_ex_s     <= '0';
+            alu_f_bit_op_ex_s<= (others => '0');
          else
             rd_mux_ex_s      <= rd_mux_s;
             branch_ex_s      <= branch_id_s;
@@ -179,12 +209,17 @@ begin
             alu_src_b_ex_s   <= alu_src_b_id_s;
             mem_to_reg_ex_s  <= mem_to_reg_id_s;
             alu_2bit_op_ex_s <= alu_2bit_op_id_s;
-            rs1_address_ex_s <= rs1_address_id_s; rs2_address_ex_s <= rs2_address_id_s;
+            rs1_address_ex_s <= rs1_address_id_s;
+            rs2_address_ex_s <= rs2_address_id_s;
+            rs3_address_ex_s <= rs3_address_id_s;
             rd_address_ex_s  <= rd_address_id_s;
             rd_we_ex_s       <= rd_we_id_s;
+            rd_we_f_ex_s     <= rd_we_f_id_s;
             rd_csr_we_ex_s   <= rd_csr_we_id_s;
             data_mem_we_ex_s <= data_mem_we_id_s;
             imm_clr_ex_s     <= imm_clr_id_s;
+            alu_mux_ex_s     <= alu_mux_id_s;
+            alu_f_bit_op_ex_s<= alu_f_bit_op_id_s;
          end if;
       end if;
    end process;
@@ -196,6 +231,7 @@ begin
          if (reset = '0' or id_ex_flush_s = '1')then
             data_mem_we_mem_s <= '0';
             rd_we_mem_s       <= '0';
+            rd_we_f_mem_s       <= '0';
             rd_csr_we_mem_s   <= '0';
             mem_to_reg_mem_s  <= (others => '0');
             funct3_mem_s      <= (others => '0');  
@@ -203,6 +239,7 @@ begin
          else
             data_mem_we_mem_s <= data_mem_we_ex_s;
             rd_we_mem_s       <= rd_we_ex_s;
+            rd_we_f_mem_s       <= rd_we_f_ex_s;
             rd_csr_we_mem_s   <= rd_csr_we_ex_s;
             funct3_mem_s      <= funct3_ex_s;
             mem_to_reg_mem_s  <= mem_to_reg_ex_s;
@@ -217,11 +254,13 @@ begin
       if (rising_edge(clk)) then
          if (reset = '0')then
             rd_we_wb_s      <= '0';
+            rd_we_f_wb_s      <= '0';
             rd_csr_we_wb_s   <= '0';
             mem_to_reg_wb_s <= (others => '0');
             rd_address_wb_s <= (others => '0');
          else
             rd_we_wb_s      <= rd_we_mem_s;
+            rd_we_f_wb_s      <= rd_we_f_mem_s;
             rd_csr_we_wb_s   <= rd_csr_we_mem_s;
             mem_to_reg_wb_s <= mem_to_reg_mem_s;
             rd_address_wb_s <= rd_address_mem_s;
@@ -237,17 +276,21 @@ begin
    ctrl_dec : entity work.ctrl_decoder(behavioral)
       port map(
          opcode_i      => instruction_i(6 downto 0),
+         funct5_i      => instruction_i(31 downto 27),
          branch_o      => branch_id_s,
          mem_to_reg_o  => mem_to_reg_id_s,
          data_mem_we_o => data_mem_we_id_s,
          alu_src_b_o   => alu_src_b_id_s,
          rd_we_o       => rd_we_id_s,
+         rd_we_f_o     => rd_we_f_id_s,
          rd_csr_we_o   => rd_csr_we_id_s,
          csr_int_mux_o => csr_int_mux_id_s,
          rs1_in_use_o  => rs1_in_use_id_s,
          rs2_in_use_o  => rs2_in_use_id_s,
          rd_mux_o      => rd_mux_s,
          load_mux_o    => load_mux_s,
+         alu_f_bit_op_o => alu_f_bit_op_id_s,
+         alu_mux_o     => alu_mux_id_s,
          alu_2bit_op_o => alu_2bit_op_id_s);
 
    -- Dekoder za ALU operaciju
@@ -267,10 +310,13 @@ begin
          rd_address_wb_i    => rd_address_wb_s,
          rs1_address_ex_i   => rs1_address_ex_s,
          rs2_address_ex_i   => rs2_address_ex_s,
+         rs3_address_ex_i   => rs3_address_ex_s,
          rs1_address_id_i   => rs1_address_id_s,
          rs2_address_id_i   => rs2_address_id_s,
+         rs3_address_id_i   => rs3_address_id_s,
          alu_forward_a_o    => alu_forward_a_o,
          alu_forward_b_o    => alu_forward_b_o,
+         alu_forward_c_o    => alu_forward_c_o,
          branch_forward_a_o => branch_forward_a_o,
          branch_forward_b_o => branch_forward_b_o);
 
@@ -303,6 +349,14 @@ begin
       imm_clr_o => imm_clr_id_s  
       );
 
+   alu_decoder_float_inst: alu_decoder_float
+   port map(
+      alu_f_bit_op_i => alu_f_bit_op_ex_s,
+      funct3_i => funct3_ex_s,
+      funct5_i => funct7_ex_s(6 downto 2),
+      rs2_i =>  rs2_address_ex_s,  
+      alu_op_f_o => alu_op_f_o
+   ); 
    --********** Izlazi **************
 
    -- prosledi kontrolne signale datapath-u
@@ -310,6 +364,7 @@ begin
    mem_to_reg_o  <= mem_to_reg_wb_s;
    alu_src_b_o   <= alu_src_b_ex_s;
    rd_we_o       <= rd_we_wb_s;
+   rd_we_f_o     <= rd_we_f_wb_s;
    if_id_flush_o <= if_id_flush_s;
    funct3_mem_o  <= funct3_mem_s;
    rd_mux_o      <= rd_mux_ex_s;
@@ -318,6 +373,6 @@ begin
    imm_clr_o     <= imm_clr_ex_s;
    rd_csr_we_o   <= rd_csr_we_wb_s;
    csr_int_mux_o <= csr_int_mux_id_s; 
-
+   alu_mux_o     <= alu_mux_ex_s;         
 end architecture;
 
