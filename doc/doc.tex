@@ -1,7 +1,7 @@
 \documentclass{scrreprt}
 \usepackage{graphicx} % Required for inserting images
 
-\title{RV32IM Description}
+\title{RV32IMF Description}
 \author{Milos Strizak}
 \date{October 2023}
 
@@ -303,6 +303,11 @@ How this instructions are encoded is represented in next table:
         \caption{RV32M instructions}
         \label{tab:tableRV32M}
     \end{table}
+
+\addcontentsline{toc}{subsection}{RV32F-type of instructions}
+\newpage
+\subsection*{RV32F-type of instructions}
+    
 \addcontentsline{toc}{section}{Flow of implementation}
 \newpage
 \section*{Flow of implementation}
@@ -769,6 +774,8 @@ Interface for table of counters is described in next table.
              cnt-two & output & Value of second counter in row. \\ \hline
              cnt-three & output & Value of third counter in row. \\ \hline
              cnt-four & output & Value of fourth counter in row. \\ \hline
+             branch-addr-prev-loc & input & Signal for updating, previous address value of counters. \\ \hline
+             taken-pred & input & Signal indicating if branch predictor was correct or not. \\ \hline
         \end{tabular}
         \caption{Table of 2-bit counters interface}
         \label{tab:Ct}
@@ -827,7 +834,13 @@ Interface of gshare branch predictor is:
             \begin{tabular}{|c|c|c|} \hline 
              Interface & I/O & Description \\ \hline  
              branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline  
+             branch-addr-prev-loc & input & Signal form EX phase updating PHT modul.  \\ \hline
+             pht-addr-4bit & output & Signal on what address we need to update value of instruction.  \\ \hline
+             branch-inst & input & Signal indicating if instruction is branch or not.  \\ \hline
+             bhr-i & input & Signal indicating if branch was taken or not.  \\ \hline
              gshare-pred & output & Output of gshare predictor indicating taken/not taken.  \\ \hline
+             
+             
         \end{tabular}
         \caption{Gshare branch predictor interface}
         \label{tab:GshareI}
@@ -854,7 +867,11 @@ Interface of GAg branch predictor is:
             \centering
             \begin{tabular}{|c|c|c|} \hline 
              Interface & I/O & Description \\ \hline  
-             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline  
+             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline 
+             branch-addr-prev-loc & input & Signal form EX phase updating PHT modul.  \\ \hline
+             pht-addr-4bit & output & Signal on what address we need to update value of instruction.  \\ \hline
+             branch-inst & input & Signal indicating if instruction is branch or not.  \\ \hline
+             bhr-i & input & Signal indicating if branch was taken or not.  \\ \hline
              GAg-pred & output & Output of GAg predictor indicating taken/not taken.  \\ \hline
         \end{tabular}
         \caption{GAg branch predictor interface}
@@ -879,11 +896,17 @@ In this project branch history table is addressed with four lowest bits of PC, t
 \newline
 \newline
 Interface of pshare branch predictor is:
-\begin{table}[htb!]
+        \begin{table}[htb!]
             \centering
             \begin{tabular}{|c|c|c|} \hline 
              Interface & I/O & Description \\ \hline  
-             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline  
+             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline
+             branch-addr-prev-loc & input & Signal form EX phase updating PHT modul.  \\ \hline
+             branch-addr-prev-loc-local & input & Signal form EX phase updating BHR modul.  \\ \hline
+             pht-addr-4bit & output & Signal on what address we need to update value of instruction.  \\ 
+             \hline
+             branch-inst & input & Signal indicating if instruction is branch or not.  \\ \hline
+             bhr-i & input & Signal indicating if branch was taken or not.  \\ \hline
              pshare-pred & output & Output of pshare predictor indicating taken/not taken.  \\ \hline
         \end{tabular}
         \caption{Pshare branch predictor interface}
@@ -900,24 +923,105 @@ PAp represents one of nine variations of two-level branch predictor. In this var
     \label{fig:PAp}
 \end{figure}
 \newline
-\newline
-\newline
-\newline
-\newline
-\newline
 Interface of a PAp branch predictor is: 
 \begin{table}[htb!]
             \centering
             \begin{tabular}{|c|c|c|} \hline 
              Interface & I/O & Description \\ \hline  
-             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline  
+             branch-address-4bit & input & Using lowest 4 bit from PC to address in table. \\ \hline
+             branch-addr-prev-loc & input & Signal form EX phase updating PHT modul.  \\ \hline
+             branch-addr-prev-loc-local & input & Signal form EX phase updating BHR modul.  \\ \hline
+             pht-addr-4bit & output & Signal on what address we need to update value of instruction.  \\ 
+             \hline
+             branch-inst & input & Signal indicating if instruction is branch or not.  \\ \hline
+             bhr-i & input & Signal indicating if branch was taken or not.  \\ \hline
              PAp-pred & output & Output of pshare predictor indicating taken/not taken.  \\ \hline
         \end{tabular}
         \caption{PAp branch predictor interface}
         \label{tab:PApI}
     \end{table}
 \newline
-The final component in sistem is multiplexer 4 on 1 that connects priority encoder and four branch predictors. Selection signal is index-sel output of priority encoder, and four inputs in multiplexer are prediction of each component. 
+The final component in system is multiplexer 4 on 1 that connects priority encoder and four branch predictors. Selection signal is index-sel output of priority encoder, and four inputs in multiplexer are prediction of each component. 
+\newpage
+\addcontentsline{toc}{section}{Control and Status Register Instructions} 
+\section*{Control and Status Register Instructions}
+RISC-V defines a separate address space of 4096 Control and Status registers associated with each hart. This chapter defines the full set of CSR instructions that operate on these CSRs.While CSRs are primarily used by the privileged architecture, there are several uses in unprivileged code including for counters and timers, and for floating-point status.
+\hfill \break
+All CSR instructions atomically read-modify-write a single CSR, whose CSR specifier is encoded
+in the 12-bit csr field of the instruction held in bits 31–20. The immediate forms use a 5-bit
+zero-extended immediate encoded in the rs1 field.
+Instructions are: 
+\begin{enumerate}
+    \item CSRRW (Atomic Read/Write CSR) - instruction atomically swaps values in the CSRs and integer registers. CSRRW reads the old value of the CSR, zero-extends the value to XLEN bits, then writes it to integer register rd. The initial value in rs1 is written to the CSR. If rd=x0, then the instruction shall not read the CSR and shall not cause any of the side effects that might occur on a CSR read.
+    \item CSRRS (Atomic Read and Set Bits in CSR) instruction reads the value of the CSR, zero extends the value to XLEN bits, and writes it to integer register rd. The initial value in integer register rs1 is treated as a bit mask that specifies bit positions to be set in the CSR. Any bit that is high in rs1 will cause the corresponding bit to be set in the CSR, if that CSR bit is writable. Other bits in the CSR are unaffected (though CSRs might have side effects when written).
+    \item  CSRRC (Atomic Read and Clear Bits in CSR) instruction reads the value of the CSR, zero extends the value to XLEN bits, and writes it to integer register rd. The initial value in integer register rs1 is treated as a bit mask that specifies bit positions to be cleared in the CSR. Any bit that is high in rs1 will cause the corresponding bit to be cleared in the CSR, if that CSR bit is writable. Other bits in the CSR are unaffected.
+    \item The CSRRWI, CSRRSI, and CSRRCI variants are similar to CSRRW, CSRRS, and CSRRC respectively, except they update the CSR using an XLEN-bit value obtained by zero-extending a 5-bit unsigned immediate (uimm[4:0]) field encoded in the rs1 field instead of a value from an integer register. For CSRRSI and CSRRCI, if the uimm[4:0] field is zero, then these instructions will not write to the CSR, and shall not cause any of the side effects that might otherwise occur on a CSR write. For CSRRWI, if rd=x0, then the instruction shall not read the CSR and shall not cause any of the side effects that might occur on a CSR read. Both CSRRSI and CSRRCI will always read the CSR and cause any read side effects regardless of rd and rs1 fields.
+\end{enumerate}
+
+For both CSRRS and CSRRC, if rs1=x0, then the instruction will not write to the CSR at all, and so shall not cause any of the side effects that might otherwise occur on a CSR write, such as raising illegal instruction exceptions on accesses to read-only CSRs. Both CSRRS and CSRRC always read the addressed CSR and cause any read side effects regardless of rs1 and rd fields. Note that if rs1 specifies a register holding a zero value other than x0, the instruction will still attempt to write the unmodified value back to the CSR and will cause any attendant side effects. A CSRRW with rs1=x0 will attempt to write zero to the destination CSR.
+\hfill \break
+\hfill \break
+This instructions are encoded in next format:
+\hfill \break
+    \begin{table}[htb!]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|} \hline 
+             Instr. & csr & rs1 & funct3 & rd & opcode\\ \hline 
+             CSRRW & csr & rs1 & 0b001 & rd & 0b1110011\\ \hline 
+             CSRRS & csr  & rs1 & 0b010 & rd & 0b1110011\\ \hline 
+             CSRRC & csr  & rs1 & 0b011 & rd & 0b1110011\\ \hline 
+             CSRRWI & csr & zimm & 0b101 & rd & 0b1110011\\ \hline 
+             CSRRSI & csr & zimm & 0b110 & rd & 0b1110011\\ \hline 
+             CSRRCI & csr & zimm & 0b111 & rd & 0b1110011\\ \hline 
+        \end{tabular}
+        \caption{CSR instructions}
+        \label{tab:CSRtable}
+    \end{table}
+
+\newpage
+\addcontentsline{toc}{section}{Implementation of Control Status Registers} 
+\section*{Implementation of Control Status Registers}
+In previous section was described what instructions there are with CSRs and what logic it represents. After analyzing what needs to be implemented, first conclusion was to implement new register bank with 4096 locations. Second step was to understand what control signals are necessary for this instructions to work properly and finally last step was connecting this control signals in data path. 
+First step is implementing register bank with one read and one write port. In next table is described interface of register bank. 
+\begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             clk & input & Clock signal in system. \\ \hline
+             reset & input & Reset signal active on low.  \\ \hline
+             rs1-address-i & input & Address of read register.  \\ \hline
+             rs1-data-o & output & Value of read register.  \\ \hline
+             rd-we-i & input & Write enable signal.  \\ \hline
+             rd-address-i & input & Address of write register.  \\ \hline
+             rd-data-i & input & Value of write register.  \\ \hline
+        \end{tabular}
+        \caption{CSR interface}
+        \label{tab:csrI}
+    \end{table}
+Second step is implementing additional control signals to decode this instructions and control flow of data in data path. It is implemented new module called csr decoder. This module produces two signal imm-clr and csr-op. Imm-clr signal is set to 1 when instruction that is executing is CSR instruciton, this signal is one bit wide. Csr-op signal is three bit wide because there are six CSR instructions, and each value is representing one instruction. Values are depending od funct3 filed in instruction, this field is diffrent for each instruction, so it is decoded depending on him. 
+\newline
+There is also one additional signal added to control decoded unit csr-int-mux. This signal indicates if we take value of first operand from integer register bank or csr register bank. 
+\newline
+Interface for csr decoder is described in next table. 
+\begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             opcode-i & input & First seven bits of instruction.  \\ \hline
+             funct3-i& input & Three bits for instruction, decoding what instruction is executing.  \\ \hline
+             csr-op-o & output & Three bit signal indicating instruction.  \\ \hline
+             imm-clr-o & output & Clear bit set to one when csr instruction are executing.  \\ \hline
+        \end{tabular}
+        \caption{CSR decoder interface}
+        \label{tab:csrDI}
+\end{table}
+\newline
+This three additional signal are connected to data path. All are representing selection signals of multiplexers in data path. 
+
+\newpage
+\addcontentsline{toc}{section}{Float point} 
+\section*{Float point}
+
 \newpage
 \addcontentsline{toc}{section}{Acronyms} 
 \section*{Acronyms}
@@ -925,7 +1029,7 @@ The final component in sistem is multiplexer 4 on 1 that connects priority encod
     \begin{table}[ht]
         \centering
         \begin{tabular}{|c|c|} \hline 
-            HW & Hardware\\ \hline 
+            HW & Hard ware\\ \hline 
             SW & Software\\ \hline 
             ISA & Instruction set architecture\\ \hline 
             PC & Program counter\\ \hline 
@@ -935,6 +1039,7 @@ The final component in sistem is multiplexer 4 on 1 that connects priority encod
             PHT & Pattern history table\\ \hline
             GAg & Global Adaptive branch prediction using one global PHT\\ \hline
             PAp & Per-address Adaptive branch prediction using per-address PHT\\ \hline
+            CRS & Control Status Register \\ \hline
         \end{tabular}
         \caption{Acronyms}
         \label{tab:table4}

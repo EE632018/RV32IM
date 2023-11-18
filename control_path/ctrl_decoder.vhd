@@ -104,7 +104,7 @@ begin
             rd_csr_we_o   <= '1';
             csr_int_mux_o <= '1';
             rd_we_o       <= '1';
-         when "1000011" =>
+         when "1000011" =>             -- F type
             alu_f_bit_op_o <= "000";
             alu_mux_o     <= '1';
             rd_we_f_o     <= '1';
