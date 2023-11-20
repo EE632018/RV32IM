@@ -127,7 +127,9 @@ begin
                             alu_op_f_o <= fmv_w_x;
                         when others =>
                             alu_op_f_o <= fmadd;
-                        end case;    
+                        end case;
+                    when "110" => 
+                            alu_op_f_o <= fadd;
                     when others =>
                     alu_op_f_o <= fmadd;
             end case;

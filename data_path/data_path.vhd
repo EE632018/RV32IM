@@ -151,13 +151,13 @@ architecture Behavioral of data_path is
    signal pc_adder_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
    signal alu_result_mem_s        : std_logic_vector(31 downto 0) := (others=>'0');
    signal rd_address_mem_s        : std_logic_vector (4 downto 0) := (others=>'0');
-   signal rd_data_csr_mem_s        : std_logic_vector (31 downto 0) := (others=>'0');
-   signal csr_address_mem_s        : std_logic_vector (11 downto 0) := (others => '0');
+   signal rd_data_csr_mem_s       : std_logic_vector (31 downto 0) := (others=>'0');
+   signal csr_address_mem_s       : std_logic_vector (11 downto 0) := (others => '0');
    signal rs2_data_mem_s          : std_logic_vector (31 downto 0) := (others=>'0');
    signal data_mem_read_mem_s     : std_logic_vector (31 downto 0) := (others=>'0');
-   signal funct3_mem_s		   : std_logic_vector (2 downto 0) := (others => '0');
+   signal funct3_mem_s		      : std_logic_vector (2 downto 0) := (others => '0');
    signal data_mem_read_mem_s2    : std_logic_vector (31 downto 0) := (others => '0');
-   signal alu_forward_b_mem_s      : std_logic_vector(31 downto 0) := (others=>'0'); -- sa registra ex ulaz u memoriju kada radimo store operaciju. 
+   signal alu_forward_b_mem_s     : std_logic_vector(31 downto 0) := (others=>'0'); -- sa registra ex ulaz u memoriju kada radimo store operaciju. 
    
 
    --*********      WRITEBACK      **************
@@ -310,7 +310,7 @@ begin
                 rs3_data_f_ex_s         <= (others => '0');
                 rd_data_csr_ex_s        <= (others => '0');
                 immediate_extended_ex_s <= (others => '0');
-                rd_address_ex_s         <= (others => '0');
+                rd_address_ex_s         <= (others => '0');   
                 csr_address_ex_s        <= (others => '0');
                 pc_reg_ex_s             <= (others => '0');
                 instruction_ex_s        <= (others => '0');
@@ -492,7 +492,8 @@ begin
    a_ex_s <= alu_forward_a_ex_s;
 
    a_ex_f_s <= alu_forward_a_f_ex_s;
-   b_ex_f_s <= alu_forward_b_f_ex_s;
+   b_ex_f_s <= alu_forward_b_f_ex_s when alu_scr_b_i = '1' else
+               immediate_extended_ex_s2;
    c_ex_f_s <= alu_forward_c_f_ex_s;
 
    -- Multiplekser koji bira izmedju operacija float i integer
@@ -511,7 +512,6 @@ begin
    rs3_address_id_s <= instruction_id_s(31 downto 27);
    rd_address_id_s  <= instruction_id_s(11 downto 7);
    csr_address_id_s <= instruction_id_s(31 downto 20);
-   
 
    --***********  Instanciranje modula ***********
    -- Registarska banka

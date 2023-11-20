@@ -307,7 +307,87 @@ How this instructions are encoded is represented in next table:
 \addcontentsline{toc}{subsection}{RV32F-type of instructions}
 \newpage
 \subsection*{RV32F-type of instructions}
-    
+This chapter describes the standard instruction-set extension for single-precision floating-point, which is named “F” and adds single-precision floating-point computational instructions compliant with the IEEE 754-2008 arithmetic standard. The F extension depends on the “Zicsr” extension for control and status register access.
+The F extension adds 32 floating-point registers, f0–f31, each 32 bits wide, and a floating-point control and status register fcsr, which contains the operating mode and exception status of the floating-point unit.
+In each instruction that works with float point value there is two bit format field \textit{fmt} that is encoded as shown in table. It is set to S (00) for all instructions in the F extension.
+ \begin{table}[htb!]
+        \centering
+        \begin{tabular}{|c|c|c|} \hline 
+            fmt field & Mnemonic & Meaning \\ \hline 
+            00 & S & 32-bit single-precision 0 \\ \hline 
+            01 & D & 64-bit double-precision \\ \hline 
+            10 & H & 16-bit half-precision \\ \hline 
+            11 & Q & 128-bit quad-precision \\ \hline  
+        \end{tabular}
+        \caption{Fmt field encoded}
+        \label{tab:fmt}
+    \end{table}
+\newline
+There is 26 different instructions in this extension. Two of them use one register with immediate filed, that are load and store operations. They are also I-type and S-type of format. Four instructions are using three operands and that is different from previous sets. There are also computational instructions, move instructions, compare instructions and classify instructions. Descriptions of this instructions is:
+\begin{enumerate}
+        \item FMADD -   
+        \item FMSUB -  
+        \item FNMSUB -  
+        \item FNMADD - 
+        \item FADD -  
+        \item FSUB - 
+        \item FMUL -  
+        \item FDIV -
+        \item FSQRT -
+        \item FSGNJ -
+        \item FSGNJN -
+        \item FSGNJX -
+        \item FMIN -
+        \item FMAX -
+        \item FCVT.W -
+        \item FCVT.WU -
+        \item FMV.X.W -
+        \item FEQ -
+        \item FLTS -
+        \item FLE -
+        \item FCLASS -
+        \item FCVT.S.W -
+        \item FCVT.S.WU -
+        \item FMV.W.X -
+        \item FLW -
+        \item FSW -
+\end{enumerate}
+\newpage
+How this instructions are encoded is represented in next table:
+\begin{table}[htb!]
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|c|c|} \hline 
+             Instr. & funct5 & fmt & rs2 & rs1 & funct3 & rd & opcode\\ \hline 
+             FMADD & rs3 & 00 & rs2 & rs1 & rm & rd & 0b1000011\\ \hline 
+             FMSUB & rs3 & 00 & rs2 & rs1 & rm & rd & 0b1000111\\ \hline 
+             FNMSUB & rs3 & 00 & rs2 & rs1 & rm & rd & 0b1001011\\ \hline 
+             FNMADD & rs3 & 00 & rs2 & rs1 & rm & rd & 0b1001111\\ \hline 
+             FADD & 0b00000 & 00 & rs2 & rs1 & rm & rd & 0b1010011\\ \hline 
+             FSUB & 0b00001 & 00 & rs2 & rs1 & rm & rd & 0b1010011\\ \hline 
+             FMUL & 0b00010 & 00 & rs2 & rs1 & rm & rd & 0b1010011\\ \hline 
+             FDIV & 0b00011 & 00 & rs2 & rs1 & rm & rd & 0b1010011 \\ \hline 
+             FSQRT & 0b01011 & 00 & 0b00000 & rs1 & rm & rd & 0b1010011\\ \hline 
+             FSGNJ & 0b00100 & 00 & rs2 & rs1 & 000 & rd & 0b1010011\\ \hline 
+             FSGNJN & 0b00100 & 00 & rs2 & rs1 & 001 & rd & 0b1010011\\ \hline 
+             FSGNJX & 0b00100 & 00 & rs2 & rs1 & 010 & rd & 0b1010011 \\ \hline 
+             FMIN & 0b00101 & 00 & rs2 & rs1 & 000 & rd & 0b1010011\\ \hline 
+             FMAX & 0b00101 & 00 & rs2 & rs1 & 001 & rd & 0b1010011\\ \hline 
+             FCVT.W & 0b11000 & 00 & 0b00000 & rs1 & rm & rd & 0b1010011\\ \hline 
+             FCVT.WU & 0b11000 & 00 & 0b00001 & rs1 & rm & rd & 0b1010011 \\ \hline 
+             FMV.X.W & 0b11100 & 00 & 0b00000 & rs1 & 000 & rd & 0b1010011\\ \hline 
+             FEQ & 0b10100 & 00 & rs2 & rs1 & 010 & rd & 0b1010011\\ \hline 
+             FLTS & 0b10100 & 00 & rs2 & rs1 & 001 & rd & 0b1010011\\ \hline 
+             FLE & 0b10100 & 00 & rs2 & rs1 & 000 & rd & 0b1010011 \\ \hline 
+             FCLASS & 0b11100 & 00 & 0b00000 & rs1 & 001 & rd & 0b1010011\\ \hline 
+             FCVT.S.W & 0b11010 & 00 & 0b00000 & rs1 & rm & rd & 0b1010011\\ \hline 
+             FCVT.S.WU & 0b11010 & 00 & 0b00001 & rs1 & rm & rd & 0b1010011\\ \hline 
+             FMV.W.X & 0b11110 & 00 & 0b00000 & rs1 & rm & rd & 0b1010011 \\ \hline 
+             FLW & \multicolumn{3}{c|}{imm[11:0]} & rs1 & 010 & rd & 0b0000111\\ \hline 
+             FSW & \multicolumn{2}{c|}{imm[11:5]} & rs2 & rs1 & 010 & imm[4:0] & 0b0100111 \\ \hline 
+        \end{tabular}
+        \caption{RV32F instructions}
+        \label{tab:tableRV32F}
+    \end{table}
 \addcontentsline{toc}{section}{Flow of implementation}
 \newpage
 \section*{Flow of implementation}
