@@ -1101,6 +1101,112 @@ This three additional signal are connected to data path. All are representing se
 \newpage
 \addcontentsline{toc}{section}{Float point} 
 \section*{Float point}
+In this section is described arithmetic float operations. All of this operations are single precision and are implemented on IEEE standard. Operations are: addition/subtraction, multiplication/division, square root. 
+First step that we need to describe is format of float point number.
+\addcontentsline{toc}{subsection}{Floating point number} 
+\subsection*{Floating point number}
+The floating point numbers representation is based on the scientific notation: the decimal point is not set in a fixed position in the bit sequence, but its position is indicated as a base power. All the floating point numbers are composed by three components:
+\begin{itemize}
+    \item Sign: it indicates the sign of the number (0 positive and 1 negative)
+    \item Mantissa: it sets the value of the number
+    \item Exponent: it contains the value of the base power (biased)
+    \item Base: the base (or radix) is implied and it is common to all the numbers (2 for binary numbers) 
+\end{itemize}
+\addcontentsline{toc}{subsection}{The Standard IEEE 754} 
+\subsection*{The Standard IEEE 754}
+Standard IEEE 754 specifies formats and methods in order to operate with floating point arithmetic. These methods for computational with floating point numbers will yield the same result regardless the processing is done in hardware, software or a combination for the two or the implementation.
+The standard specifies:
+\begin{itemize}
+    \item Formats for binary and decimal floating point data for computation and data interchange 
+    \item Different operations as addition, subtraction, multiplication and other operations
+    \item Conversion between integer-floating point formats and the other way around
+    \item Different properties to be satisfied when rounding numbers during arithmetic and conversions 
+    \item Floating point exceptions and their handling (NaN, ±infinity or zero)
+\end{itemize}
+
+The standard IEEE 754 requires that the operation result must be the same which would obtain if a calculation with absolute precision and rounded had been done. Four types of rounding are described by the standard:
+\begin{itemize}
+    \item Rounding to the nearest (to even number in case of tie) is the floating point number that is the closest to x. 
+    \item Rounding to +infinity is the smallest floating point number (possibly +infinity) greater than or equal to x
+    \item Rounding to -infinity is the smallest floating point number (possibly -infinity) less than or equal to x
+    \item Rounding to zero is the closest floating point number to x that is no greater in magnitude than x (it is equal to rounding to -infinity if x greater than 0 and to +infinity if x less than 0)
+\end{itemize}
+\addcontentsline{toc}{subsection}{Floating Point Adder Design} 
+\subsection*{Floating Point Adder Design}
+Steps in calculating addition/subtraction are: 
+\begin{enumerate}
+    \item Extracting signs, exponents and mantissas of both A and B numbers.
+    \item Treating the special cases:
+      \begin{itemize}
+          \item Operations with A or B equal to zero 
+          \item Operations with ±infinity
+          \item Operations with NaN 
+      \end{itemize}  
+    \item Finding out what type of numbers are given:
+        \begin{itemize}
+              \item Normal
+              \item Subnormal
+              \item Mixed 
+          \end{itemize} 
+    \item  Shifting the lower exponent number mantissa to the right (e1 - e2) bits. Setting the output exponent as the highest exponent.   \item  Working with the operation symbol and both signs to calculate the output sign and determine the operation to do.
+    \item Addition/Subtraction of the numbers and detection of mantissa overflow (carry bit).
+    \item Standardizing mantissa shifting it to the left up the first one will be at the first position and updating the value of the exponent according with the carry bit and the shifting over the mantissa. 
+    \item Detecting exponent overflow or underflow (result NaN or ±infinity).
+\end{enumerate}
+This steps are designed in three parts:
+\begin{enumerate}
+    \item Pre-Adder Block
+    \item Adder Block
+    \item Standardizing block 
+\end{enumerate}
+The first sub-block is the Pre-Adder. The goals are:
+\begin{enumerate}
+    \item Distinguishing between normal, subnormal or mixed (normal-subnormal combination) numbers.
+    \item Treating the numbers in order to be added (or subtracted) in the adder block.
+        \begin{itemize}
+            \item Setting the Output’s exponent
+            \item Shifting the mantissa
+            \item Standardizing the subnormal number in mixed numbers case to be treated as a normal case
+        \end{itemize}
+\end{enumerate}
+The second block is Adder the easiest part of the blocks. This block only implements the operation (addition or subtraction). Two functions are implemented in this part of the code:
+\begin{enumerate}
+    \item Obtaining the output’s sign
+    \item Implementing the desired operation 
+\end{enumerate}
+In this block two related problems should be taken into account. Firstly, the calculation symbol (+ or -) depends on itself and the A and B’s signs. Secondly, positive or negative numbers addition gives the same result. The problem will appear when the signs are different. In these cases the positive number will be kept in the first operand and the negative one in the second operand. All these problems will be explained in detail in next sections.
+\break \hfill
+Finally the Standardizing Block takes the result of the addition/subtraction and gives it an IEEE 754 format.The procedure is as follows:
+\begin{enumerate}
+    \item Shifting the mantissa to standardize the result
+    \item Calculating the new exponent according with the addition/subtraction overflow (carry out bit) and the displacement of the mantissa. 
+\end{enumerate}
+The exponent value must be controlled when these steps are going to be made because it could be the number of positions the mantissa must be shifted are higher than the exponent value. In this case the result becomes subnormal. Another exception is when exponent and number of displacements are equal: mantissa will be shifted and exponent will be one.
+\newpage
+\addcontentsline{toc}{subsection}{Implementation of Pre-Adder} 
+\subsection*{Implementation of Pre-Adder}
+Pre-Adder block contains several smaller blocks,each of them is going to be described what is functional specification. 
+Sub-blocks:
+\begin{enumerate}
+    \item n-case block - Both number A and number B are introduced as inputs. Vector S is one of the outputs and it contains the result when there is a special case, otherwise undefined. Finally, enable signal enables or disables the adder block if it is needed or not.
+    \item n-subn block - Number A and B are the entries. The outputs are six. SA-MA and SB-MB contain the sign and mantissa of A and B respectively. Comp signal is referred to the result comparison and EO is the result exponent. 
+    \item comp block - The block entries are both numbers and the outputs are the same numbers ordered as normal NA and subnormal NB.
+    \item zero block - Counting zeros is the zero block target. The mantissa which is needed to shift is introduced as an entry in T vector and the output Zcount contains the number of zeros the mantissa has on the beginning which corresponds with the number of positions the vector must be shifted.
+    \item shift block - Shifting is required to match the normal and mixed mantissas to perform the addition/subtraction properly.
+    \item norm block - Finally, the rest of the entities are all included in the norm block. It also performs the output exponent treatment. The inputs are the numbers A and B. Once the subnormal one has been shifted it is fixed in MB. The normal number is set in MA.
+    \item comp-exp block - The comp-exp entries are the two introduced numbers again. There are several outputs: SA and SB are the sign of A and B respectively, EMax is the output exponent, MMax the largest mantissa, Mshft the mantissa to shift, Dexp the number of positions Mshft must be shifted and Comp indicates what number is the largest one.
+    \item selector block - Selector block prepares the numbers: the entries are shorter than outputs because the implicit bit (high if the number is normal and low in subnormal’s case) and the guard bits are added in this block. Enable signal enables this block (and therefore the entire preadder block) when we do not have a special case. 
+    \item MUX/DEMUX blocks - The operation of the demux demultiplexor is routing the A and B numbers to the subnormal, normal or mixed block according with the e-data value. NumberA, NumberB and the enable signal e-data are the entries and the outputs are 3 pairs of signals but only one pair is activated in each time. The typical demultiplexor’s behaviour. The mux-ns multiplexor’s target is selecting which signal must be introduced in the normal numbers block: normal numbers or a standardized numbers from the mixed numbers block.Finally mux-adder multiplexor is in charge of selecting which data are going to be introduced in the adder.  
+\end{enumerate}
+Next step is showing structural look of Pre-Adder block design. 
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=1\linewidth]{preadder2.png}
+    \caption{Structural Pre-adder}
+    \label{fig:preadder}
+\end{figure}
+\addcontentsline{toc}{subsection}{Implementation of Adder} 
+\subsection*{Implementation of Adder}
 
 \newpage
 \addcontentsline{toc}{section}{Acronyms} 
