@@ -325,32 +325,32 @@ In each instruction that works with float point value there is two bit format fi
 \newline
 There is 26 different instructions in this extension. Two of them use one register with immediate filed, that are load and store operations. They are also I-type and S-type of format. Four instructions are using three operands and that is different from previous sets. There are also computational instructions, move instructions, compare instructions and classify instructions. Descriptions of this instructions is:
 \begin{enumerate}
-        \item FMADD -   
-        \item FMSUB -  
-        \item FNMSUB -  
-        \item FNMADD - 
-        \item FADD -  
-        \item FSUB - 
-        \item FMUL -  
-        \item FDIV -
-        \item FSQRT -
-        \item FSGNJ -
-        \item FSGNJN -
-        \item FSGNJX -
-        \item FMIN -
-        \item FMAX -
-        \item FCVT.W -
-        \item FCVT.WU -
-        \item FMV.X.W -
-        \item FEQ -
-        \item FLTS -
-        \item FLE -
-        \item FCLASS -
-        \item FCVT.S.W -
-        \item FCVT.S.WU -
-        \item FMV.W.X -
-        \item FLW -
-        \item FSW -
+        \item FMADD - Perform single-precision fused multiply addition. 
+        \item FMSUB - Perform single-precision fused multiply subtraction. 
+        \item FNMSUB - Perform single-precision fused negative multiply subtraction. 
+        \item FNMADD - Perform single-precision fused negative multiply addition. 
+        \item FADD -  Perform single-precision floating-point addition.
+        \item FSUB - Perform single-precision floating-point subtraction.
+        \item FMUL - Perform single-precision floating-point multiplication. 
+        \item FDIV - Perform single-precision floating-point division.
+        \item FSQRT - Perform single-precision square root.
+        \item FSGNJ - Produce a result that takes all bits except the sign bit from rs1.The result’s sign bit is rs2’s sign bit.
+        \item FSGNJN - Produce a result that takes all bits except the sign bit from rs1. The result’s sign bit is opposite of rs2’s sign bit.
+        \item FSGNJX - Produce a result that takes all bits except the sign bit from rs1. The result’s sign bit is XOR of sign bit of rs1 and rs2.
+        \item FMIN - Write the smaller of single precision data in rs1 and rs2 to rd.
+        \item FMAX - Write the larger of single precision data in rs1 and rs2 to rd.
+        \item FCVT.W - Convert a floating-point number in floating-point register rs1 to signed 32-bit in integer register rd.
+        \item FCVT.WU - Convert a floating-point number in floating-point register rs1 to a signed 32-bit in unsigned integer register rd.
+        \item FMV.X.W - Move the single-precision value in floating-point register rs1 represented in IEEE 754-2008 encoding to the lower 32 bits of integer register rd.
+        \item FEQ - Performs a quiet equal comparison between floating-point registers rs1 and rs2 and record the Boolean result in integer register rd. Only signaling NaN inputs cause an Invalid Operation exception. The result is 0 if either operand is NaN.
+        \item FLTS - Performs a quiet less comparison between floating-point registers rs1 and rs2 and record the Boolean result in integer register rd. Only signaling NaN inputs cause an Invalid Operation exception. The result is 0 if either operand is NaN.
+        \item FLE - Performs a quiet less or equal comparison between floating-point registers rs1 and rs2 and record the Boolean result in integer register rd. Only signaling NaN inputs cause an Invalid Operation exception. The result is 0 if either operand is NaN.
+        \item FCLASS - Examines the value in floating-point register rs1 and writes to integer register rd a 10-bit mask that indicates the class of the floating-point number. The format of the mask is described in [classify table].The corresponding bit in rd will be set if the property is true and clear otherwise. All other bits in rd are cleared. Note that exactly one bit in rd will be set.
+        \item FCVT.S.W - Converts a 32-bit signed integer, in integer register rs1 into a floating-point number in floating-point register rd.
+        \item FCVT.S.WU - Converts a 32-bit unsigned integer, in integer register rs1 into a floating-point number in floating-point register rd.
+        \item FMV.W.X - Move the single-precision value encoded in IEEE 754-2008 standard encoding from the lower 32 bits of integer register rs1 to the floating-point register rd.
+        \item FLW - Load a single-precision floating-point value from memory into floating-point register rd.
+        \item FSW - Store a single-precision value from floating-point register rs2 to memory.
 \end{enumerate}
 \newpage
 How this instructions are encoded is represented in next table:
