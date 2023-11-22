@@ -1183,8 +1183,8 @@ Finally the Standardizing Block takes the result of the addition/subtraction and
 \end{enumerate}
 The exponent value must be controlled when these steps are going to be made because it could be the number of positions the mantissa must be shifted are higher than the exponent value. In this case the result becomes subnormal. Another exception is when exponent and number of displacements are equal: mantissa will be shifted and exponent will be one.
 \newpage
-\addcontentsline{toc}{subsection}{Implementation of Pre-Adder} 
-\subsection*{Implementation of Pre-Adder}
+\addcontentsline{toc}{subsubsection}{Implementation of Pre-Adder} 
+\subsubsection*{Implementation of Pre-Adder}
 Pre-Adder block contains several smaller blocks,each of them is going to be described what is functional specification. 
 Sub-blocks:
 \begin{enumerate}
@@ -1205,8 +1205,37 @@ Next step is showing structural look of Pre-Adder block design.
     \caption{Structural Pre-adder}
     \label{fig:preadder}
 \end{figure}
-\addcontentsline{toc}{subsection}{Implementation of Adder} 
-\subsection*{Implementation of Adder}
+\addcontentsline{toc}{subsubsection}{Implementation of Adder} 
+\subsubsection*{Implementation of Adder}
+The adder is a fundamental piece of the design because it implements the addition/subtraction operation, main purpose of the 32 bit Floating Point Adder. 
+The Adder block is composed by two entities: signout and adder. Signout is responsible for the sign operation and the adder is the adder strictly speaking. 
+Next figure shows structural look of Adder block:
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=1\linewidth]{adder.png}
+    \caption{Structural Adder}
+    \label{fig:adder}
+\end{figure}
+\addcontentsline{toc}{subsubsection}{Implementation of Standardizing block} 
+\subsubsection*{Implementation of Standardizing block}
+The Standardizing block, as its name suggest, is responsible for displaying the addition/subtraction operation value according to the IEEE 754 standard. 
+This block is composed of four entities. Shift-left and zero blocks have been explained. Round block provides more accuracy to the design. Four bits at the end of the vector had been added in the Pre-Adder block. Now it is time to use these bits in order to round the result.
+Next figure shows structural look of Standardizing block:
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=1\linewidth]{Stabilizing.png}
+    \caption{Structural Stabilizing block}
+    \label{fig:Stabilizing}
+\end{figure}
+\addcontentsline{toc}{subsubsection}{Float point model} 
+\subsubsection*{Float point model}
+Representing float point adder/subtractor in block form on next figure. It is done this way because of complexity of design. Thicker arrows represent multiple signals between two blocks. 
+\begin{figure}[htb!]
+    \centering
+    \includegraphics[width=1\linewidth]{FADD.png}
+    \caption{FADD/FSUB structure}
+    \label{fig:FADD}
+\end{figure}
 
 \newpage
 \addcontentsline{toc}{section}{Acronyms} 
