@@ -50,7 +50,23 @@ add_files -norecurse ../division_u.vhd
 add_files -norecurse ../multiply.vhd
 add_files -norecurse ../TOP_RISCV.vhd
 add_files -norecurse ../RISCV_tb/BRAM_byte_addressable.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/*.vhd
+# preadder files
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/comp_exp.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/comp.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/demux.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/mux_adder.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/mux_ns.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/mux2on1.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/n_case.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/n_normal.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/n_subn.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/norm.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/selector.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/shift_exp.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/shift.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/zero.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/preadder.vhd
+
 add_files -fileset sim_1 ../RISCV_tb/TOP_RISCV_tb.vhd
 add_files -fileset constrs_1 -norecurse ../constraints/clk_constraint.xdc
 

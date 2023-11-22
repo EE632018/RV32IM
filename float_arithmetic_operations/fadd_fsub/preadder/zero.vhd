@@ -17,7 +17,7 @@ begin
 
     zero_vector <= (others => '0');
     -- logic aux 
-    aux <= (others => '-') when T(27 downto 27) = '-' else
+    aux <= --(others => '-') when (T(27 downto 27) = '-') else
            x"1c" when T(27 downto 0) = zero_vector(27 downto 0) else
            x"1b" when T(27 downto 1) = zero_vector(27 downto 1) else
            x"1a" when T(27 downto 2) = zero_vector(27 downto 2) else

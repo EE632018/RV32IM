@@ -10,9 +10,9 @@ entity preadder is
         SA      : out std_logic;
         SB      : out std_logic;
         C       : out std_logic;
-        EOut    : out std_logic_vecotr(7 downto 0);
-        MAout   : out std_logic_vecotr(27 downto 0);
-        MBout   : out std_logic_vecotr(27 downto 0)
+        EOut    : out std_logic_vector(7 downto 0);
+        MAout   : out std_logic_vector(27 downto 0);
+        MBout   : out std_logic_vector(27 downto 0)
     );  
 end entity;
 
@@ -71,22 +71,22 @@ architecture behavioral of preadder is
         CompN    : in std_logic;
         CompS    : in std_logic;
 
-        NorE     : in std_logic_vecotr(7 downto 0);
-        SubE     : in std_logic_vecotr(7 downto 0);
+        NorE     : in std_logic_vector(7 downto 0);
+        SubE     : in std_logic_vector(7 downto 0);
 
-        NorMA    : in std_logic_vecotr(27 downto 0);
-        SubMA    : in std_logic_vecotr(27 downto 0);
-        NorMB    : in std_logic_vecotr(27 downto 0);
-        SubMB    : in std_logic_vecotr(27 downto 0);
+        NorMA    : in std_logic_vector(27 downto 0);
+        SubMA    : in std_logic_vector(27 downto 0);
+        NorMB    : in std_logic_vector(27 downto 0);
+        SubMB    : in std_logic_vector(27 downto 0);
 
         e_data  : in std_logic_vector(1 downto 0);
 
         SA      : out std_logic;
         SB      : out std_logic;
         C       : out std_logic;
-        E       : out std_logic_vecotr(7 downto 0);
-        A      : out std_logic_vecotr(27 downto 0);
-        B      : out std_logic_vecotr(27 downto 0)
+        E       : out std_logic_vector(7 downto 0);
+        A      : out std_logic_vector(27 downto 0);
+        B      : out std_logic_vector(27 downto 0)
     );
     end component;
 
@@ -129,7 +129,7 @@ architecture behavioral of preadder is
     signal Amux, Bmux, A_sub, B_sub, A_mix, B_mix, MixAaux, MixBaux, NA_out_select, NB_out_select: std_logic_vector(36 downto 0);
     signal A_nor, B_nor: std_logic_vector(36 downto 0); 
     signal NComp, SAnor, SBnor, SAsub, SBsub, SComp: std_logic;
-    signal edata: sta_logic_vector(1 downto 0);
+    signal edata: std_logic_vector(1 downto 0);
     signal Enor, Esub: std_logic_vector(7 downto 0);
     signal MAnor, MBnor, MAsub, MBsub: std_logic_vector(27 downto 0);
 begin
@@ -221,7 +221,7 @@ begin
         e_data   => edata,
         SA       => SA,
         SB       => SB,
-        C        => C
+        C        => C,
         E        => EOut,
         A        => MAout,
         B        => MBout

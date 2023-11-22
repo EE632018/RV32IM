@@ -9,10 +9,10 @@ entity comp_exp is
         NumberB : in std_logic_vector(WIDTH - 1 downto 0);
         SA      : out std_logic;
         SB      : out std_logic;
-        Emax    : out std_logic_vecotr(7 downto 0);
-        Mmax    : out std_logic_vecotr(27 downto 0);
-        Mshft   : out std_logic_vecotr(27 downto 0);
-        Dexp    : out std_logic_vecotr(4 downto 0);
+        Emax    : out std_logic_vector(7 downto 0);
+        Mmax    : out std_logic_vector(27 downto 0);
+        Mshft   : out std_logic_vector(27 downto 0);
+        Dexp    : out std_logic_vector(4 downto 0);
         Comp    : out std_logic
     );  
  end entity;
@@ -55,7 +55,7 @@ begin
         if dif <= x"1b" then
             Dexp <= dif(4 downto 0);
         elsif dif > x"1b" then
-            Dexp <= "11100"
+            Dexp <= "11100";
         else
             Dexp <= (others => '-');
         end if;

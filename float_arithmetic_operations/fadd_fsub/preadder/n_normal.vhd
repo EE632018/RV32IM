@@ -25,10 +25,10 @@ architecture behavioral of n_normal is
         NumberB : in std_logic_vector(WIDTH - 1 downto 0);
         SA      : out std_logic;
         SB      : out std_logic;
-        Emax    : out std_logic_vecotr(7 downto 0);
-        Mmax    : out std_logic_vecotr(27 downto 0);
-        Mshft   : out std_logic_vecotr(27 downto 0);
-        Dexp    : out std_logic_vecotr(4 downto 0);
+        Emax    : out std_logic_vector(7 downto 0);
+        Mmax    : out std_logic_vector(27 downto 0);
+        Mshft   : out std_logic_vector(27 downto 0);
+        Dexp    : out std_logic_vector(4 downto 0);
         Comp    : out std_logic
     ); 
     end component;
@@ -42,8 +42,8 @@ architecture behavioral of n_normal is
     );
     end component;
 
-    signal Mshft_aux: std_logic_vecotr(27 downto 0);
-    signal Dexp_aux: std_logic_vecotr(4 downto 0);
+    signal Mshft_aux: std_logic_vector(27 downto 0);
+    signal Dexp_aux: std_logic_vector(4 downto 0);
 begin
     
     comp1: comp_exp

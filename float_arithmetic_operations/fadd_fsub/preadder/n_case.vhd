@@ -79,17 +79,17 @@ begin
             MS <= MA;
         elsif (outA and outB) = "100" and SA /= SB then
             SS <= '1';
-            ES <= x"ff"";
+            ES <= x"ff";
             MS <= "00000000000000000000001";
         end if;
 
-        if outA = "110" of outB = "110" then
+        if outA = "110" or outB = "110" then
             SS <= '1';
-            ES <= x"ff"";
+            ES <= x"ff";
             MS <= "00000000000000000000001";
         end if;
 
-        if outA(0) and outB(0) = '1' then
+        if (outA(0) and outB(0)) = '1' then
             SS <= '-';
             ES <= (others => '-');
             MS <= (others => '-');    
@@ -97,7 +97,7 @@ begin
     end process;
 
     -- OUtput signals
-    enable <= '1' when outA(0) and outB(0) = '1' else 
+    enable <= '1' when (outA(0) and outB(0)) = '1' else 
               '0';
     S <= SS & ES & MS;          
 end behavioral;

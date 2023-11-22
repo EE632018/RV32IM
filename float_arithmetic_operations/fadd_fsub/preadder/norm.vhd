@@ -42,13 +42,14 @@ architecture behavioral of norm is
     );  
     end component;
 
-    signal NumberB_aux, MB_aux : std_logic_vector(WIDTH - 1 downto 0);
-    signal Zcount_aux: std_logic_vecotr(4 downto 0);
+    signal NumberB_aux : std_logic_vector(WIDTH - 1 downto 0);
+    signal Zcount_aux: std_logic_vector(4 downto 0);
     signal EB       : std_logic_vector(7 downto 0);
+    signal MB_aux   : std_logic_vector(27 downto 0);
 begin
 
     comp1: comp 
-    generic map(WIDTH => 36)
+    generic map(WIDTH => 37)
     port map (NumberA => NumberA,
               NumberB => NumberB,
               NA      => MA,
