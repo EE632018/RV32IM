@@ -50,6 +50,17 @@ add_files -norecurse ../division_u.vhd
 add_files -norecurse ../multiply.vhd
 add_files -norecurse ../TOP_RISCV.vhd
 add_files -norecurse ../RISCV_tb/BRAM_byte_addressable.vhd
+# FPADDER files
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/fpadder.vhd
+# adder files
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/adder/adder.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/adder/cla.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/adder/signout.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/adder/block_adder.vhd
+#stabilizing
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/stabilizing/block_norm.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/stabilizing/round.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/stabilizing/vector.vhd
 # preadder files
 add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/comp_exp.vhd
 add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/comp.vhd

@@ -45,8 +45,12 @@ begin
             "101" when EB = x"ff" and MB > std_logic_vector(to_unsigned(0,23)) else  -- NaN
             "000";
 
-    process(SA, SB, outA, outB)
+    process(SA, SB, outA, outB, EA, EB, MA, MB)
     begin
+    
+        SS <= '-';
+        MS <= (others => '-');
+        ES <= (others => '-');
         ------------------------
         --        ZERO
         ------------------------
