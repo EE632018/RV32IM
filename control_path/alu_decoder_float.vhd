@@ -17,8 +17,8 @@ end entity;
 architecture behavioral of alu_decoder_float is
     constant fmadd:     std_logic_vector (4 downto 0):="00000";
     constant fmsub:     std_logic_vector (4 downto 0):="00001";
-    constant fnmsub:    std_logic_vector (4 downto 0):="00010";
-    constant fnmadd:    std_logic_vector (4 downto 0):="00011";
+    constant fnmsub:    std_logic_vector (4 downto 0):="00011";
+    constant fnmadd:    std_logic_vector (4 downto 0):="00010";
     constant fadd:      std_logic_vector (4 downto 0):="00100";
     constant fsub:      std_logic_vector (4 downto 0):="00101";
     constant fmul:      std_logic_vector (4 downto 0):="00110";

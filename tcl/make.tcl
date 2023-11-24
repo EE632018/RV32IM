@@ -77,6 +77,8 @@ add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/shift_exp
 add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/shift.vhd
 add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/zero.vhd
 add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/preadder.vhd
+#FMUL
+add_files -norecurse ../float_arithmetic_operations/fmul/floatM.vhd
 
 add_files -fileset sim_1 ../RISCV_tb/TOP_RISCV_tb.vhd
 add_files -fileset constrs_1 -norecurse ../constraints/clk_constraint.xdc
