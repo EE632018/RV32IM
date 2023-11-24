@@ -38,6 +38,13 @@ ARCHITECTURE behavioral OF ALU_float IS
            c_out : out std_logic_vector(31 downto 0)
    );
     end component;
+    
+    component floatComp
+        Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
+           b_in : in STD_LOGIC_VECTOR (31 downto 0);
+           c_max_out : out STD_LOGIC_VECTOR (31 downto 0);
+           c_min_out : out STD_LOGIC_VECTOR (31 downto 0));
+    end component;
     ------------------------------------------------------------ CONSTANT OP
     constant fmadd:     std_logic_vector (4 downto 0):="00000"; --
     constant fmsub:     std_logic_vector (4 downto 0):="00001"; --
@@ -71,6 +78,8 @@ ARCHITECTURE behavioral OF ALU_float IS
     signal fsgnjn_res : std_logic_vector(WIDTH - 1 downto 0);
     signal fsgnjx_res : std_logic_vector(WIDTH - 1 downto 0);
     signal fmul_res   : std_logic_vector(WIDTH - 1 downto 0);
+    signal fmax_res   : std_logic_vector(WIDTH - 1 downto 0);
+    signal fmin_res   : std_logic_vector(WIDTH - 1 downto 0);
     signal res_s     : std_logic_vector(WIDTH - 1 downto 0);
     
 begin
@@ -81,6 +90,9 @@ begin
    fmul_ins: floatM
    port map (a_in => a_mux_m_i, b_in => b_i, c_out => fmul_res);
 
+   floatComp_inst: floatComp
+   port map(a_in => a_i, b_in => b_i, c_max_out => fmax_res, c_min_out => fmin_res); 
+    
    fsgnj_res <= b_i(31) & a_i(30 downto 0);
    fsgnjn_res <= not(b_i(31)) & a_i(30 downto 0);
    fsgnjx_res <= (a_i(31) xor b_i(31)) & a_i(30 downto 0);
@@ -108,6 +120,8 @@ begin
                fsgnjn_res when fsgnjn,
                fsgnjx_res when fsgnjx,
                fmul_res   when fmul,
+               fmax_res   when fmax,
+               fmin_res   when fmin,
                (others => '1') when others;   
                
 
