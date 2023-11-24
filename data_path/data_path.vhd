@@ -492,7 +492,7 @@ begin
    a_ex_s <= alu_forward_a_ex_s;
 
    a_ex_f_s <= alu_forward_a_f_ex_s;
-   b_ex_f_s <= alu_forward_b_f_ex_s when alu_scr_b_i = '1' else
+   b_ex_f_s <= alu_forward_b_f_ex_s when alu_src_b_i = '1' else
                immediate_extended_ex_s2;
    c_ex_f_s <= alu_forward_c_f_ex_s;
 

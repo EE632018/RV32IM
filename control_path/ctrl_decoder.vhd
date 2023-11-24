@@ -143,6 +143,8 @@ begin
          when "1010011" =>
             alu_f_bit_op_o <= "100";
             alu_mux_o     <= '1';
+            rs1_in_use_o  <= '1';
+            rs2_in_use_o  <= '1';
             if funct5_i(4) = '0' then
                rd_we_f_o     <= '1';
             else
