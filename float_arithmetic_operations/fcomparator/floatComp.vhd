@@ -35,7 +35,10 @@ entity floatComp is
     Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
            b_in : in STD_LOGIC_VECTOR (31 downto 0);
            c_max_out : out STD_LOGIC_VECTOR (31 downto 0);
-           c_min_out : out STD_LOGIC_VECTOR (31 downto 0));
+           c_min_out : out STD_LOGIC_VECTOR (31 downto 0);
+           c_feq_out : out STD_LOGIC_VECTOR (31 downto 0);
+           c_flts_out: out STD_LOGIC_VECTOR (31 downto 0);
+           c_fle_out : out STD_LOGIC_VECTOR (31 downto 0));
 end floatComp;
 
 architecture Behavioral of floatComp is
@@ -56,8 +59,11 @@ begin
     process(a_e, b_e, a_s, b_s, a_m, b_m) --NAN
         begin
         if(a_e = "01111111" or b_e = "01111111" ) then
-            c_max_out <= "10111111111111111111111111111111";
-            c_min_out <= "10111111111111111111111111111111";
+            c_max_out  <= "10111111111111111111111111111111";
+            c_min_out  <= "10111111111111111111111111111111";
+            c_feq_out  <= (others => '0');
+            c_flts_out <= (others => '0');
+            c_fle_out  <= (others => '0');
         else
             if(a_s = b_s) then                                  -- SAME SIGN
                 if(a_e = b_e) then                              -- SAME EXSPONAT
@@ -86,4 +92,32 @@ begin
             end if;
         end if;
     end process;
+
+    process(a_e, b_e, a_in, b_in) --NAN
+        begin
+        if(a_e = "01111111" or b_e = "01111111" ) then
+            c_feq_out  <= (others => '0');
+            c_flts_out <= (others => '0');
+            c_fle_out  <= (others => '0');
+        else
+            if a_in = b_in then
+                c_feq_out  <= (others => '1');
+            else
+                c_feq_out  <= (others => '0');    
+            end if; 
+            
+            if a_in < b_in then
+                c_flts_out  <= (others => '1');
+            else
+                c_flts_out  <= (others => '0');    
+            end if;
+
+            if a_in <= b_in then
+                c_fle_out  <= (others => '1');
+            else
+                c_fle_out  <= (others => '0');    
+            end if;
+        end if;
+    end process;
+    
 end Behavioral;

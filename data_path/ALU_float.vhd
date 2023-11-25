@@ -43,7 +43,27 @@ ARCHITECTURE behavioral OF ALU_float IS
         Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
            b_in : in STD_LOGIC_VECTOR (31 downto 0);
            c_max_out : out STD_LOGIC_VECTOR (31 downto 0);
-           c_min_out : out STD_LOGIC_VECTOR (31 downto 0));
+           c_min_out : out STD_LOGIC_VECTOR (31 downto 0);
+           c_feq_out : out STD_LOGIC_VECTOR (31 downto 0);
+           c_flts_out: out STD_LOGIC_VECTOR (31 downto 0);
+           c_fle_out : out STD_LOGIC_VECTOR (31 downto 0));
+    end component;
+
+    component fcvt
+    Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
+           c_s_out : out STD_LOGIC_VECTOR (31 downto 0);
+           c_u_out : out STD_LOGIC_VECTOR (31 downto 0));
+    end component;
+
+    component fcvt_i
+    Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
+           c_s_out : out STD_LOGIC_VECTOR (31 downto 0);
+           c_u_out : out STD_LOGIC_VECTOR (31 downto 0));
+    end component;
+
+    component fclass
+    Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
+           c_out : out STD_LOGIC_VECTOR (31 downto 0));
     end component;
     ------------------------------------------------------------ CONSTANT OP
     constant fmadd:     std_logic_vector (4 downto 0):="00000"; --
@@ -58,18 +78,18 @@ ARCHITECTURE behavioral OF ALU_float IS
     constant fsgnj:     std_logic_vector (4 downto 0):="01001"; --
     constant fsgnjn:    std_logic_vector (4 downto 0):="01010"; --
     constant fsgnjx:    std_logic_vector (4 downto 0):="01011"; --
-    constant fmin:      std_logic_vector (4 downto 0):="01100";
-    constant fmax:      std_logic_vector (4 downto 0):="01101";
-    constant fcvt_w:    std_logic_vector (4 downto 0):="01110";
-    constant fcvt_wu:   std_logic_vector (4 downto 0):="01111";
-    constant fmv_x_w:   std_logic_vector (4 downto 0):="10000";
-    constant feq:       std_logic_vector (4 downto 0):="10001";
-    constant flts:      std_logic_vector (4 downto 0):="10010";
-    constant fle:       std_logic_vector (4 downto 0):="10011";
-    constant fclass:    std_logic_vector (4 downto 0):="10100";
-    constant fcvt_s_w:  std_logic_vector (4 downto 0):="10101";
-    constant fcvt_s_wu: std_logic_vector (4 downto 0):="10110";
-    constant fmv_w_x:   std_logic_vector (4 downto 0):="10111";
+    constant fmin:      std_logic_vector (4 downto 0):="01100"; --
+    constant fmax:      std_logic_vector (4 downto 0):="01101"; --
+    constant fcvt_w:    std_logic_vector (4 downto 0):="01110"; --
+    constant fcvt_wu:   std_logic_vector (4 downto 0):="01111"; --
+    constant fmv_x_w:   std_logic_vector (4 downto 0):="10000"; --
+    constant feq:       std_logic_vector (4 downto 0):="10001"; --
+    constant flts:      std_logic_vector (4 downto 0):="10010"; --
+    constant fle:       std_logic_vector (4 downto 0):="10011"; --
+    constant fclass:    std_logic_vector (4 downto 0):="10100"; --
+    constant fcvt_s_w:  std_logic_vector (4 downto 0):="10101"; --
+    constant fcvt_s_wu: std_logic_vector (4 downto 0):="10110"; --
+    constant fmv_w_x:   std_logic_vector (4 downto 0):="10111"; --
     
     signal a_mux_i, b_mux_i, a_mux_m_i : std_logic_vector(WIDTH - 1 downto 0);
 
@@ -80,6 +100,16 @@ ARCHITECTURE behavioral OF ALU_float IS
     signal fmul_res   : std_logic_vector(WIDTH - 1 downto 0);
     signal fmax_res   : std_logic_vector(WIDTH - 1 downto 0);
     signal fmin_res   : std_logic_vector(WIDTH - 1 downto 0);
+    signal fcvt_res_s : std_logic_vector(WIDTH - 1 downto 0); 
+    signal fcvt_res_u : std_logic_vector(WIDTH - 1 downto 0); 
+    signal fcvt_res_i_s : std_logic_vector(WIDTH - 1 downto 0); 
+    signal fcvt_res_i_u : std_logic_vector(WIDTH - 1 downto 0); 
+    signal fmv_res_f  : std_logic_vector(WIDTH - 1 downto 0); -- float to integer
+    signal fmv_res_i  : std_logic_vector(WIDTH - 1 downto 0); -- integer to float
+    signal feq_res    : std_logic_vector(WIDTH - 1 downto 0);
+    signal flts_res   : std_logic_vector(WIDTH - 1 downto 0);
+    signal fle_res    : std_logic_vector(WIDTH - 1 downto 0);
+    signal fclass_res : std_logic_vector(WIDTH - 1 downto 0);
     signal res_s     : std_logic_vector(WIDTH - 1 downto 0);
     
 begin
@@ -91,12 +121,23 @@ begin
    port map (a_in => a_mux_m_i, b_in => b_i, c_out => fmul_res);
 
    floatComp_inst: floatComp
-   port map(a_in => a_i, b_in => b_i, c_max_out => fmax_res, c_min_out => fmin_res); 
-    
+   port map (a_in => a_i, b_in => b_i, c_max_out => fmax_res, c_min_out => fmin_res, c_feq_out => feq_res,
+             c_flts_out => flts_res, c_fle_out => fle_res); 
+
+   fcvt_inst: fcvt
+   port map (a_in => a_i, c_s_out => fcvt_res_s, c_u_out => fcvt_res_u);
+   
+   fcvt_inst: fcvt_i
+   port map (a_in => a_ii, c_s_out => fcvt_i_res_s, c_u_out => fcvt_i_res_u); 
+
+   fclass_inst: fclass
+   port map (a_in => a_i, c_out => fclass_res);
+
    fsgnj_res <= b_i(31) & a_i(30 downto 0);
    fsgnjn_res <= not(b_i(31)) & a_i(30 downto 0);
    fsgnjx_res <= (a_i(31) xor b_i(31)) & a_i(30 downto 0);
-
+   fmv_res_f <= a_i;
+   fmv_res_i <= a_ii;
     process(op_i, a_i, b_i)
     begin
         if op_i = fadd or op_i = fsub then
@@ -115,13 +156,23 @@ begin
     end process;
 
    with op_i select
-      res_s <= fpadd_sub when (fadd or fsub or fmadd or fnmadd or fmsub or fnmsub),
-               fsgnj_res when fsgnj,
+      res_s <= fpadd_sub  when (fadd or fsub or fmadd or fnmadd or fmsub or fnmsub),
+               fsgnj_res  when fsgnj,
                fsgnjn_res when fsgnjn,
                fsgnjx_res when fsgnjx,
                fmul_res   when fmul,
                fmax_res   when fmax,
                fmin_res   when fmin,
+               fcvt_res_u when fcvt_wu,
+               fcvt_res_s when fcvt_w, 
+               fmv_res_f  when fmv_x_w,
+               fmv_res_i  when fmv_w_x,
+               feq_res    when feq,
+               flts_res   when flts,
+               fle_res    when fle,
+               fclass_res when fclass,
+               fcvt_i_res_s when fcvt_s_w,
+               fcvt_i_res_u when fcvt_s_wu,
                (others => '1') when others;   
                
 
