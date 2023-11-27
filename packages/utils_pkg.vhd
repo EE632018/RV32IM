@@ -16,29 +16,34 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 package utils_pkg is
-    function log2c (n: integer) return integer;
+    function log2c (n: natural) return natural;
 end utils_pkg;
 
 --package body
 package body utils_pkg is
 
-    function log2c (n: integer) return integer is
-    variable m, p: integer;
+    function log2c (n: natural) return natural is
+    variable m : natural := n;
+    variable p : natural := 0;
 
 begin
-    
-    m := 0;
-    p := 1;
-    
-    while p < n loop
-    
-        m := m + 1;
-        p := p * 2;
-        
+--    if n = 0 then
+--        return 0;
+--    elsif n = 1 then
+--        return 0;
+--    else
+--        while m /= 1 loop
+--            m := m(31 downto 1);
+--            p := p + 1;   
+--        end loop;
+--    end if;    
+--    return p;
+    for i in 31 downto 0 loop
+        if n >= 2**i then
+            return i;
+        end if;
     end loop;
-    
-    return m;
-
+    return 0;
 end log2c;
 
 end utils_pkg;
