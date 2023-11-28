@@ -133,6 +133,7 @@ architecture Behavioral of data_path is
    signal rd_address_ex_s         : std_logic_vector (4 downto 0) := (others=>'0');
    signal csr_address_ex_s        : std_logic_vector (11 downto 0) := (others => '0');
    signal stall_s                 : std_logic;
+   signal stall_f_s               : std_logic;
    signal pc_reg_ex_s             : std_logic_vector (31 downto 0) := (others=>'0');
    signal branch_adder_ex_s       : std_logic_vector (31 downto 0) := (others=>'0');
 
@@ -578,7 +579,7 @@ begin
          c_i    => c_ex_f_s,
          op_i   => alu_op_f_i,
          res_o  => alu_result_f_ex_s,
-         stall_o=> open
+         stall_o=> stall_f_s
          );       
     MHBP_INST:MHBP
     GENERIC MAP(WIDTH       => 4,
@@ -739,7 +740,7 @@ begin
         end if;
     end process;
     
-    stall_o <= stall_s;
+    stall_o <= stall_s or stall_f_s;
 
 
    --***********  Ulazi/Izlazi  ***************

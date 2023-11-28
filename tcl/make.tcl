@@ -81,6 +81,15 @@ add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/preadder.
 add_files -norecurse ../float_arithmetic_operations/fmul/floatM.vhd
 #FCOMPARATOR
 add_files -norecurse ../float_arithmetic_operations/fcomparator/floatComp.vhd
+#FDIV
+add_files -norecurse ../float_arithmetic_operations/fdiv/floatDevision.vhd
+add_files -norecurse ../float_arithmetic_operations/fdiv/floatReciproach.vhd
+#FCONV
+add_files -norecurse ../float_arithmetic_operations/fconverter/fcvt_i.vhd
+add_files -norecurse ../float_arithmetic_operations/fconverter/fcvt.vhd
+#FCLASS
+add_files -norecurse ../float_arithmetic_operations/fclass/fclass_c.vhd
+#TB
 add_files -fileset sim_1 ../RISCV_tb/TOP_RISCV_tb.vhd
 add_files -fileset constrs_1 -norecurse ../constraints/clk_constraint.xdc
 

@@ -31,12 +31,12 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
-entity fclass is
+entity fclass_c is
     Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
            c_out : out STD_LOGIC_VECTOR (31 downto 0));
-end fclass;
+end fclass_c;
 
-architecture Behavioral of fclass is
+architecture Behavioral of fclass_c is
     signal a_s : std_logic;
     signal a_e : std_logic_vector(7 downto 0);
     signal a_m : std_logic_vector(22 downto 0);

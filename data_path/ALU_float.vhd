@@ -61,9 +61,19 @@ ARCHITECTURE behavioral OF ALU_float IS
            c_u_out : out STD_LOGIC_VECTOR (31 downto 0));
     end component;
 
-    component fclass
+    component fclass_c
     Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
            c_out : out STD_LOGIC_VECTOR (31 downto 0));
+    end component;
+    
+    component floatDevision
+        Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
+               b_in : in STD_LOGIC_VECTOR (31 downto 0);
+               r_out : out STD_LOGIC_VECTOR (31 downto 0);
+               clk : in STD_LOGIC;
+               rst : in STD_LOGIC;
+               start : in std_logic; 
+               stall_o : out STD_LOGIC);
     end component;
     ------------------------------------------------------------ CONSTANT OP
     constant fmadd:     std_logic_vector (4 downto 0):="00000"; --
@@ -102,8 +112,8 @@ ARCHITECTURE behavioral OF ALU_float IS
     signal fmin_res   : std_logic_vector(WIDTH - 1 downto 0);
     signal fcvt_res_s : std_logic_vector(WIDTH - 1 downto 0); 
     signal fcvt_res_u : std_logic_vector(WIDTH - 1 downto 0); 
-    signal fcvt_res_i_s : std_logic_vector(WIDTH - 1 downto 0); 
-    signal fcvt_res_i_u : std_logic_vector(WIDTH - 1 downto 0); 
+    signal fcvt_i_res_s : std_logic_vector(WIDTH - 1 downto 0); 
+    signal fcvt_i_res_u : std_logic_vector(WIDTH - 1 downto 0); 
     signal fmv_res_f  : std_logic_vector(WIDTH - 1 downto 0); -- float to integer
     signal fmv_res_i  : std_logic_vector(WIDTH - 1 downto 0); -- integer to float
     signal feq_res    : std_logic_vector(WIDTH - 1 downto 0);
@@ -111,6 +121,11 @@ ARCHITECTURE behavioral OF ALU_float IS
     signal fle_res    : std_logic_vector(WIDTH - 1 downto 0);
     signal fclass_res : std_logic_vector(WIDTH - 1 downto 0);
     signal res_s     : std_logic_vector(WIDTH - 1 downto 0);
+    signal fdiv_res  : std_logic_vector(WIDTH - 1 downto 0);
+    
+    signal start_s : std_logic;
+    
+    signal fdiv_stall : std_logic;
     
 begin
 
@@ -127,11 +142,14 @@ begin
    fcvt_inst: fcvt
    port map (a_in => a_i, c_s_out => fcvt_res_s, c_u_out => fcvt_res_u);
    
-   fcvt_inst: fcvt_i
+   fcvt_i_inst: fcvt_i
    port map (a_in => a_ii, c_s_out => fcvt_i_res_s, c_u_out => fcvt_i_res_u); 
 
-   fclass_inst: fclass
+   fclass_inst: fclass_c
    port map (a_in => a_i, c_out => fclass_res);
+   
+   fdiv_i:floatDevision
+   port map (a_in => a_i, b_in => b_i, r_out => fdiv_res, clk => clk, rst => reset, start => start_s, stall_o => fdiv_stall);
 
    fsgnj_res <= b_i(31) & a_i(30 downto 0);
    fsgnjn_res <= not(b_i(31)) & a_i(30 downto 0);
@@ -173,8 +191,14 @@ begin
                fclass_res when fclass,
                fcvt_i_res_s when fcvt_s_w,
                fcvt_i_res_u when fcvt_s_wu,
+               fdiv_res     when fdiv,
                (others => '1') when others;   
                
-
+    with op_i select
+        stall_o <= fdiv_stall when fdiv,
+                    '0'       when others;
+    with op_i select
+        start_s <= '1' when fdiv,
+                   '0' when others;                
    res_o <= res_s;            
 end behavioral;    

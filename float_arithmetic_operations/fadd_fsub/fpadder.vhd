@@ -100,6 +100,7 @@ begin
         case enable_s is
             when '1' => Result <= Nadder;
             when '0' => Result <= Ncase;
+            when others => Result <= Nadder;
         end case;
     end process; 
 end behavioral;
