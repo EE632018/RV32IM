@@ -87,6 +87,7 @@ add_files -norecurse ../float_arithmetic_operations/fdiv/floatReciproach.vhd
 #FCONV
 add_files -norecurse ../float_arithmetic_operations/fconverter/fcvt_i.vhd
 add_files -norecurse ../float_arithmetic_operations/fconverter/fcvt.vhd
+add_files -norecurse ../loat_arithmetic_operations/fconverter/Ilog.vhd
 #FCLASS
 add_files -norecurse ../float_arithmetic_operations/fclass/fclass_c.vhd
 #TB

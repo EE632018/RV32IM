@@ -18,6 +18,16 @@ entity fcvt_i is
 end fcvt_i;
 
 architecture behavioral of fcvt_i is
+    
+    component Ilog
+        Port ( clk : in STD_LOGIC;
+           rst : in STD_LOGIC;
+           start : in std_logic;
+           a_in : in STD_LOGIC_VECTOR (31 downto 0);
+           c_out : out STD_LOGIC_VECTOR (31 downto 0);
+           stall_o : out STD_LOGIC);
+    end component;
+
     constant EXPONENT_BIAS : natural := 127;  -- Single-precision float exponent bias
     constant EXPONENT_WIDTH : natural := 8;   -- Width of the exponent field
     constant FRACTION_WIDTH : natural := 23;  -- Width of the fraction field
@@ -32,6 +42,8 @@ architecture behavioral of fcvt_i is
     signal int_s3   : natural;
     signal int_u    : integer;
     signal int_u2   : natural;
+    
+    
 begin
 
     process(a_in, int_s3, int_u2, int_u, sign_s, exponent_s, fraction_s, exponent_u, fraction_u, int_s, int_s2)

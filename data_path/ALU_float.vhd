@@ -83,7 +83,7 @@ ARCHITECTURE behavioral OF ALU_float IS
     constant fadd:      std_logic_vector (4 downto 0):="00100"; --
     constant fsub:      std_logic_vector (4 downto 0):="00101"; --
     constant fmul:      std_logic_vector (4 downto 0):="00110"; --
-    constant fdiv:      std_logic_vector (4 downto 0):="00111";
+    constant fdiv:      std_logic_vector (4 downto 0):="00111"; --
     constant fsqrt:     std_logic_vector (4 downto 0):="01000";
     constant fsgnj:     std_logic_vector (4 downto 0):="01001"; --
     constant fsgnjn:    std_logic_vector (4 downto 0):="01010"; --
@@ -196,7 +196,7 @@ begin
                
     with op_i select
         stall_o <= fdiv_stall when fdiv,
-                    '0'       when others;
+                    '1'       when others;
     with op_i select
         start_s <= '1' when fdiv,
                    '0' when others;                
