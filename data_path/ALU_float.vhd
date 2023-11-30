@@ -23,14 +23,16 @@ END ALU_float;
 ARCHITECTURE behavioral OF ALU_float IS
 
    ------------------------------------------------------------- COMPONENT 
-    component fpadder
-    port ( 
-        NumberA : in std_logic_vector(31 downto 0);
-        NumberB : in std_logic_vector(31 downto 0);
-        A_S     : in std_logic;
-        Result  : out std_logic_vector(31 downto 0)
-    ); 
-    end component;
+   component FPU is
+    Port (clk:   in std_logic;
+          rst:   in std_logic;
+          start: in std_logic;
+          X:     in std_logic_vector(31 downto 0);
+          Y:     in std_logic_vector(31 downto 0);
+          R:     out std_logic_vector(31 downto 0);
+          done:  out std_logic
+          );
+  end component;
 
     component floatM
     Port ( a_in : in std_logic_vector(31 downto 0);
@@ -126,11 +128,12 @@ ARCHITECTURE behavioral OF ALU_float IS
     signal start_s : std_logic;
     
     signal fdiv_stall : std_logic;
+    signal fadd_stall : std_logic;
     
 begin
 
-   fadd_fsub: fpadder
-   port map (NumberA => a_mux_i, NumberB => b_mux_i, A_S => op_i(0), Result => fpadd_sub);
+   fadd_fsub: FPU
+   port map (clk => clk, rst => reset, start => start_s, X => a_i, Y => b_i, R => fpadd_sub, done => fadd_stall);
    
    fmul_ins: floatM
    port map (a_in => a_mux_m_i, b_in => b_i, c_out => fmul_res);
@@ -196,9 +199,11 @@ begin
                
     with op_i select
         stall_o <= fdiv_stall when fdiv,
+                   fadd_stall when fadd, 
                     '1'       when others;
     with op_i select
         start_s <= '1' when fdiv,
+                   '1' when fadd, 
                    '0' when others;                
    res_o <= res_s;            
 end behavioral;    

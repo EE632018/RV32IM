@@ -85,7 +85,7 @@ begin
                 cnt <= (others => '0');
             else
                 if en_s = '1' then 
-                    cnt <= std_logic_vector(unsigned(cnt) + TO_UNSIGNED(1, 4));
+                    cnt <= std_logic_vector(unsigned(cnt) + TO_UNSIGNED(1, 8));
                 end if;
             end if;
         end if;
