@@ -51,32 +51,8 @@ add_files -norecurse ../multiply.vhd
 add_files -norecurse ../TOP_RISCV.vhd
 add_files -norecurse ../RISCV_tb/BRAM_byte_addressable.vhd
 # FPADDER files
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/fpadder.vhd
-# adder files
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/adder/adder.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/adder/cla.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/adder/signout.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/adder/block_adder.vhd
-#stabilizing
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/stabilizing/block_norm.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/stabilizing/round.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/stabilizing/vector.vhd
-# preadder files
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/comp_exp.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/comp.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/demux.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/mux_adder.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/mux_ns.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/mux2on1.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/n_case.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/n_normal.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/n_subn.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/norm.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/selector.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/shift_exp.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/shift.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/zero.vhd
-add_files -norecurse ../float_arithmetic_operations/fadd_fsub/preadder/preadder.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/FPU.vhd
+add_files -norecurse ../float_arithmetic_operations/fadd_fsub/cmp_exp.vhd
 #FMUL
 add_files -norecurse ../float_arithmetic_operations/fmul/floatM.vhd
 #FCOMPARATOR
