@@ -47,23 +47,25 @@ architecture Behavioral of floatReciproach is
                c_out : out std_logic_vector(31 downto 0));
     end component;
     
-    component fpadder
-        port ( 
-            NumberA : in std_logic_vector(31 downto 0);
-            NumberB : in std_logic_vector(31 downto 0);
-            A_S     : in std_logic;
-            Result  : out std_logic_vector(31 downto 0)
-        );  
+    component FPU
+    Port (clk:   in std_logic;
+          rst:   in std_logic;
+          start: in std_logic;
+          X:     in std_logic_vector(31 downto 0);
+          Y:     in std_logic_vector(31 downto 0);
+          R:     out std_logic_vector(31 downto 0);
+          done:  out std_logic
+        );
     end component;
     
     signal x_reg, x_next : std_logic_vector(31 downto 0);
-    signal mul1_out, sub_out: std_logic_vector(31 downto 0);
-    signal num2: std_logic_vector(31 downto 0) := std_logic_vector(to_unsigned(2,32));
+    signal mul1_out, mul1_out_s, sub_out: std_logic_vector(31 downto 0);
+    signal num2: std_logic_vector(31 downto 0) := x"40000000";
     
-    type state is (IDLE, RESET, CAL);
+    type state is (IDLE, RESET, CAL, CAL_SUB);
     signal state_r, state_next : state;
     
-    signal en_s, reset_s, done_s: std_logic;
+    signal en_s, reset_s, done_s, start_s, done_sub: std_logic;
     signal cnt : std_logic_vector(7 downto 0);
 begin
 
@@ -100,8 +102,10 @@ begin
         end if;
     end process;
     
-    process(state_r, start, done_s)
+    process(state_r, start, done_s, done_sub)
     begin
+
+        start_s <= '0';
         case state_r is
             when IDLE =>
                 stall_o <= '1';
@@ -119,13 +123,25 @@ begin
                 state_next <= CAL;
             when CAL =>
                 stall_o <= '0';
-                en_s <= '1';
+                en_s <= '0';
                 reset_s <= '0';
+                start_s <= '1';
                 if done_s = '1' then
                     state_next <= IDLE;
                 else
-                    state_next <= CAL;
+                    state_next <= CAL_SUB;
                 end if;
+            when CAL_SUB => 
+                en_s <= '0';
+                stall_o <= '0';
+                reset_s <= '0';
+
+                if done_sub = '1' then
+                    state_next <= CAL;
+                    en_s       <= '1';
+                else
+                    state_next <= CAL_SUB;
+                end if;            
             when others =>
                 en_s <= '0';
                 stall_o <= '1';
@@ -138,7 +154,7 @@ begin
     begin
         if(rising_edge(clk))then
             if (rst = '1' or reset_s = '1')  then
-                x_reg <= std_logic_vector(to_unsigned(1,32));
+                x_reg <= x"3f800000";
             else
                 if en_s = '1' then
                     x_reg <= x_next;
@@ -150,8 +166,10 @@ begin
     mul1: floatM
     port map(a_in => x_reg, b_in => b_in, c_out => mul1_out);
     
-    sub1_i:fpadder
-    port map(NumberA => num2, NumberB => mul1_out, A_S => '1', Result => sub_out);
+    mul1_out_s <= ('1' xor mul1_out(31)) & mul1_out(30 downto 0);
+    
+    sub1_i:FPU
+    port map(clk => clk, rst => rst, start => start_s, X => num2, Y => mul1_out_s, R => sub_out, done => done_sub);
     
     mul2: floatM
     port map(a_in => x_reg, b_in => sub_out, c_out => x_next);

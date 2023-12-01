@@ -105,7 +105,8 @@ ARCHITECTURE behavioral OF ALU_float IS
     
     signal a_mux_i, b_mux_i, a_mux_m_i : std_logic_vector(WIDTH - 1 downto 0);
 
-    signal fpadd_sub : std_logic_vector(WIDTH - 1 downto 0);
+    signal fpadd      : std_logic_vector(WIDTH - 1 downto 0);
+    signal fpsub      : std_logic_vector(WIDTH - 1 downto 0);
     signal fsgnj_res : std_logic_vector(WIDTH - 1 downto 0);
     signal fsgnjn_res : std_logic_vector(WIDTH - 1 downto 0);
     signal fsgnjx_res : std_logic_vector(WIDTH - 1 downto 0);
@@ -129,11 +130,19 @@ ARCHITECTURE behavioral OF ALU_float IS
     
     signal fdiv_stall : std_logic;
     signal fadd_stall : std_logic;
+    signal fsub_stall : std_logic;
     
+    signal b_sub      : std_logic_vector(31 downto 0);
 begin
 
-   fadd_fsub: FPU
-   port map (clk => clk, rst => reset, start => start_s, X => a_i, Y => b_i, R => fpadd_sub, done => fadd_stall);
+   -- Logic xor b input for subtraction
+   b_sub <= ('1' xor b_i(31)) & b_i(30 downto 0); 
+
+   fadd: FPU
+   port map (clk => clk, rst => reset, start => start_s, X => a_mux_i, Y => b_mux_i, R => fpadd, done => fadd_stall);
+
+   fsub: FPU
+   port map (clk => clk, rst => reset, start => start_s, X => a_i, Y => b_sub, R => fpsub, done => fsub_stall);
    
    fmul_ins: floatM
    port map (a_in => a_mux_m_i, b_in => b_i, c_out => fmul_res);
@@ -159,25 +168,31 @@ begin
    fsgnjx_res <= (a_i(31) xor b_i(31)) & a_i(30 downto 0);
    fmv_res_f <= a_i;
    fmv_res_i <= a_ii;
+
+
     process(op_i, a_i, b_i)
     begin
-        if op_i = fadd or op_i = fsub then
+        if op_i = fadd then
             a_mux_i <= a_i;
             b_mux_i <= b_i;
         else
             a_mux_i <= fmul_res;
             b_mux_i <= c_i;
+            if op_i = fnmsub or op_i = fmsub then
+                b_mux_i <= ('1' xor c_i(31)) & c_i(30 downto 0);
+            end if;    
         end if;
         
         if op_i = fnmadd or op_i = fnmsub then
-            a_mux_m_i <= std_logic_vector(unsigned(not a_i) + TO_UNSIGNED(1, 32));
+            a_mux_m_i <= ('1' xor a_i(31)) & a_i(30 downto 0);
         else
             a_mux_m_i <= a_i;
         end if;
     end process;
 
    with op_i select
-      res_s <= fpadd_sub  when (fadd or fsub or fmadd or fnmadd or fmsub or fnmsub),
+      res_s <= fpadd      when (fadd or fnmsub or fmsub or fnmadd or fmadd),
+               fpsub      when fsub,
                fsgnj_res  when fsgnj,
                fsgnjn_res when fsgnjn,
                fsgnjx_res when fsgnjx,
@@ -199,11 +214,12 @@ begin
                
     with op_i select
         stall_o <= fdiv_stall when fdiv,
-                   fadd_stall when fadd, 
+                   fadd_stall when (fadd or fnmsub or fmsub or fnmadd or fmadd),
+                   fsub_stall when fsub, 
                     '1'       when others;
     with op_i select
         start_s <= '1' when fdiv,
-                   '1' when fadd, 
+                   '1' when (fadd or fsub or fmadd or fnmadd or fmsub or fnmsub), 
                    '0' when others;                
    res_o <= res_s;            
 end behavioral;    

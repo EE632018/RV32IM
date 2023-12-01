@@ -41,13 +41,14 @@ begin
         variable d: signed(8 downto 0);
         variable case3, case5: std_logic := '0';
     begin
-        done <= '1';
+        
         if rst = '1' then
             state <= WAITING;
-            done  <= '1';
+            --done  <= '1';
         elsif rising_edge(clk) then
             case state is
                 when WAITING =>
+                    --done <= '1';
                     if start = '1' then
                         Sx <= X(31);
                         Sy <= Y(31);
@@ -60,6 +61,7 @@ begin
                         state <= WAITING;
                     end if; 
                 when ALIGN =>
+                    --done <= '0';
                     if expGT = '1' then
                         d := signed(Ex) - signed(Ey);
                         if d < 23 then
@@ -87,6 +89,7 @@ begin
                         state <= ADD;
                     end if;
                 when ADD =>
+                    --done <= '0';
                     state <= NORMALIZE;
                     if (Sx xor Sy) = '0' then -- X, Y have same sign
                         Mr <= std_logic_vector((unsigned(Mx) + unsigned(My)));
@@ -99,6 +102,7 @@ begin
                         Sr <= Sy;
                     end if;
                 when NORMALIZE =>
+                    --done <= '0';
                     if unsigned(Mr) = to_unsigned(0, 25) then
                         Mr <= (others => '0');
                         Er <= (others => '0');
@@ -119,9 +123,9 @@ begin
                         R(31) <= Sr;
                         R(30 downto 23) <= Er(7 downto 0);
                         R(22 downto 0) <= Mr(22 downto 0);
-                        done <= '0';
+                        --done <= '0';
                     else
-                        done <= '0';
+                        --done <= '0';
                     end if;
                     
                     if start = '0' then
@@ -130,6 +134,19 @@ begin
                 when others => state <= WAITING;
             end case;
         end if;                              
+    end process;
+
+    process(state)
+    begin
+        case state is
+            when WAITING => done <= '1';
+            when ALIGN =>  done <= '0';
+            when ADD =>  done <= '0';
+            when NORMALIZE =>  done <= '0';
+            when OUTPUT =>  done <= '0';
+            when others =>  done <= '1';
+        end case;
+        
     end process;
 
 end Behavioral;
