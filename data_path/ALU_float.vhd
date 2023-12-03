@@ -68,14 +68,17 @@ ARCHITECTURE behavioral OF ALU_float IS
            c_out : out STD_LOGIC_VECTOR (31 downto 0));
     end component;
     
-    component floatDevision
-        Port ( a_in : in STD_LOGIC_VECTOR (31 downto 0);
-               b_in : in STD_LOGIC_VECTOR (31 downto 0);
-               r_out : out STD_LOGIC_VECTOR (31 downto 0);
-               clk : in STD_LOGIC;
-               rst : in STD_LOGIC;
-               start : in std_logic; 
-               stall_o : out STD_LOGIC);
+    component FPP_DIVIDE 
+      port (A        : in  std_logic_vector(31 downto 0);  --Dividend
+            B        : in  std_logic_vector(31 downto 0);  --Divisor
+            clk      : in  std_logic;       --Master clock
+            reset    : in  std_logic;       --Global asynch reset
+            go       : in  std_logic;       --Enable
+            done     : out std_logic;       --Flag for done computing
+            --ZD:         out std_logic;                                          --Flag for zero divisor
+            overflow : out std_logic;       --Flag for overflow
+            result   : out std_logic_vector(31 downto 0)   --Holds final FP result
+            );
     end component;
     ------------------------------------------------------------ CONSTANT OP
     constant fmadd:     std_logic_vector (4 downto 0):="00000"; --
@@ -138,10 +141,10 @@ begin
    -- Logic xor b input for subtraction
    b_sub <= ('1' xor b_i(31)) & b_i(30 downto 0); 
 
-   fadd: FPU
+   fadd_inst: FPU
    port map (clk => clk, rst => reset, start => start_s, X => a_mux_i, Y => b_mux_i, R => fpadd, done => fadd_stall);
 
-   fsub: FPU
+   fsub_inst: FPU
    port map (clk => clk, rst => reset, start => start_s, X => a_i, Y => b_sub, R => fpsub, done => fsub_stall);
    
    fmul_ins: floatM
@@ -160,8 +163,8 @@ begin
    fclass_inst: fclass_c
    port map (a_in => a_i, c_out => fclass_res);
    
-   fdiv_i:floatDevision
-   port map (a_in => a_i, b_in => b_i, r_out => fdiv_res, clk => clk, rst => reset, start => start_s, stall_o => fdiv_stall);
+   fdiv_i:FPP_DIVIDE
+   port map (A => a_i, B => b_i, result => fdiv_res, clk => clk, reset => reset, go => start_s, done => fdiv_stall, overflow => open);
 
    fsgnj_res <= b_i(31) & a_i(30 downto 0);
    fsgnjn_res <= not(b_i(31)) & a_i(30 downto 0);

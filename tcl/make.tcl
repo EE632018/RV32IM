@@ -58,8 +58,8 @@ add_files -norecurse ../float_arithmetic_operations/fmul/floatM.vhd
 #FCOMPARATOR
 add_files -norecurse ../float_arithmetic_operations/fcomparator/floatComp.vhd
 #FDIV
-add_files -norecurse ../float_arithmetic_operations/fdiv/floatDevision.vhd
-add_files -norecurse ../float_arithmetic_operations/fdiv/floatReciproach.vhd
+add_files -norecurse ../float_arithmetic_operations/fdiv/MantissaDivision.vhd
+add_files -norecurse ../float_arithmetic_operations/fdiv/FPP_DIVIDE.vhd
 #FCONV
 add_files -norecurse ../float_arithmetic_operations/fconverter/fcvt_i.vhd
 add_files -norecurse ../float_arithmetic_operations/fconverter/fcvt.vhd
