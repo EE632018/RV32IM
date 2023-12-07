@@ -50,7 +50,7 @@ begin
     process(a_m, a_e, a_s)
     begin
         c_out <= (others => '0');
-        if a_s = '1' then
+        if a_s = '0' then
             if(unsigned(a_e) = TO_UNSIGNED(0, 8)) then
                 if(unsigned(a_m) = TO_UNSIGNED(0, 23)) then
                     c_out(4) <= '1';

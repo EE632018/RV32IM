@@ -21,6 +21,7 @@ add_files -norecurse ../packages/alu_ops_pkg.vhd
 add_files -norecurse ../packages/controlpath_signals_pkg.vhd
 add_files -norecurse ../packages/datapath_signals_pkg.vhd
 add_files -norecurse ../packages/txt_util.vhd
+add_files -norecurse ../packages/utils_pkg.vhd
 add_files -norecurse ../control_path/alu_decoder.vhd
 add_files -norecurse ../control_path/alu_decoder_float.vhd
 add_files -norecurse ../control_path/ctrl_decoder.vhd
@@ -63,9 +64,12 @@ add_files -norecurse ../float_arithmetic_operations/fdiv/FPP_DIVIDE.vhd
 #FCONV
 add_files -norecurse ../float_arithmetic_operations/fconverter/fcvt_i.vhd
 add_files -norecurse ../float_arithmetic_operations/fconverter/fcvt.vhd
-add_files -norecurse ../loat_arithmetic_operations/fconverter/Ilog.vhd
+#add_files -norecurse ../loat_arithmetic_operations/fconverter/Ilog.vhd
 #FCLASS
 add_files -norecurse ../float_arithmetic_operations/fclass/fclass_c.vhd
+#FSQRT
+add_files -norecurse ../float_arithmetic_operations/fsqrt/fsqrt.vhd
+add_files -norecurse ../float_arithmetic_operations/fsqrt/mantissa_sqrt.vhd
 #TB
 add_files -fileset sim_1 ../RISCV_tb/TOP_RISCV_tb.vhd
 add_files -fileset constrs_1 -norecurse ../constraints/clk_constraint.xdc
