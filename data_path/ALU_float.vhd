@@ -173,7 +173,7 @@ begin
    fmv_res_i <= a_ii;
 
 
-    process(op_i, a_i, b_i)
+    process(op_i, a_i, b_i, fmul_res, c_i)
     begin
         if op_i = fadd then
             a_mux_i <= a_i;
@@ -194,7 +194,11 @@ begin
     end process;
 
    with op_i select
-      res_s <= fpadd      when (fadd or fnmsub or fmsub or fnmadd or fmadd),
+      res_s <= fpadd      when fadd,
+               fpadd      when fnmsub, 
+               fpadd      when fmsub, 
+               fpadd      when fnmadd, 
+               fpadd      when fmadd,
                fpsub      when fsub,
                fsgnj_res  when fsgnj,
                fsgnjn_res when fsgnjn,
@@ -217,12 +221,21 @@ begin
                
     with op_i select
         stall_o <= fdiv_stall when fdiv,
-                   fadd_stall when (fadd or fnmsub or fmsub or fnmadd or fmadd),
+                   fadd_stall when fadd,
+                   fadd_stall when fnmsub, 
+                   fadd_stall when fmsub, 
+                   fadd_stall when fnmadd, 
+                   fadd_stall when fmadd,
                    fsub_stall when fsub, 
                     '1'       when others;
     with op_i select
         start_s <= '1' when fdiv,
-                   '1' when (fadd or fsub or fmadd or fnmadd or fmsub or fnmsub), 
+                   '1' when fadd,
+                   '1' when fsub, 
+                   '1' when fmadd, 
+                   '1' when fnmadd, 
+                   '1' when fmsub, 
+                   '1' when fnmsub, 
                    '0' when others;                
    res_o <= res_s;            
 end behavioral;    

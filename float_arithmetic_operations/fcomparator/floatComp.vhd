@@ -61,9 +61,9 @@ begin
         if(a_e = "01111111" or b_e = "01111111" ) then
             c_max_out  <= "10111111111111111111111111111111";
             c_min_out  <= "10111111111111111111111111111111";
-            c_feq_out  <= (others => '0');
-            c_flts_out <= (others => '0');
-            c_fle_out  <= (others => '0');
+            --c_feq_out  <= (others => '0');
+            --c_flts_out <= (others => '0');
+            --c_fle_out  <= (others => '0');
         else
             if(a_s = b_s) then                                  -- SAME SIGN
                 if(a_e = b_e) then                              -- SAME EXSPONAT
