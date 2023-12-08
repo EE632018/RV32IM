@@ -139,7 +139,7 @@ begin
         end if;
     end process;
 
-    process(state_r, start, cnt_r, res_r, stall_d, stall_a, stall_d2, res_div2)
+    process(state_r, start, cnt_r, res_r, stall_d, stall_a, stall_d2, res_div2, a_i)
     begin
     
         cnt_n <= cnt_r;
