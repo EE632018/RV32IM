@@ -38,9 +38,9 @@ entity fsqrt_c is
            a_i : in STD_LOGIC_VECTOR (31 downto 0);
            c_out : out STD_LOGIC_VECTOR (31 downto 0);
            stall_o : out STD_LOGIC);
-end fsqrt_c;
+end fsqrt;
 
-architecture Behavioral of fsqrt_c is
+architecture Behavioral of fsqrt is
     component FPP_DIVIDE 
       port (A        : in  std_logic_vector(31 downto 0);  --Dividend
             B        : in  std_logic_vector(31 downto 0);  --Divisor

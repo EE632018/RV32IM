@@ -68,8 +68,8 @@ add_files -norecurse ../float_arithmetic_operations/fconverter/fcvt.vhd
 #FCLASS
 add_files -norecurse ../float_arithmetic_operations/fclass/fclass_c.vhd
 #FSQRT
-add_files -norecurse ../float_arithmetic_operations/fsqrt/fsqrt.vhd
-add_files -norecurse ../float_arithmetic_operations/fsqrt/mantissa_sqrt.vhd
+add_files -norecurse ../float_arithmetic_operations/fsqrt/fsqrt_c.vhd
+
 #TB
 add_files -fileset sim_1 ../RISCV_tb/TOP_RISCV_tb.vhd
 add_files -fileset constrs_1 -norecurse ../constraints/clk_constraint.xdc

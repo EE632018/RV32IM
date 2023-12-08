@@ -80,6 +80,15 @@ ARCHITECTURE behavioral OF ALU_float IS
             result   : out std_logic_vector(31 downto 0)   --Holds final FP result
             );
     end component;
+    
+    component fsqrt_c
+        Port ( clk : in STD_LOGIC;
+               rst : in STD_LOGIC;
+               start : in STD_LOGIC;
+               a_i : in STD_LOGIC_VECTOR (31 downto 0);
+               c_out : out STD_LOGIC_VECTOR (31 downto 0);
+               stall_o : out STD_LOGIC);
+    end component;
     ------------------------------------------------------------ CONSTANT OP
     constant fmadd:     std_logic_vector (4 downto 0):="00000"; --
     constant fmsub:     std_logic_vector (4 downto 0):="00001"; --
@@ -89,7 +98,7 @@ ARCHITECTURE behavioral OF ALU_float IS
     constant fsub:      std_logic_vector (4 downto 0):="00101"; --
     constant fmul:      std_logic_vector (4 downto 0):="00110"; --
     constant fdiv:      std_logic_vector (4 downto 0):="00111"; --
-    constant fsqrt:     std_logic_vector (4 downto 0):="01000";
+    constant fsqrt:     std_logic_vector (4 downto 0):="01000"; --
     constant fsgnj:     std_logic_vector (4 downto 0):="01001"; --
     constant fsgnjn:    std_logic_vector (4 downto 0):="01010"; --
     constant fsgnjx:    std_logic_vector (4 downto 0):="01011"; --
@@ -128,12 +137,14 @@ ARCHITECTURE behavioral OF ALU_float IS
     signal fclass_res : std_logic_vector(WIDTH - 1 downto 0);
     signal res_s     : std_logic_vector(WIDTH - 1 downto 0);
     signal fdiv_res  : std_logic_vector(WIDTH - 1 downto 0);
+    signal fsqrt_res  : std_logic_vector(WIDTH - 1 downto 0);
     
     signal start_s : std_logic;
     
     signal fdiv_stall : std_logic;
     signal fadd_stall : std_logic;
     signal fsub_stall : std_logic;
+    signal fsqrt_stall : std_logic;
     
     signal b_sub      : std_logic_vector(31 downto 0);
 begin
@@ -166,6 +177,9 @@ begin
    fdiv_i:FPP_DIVIDE
    port map (A => a_i, B => b_i, result => fdiv_res, clk => clk, reset => reset, go => start_s, done => fdiv_stall, overflow => open);
 
+   fsqrt_i: fsqrt_c
+   port map(a_i => a_i, clk => clk, rst => reset, start => start_s, stall_o => fsqrt_stall, c_out => fsqrt_res); 
+
    fsgnj_res <= b_i(31) & a_i(30 downto 0);
    fsgnjn_res <= not(b_i(31)) & a_i(30 downto 0);
    fsgnjx_res <= (a_i(31) xor b_i(31)) & a_i(30 downto 0);
@@ -194,40 +208,42 @@ begin
     end process;
 
    with op_i select
-      res_s <= fpadd      when fadd,
-               fpadd      when fnmsub, 
-               fpadd      when fmsub, 
-               fpadd      when fnmadd, 
-               fpadd      when fmadd,
-               fpsub      when fsub,
-               fsgnj_res  when fsgnj,
-               fsgnjn_res when fsgnjn,
-               fsgnjx_res when fsgnjx,
-               fmul_res   when fmul,
-               fmax_res   when fmax,
-               fmin_res   when fmin,
-               fcvt_res_u when fcvt_wu,
-               fcvt_res_s when fcvt_w, 
-               fmv_res_f  when fmv_x_w,
-               fmv_res_i  when fmv_w_x,
-               feq_res    when feq,
-               flts_res   when flts,
-               fle_res    when fle,
-               fclass_res when fclass,
-               fcvt_i_res_s when fcvt_s_w,
-               fcvt_i_res_u when fcvt_s_wu,
-               fdiv_res     when fdiv,
-               (others => '1') when others;   
+      res_s <= fpadd            when fadd,
+               fpadd            when fnmsub, 
+               fpadd            when fmsub, 
+               fpadd            when fnmadd, 
+               fpadd            when fmadd,
+               fpsub            when fsub,
+               fsgnj_res        when fsgnj,
+               fsgnjn_res       when fsgnjn,
+               fsgnjx_res       when fsgnjx,
+               fmul_res         when fmul,
+               fmax_res         when fmax,
+               fmin_res         when fmin,
+               fcvt_res_u       when fcvt_wu,
+               fcvt_res_s       when fcvt_w, 
+               fmv_res_f        when fmv_x_w,
+               fmv_res_i        when fmv_w_x,
+               feq_res          when feq,
+               flts_res         when flts,
+               fle_res          when fle,
+               fclass_res       when fclass,
+               fcvt_i_res_s     when fcvt_s_w,
+               fcvt_i_res_u     when fcvt_s_wu,
+               fdiv_res         when fdiv,
+               fsqrt_res        when fsqrt,
+               (others => '1')  when others;   
                
     with op_i select
-        stall_o <= fdiv_stall when fdiv,
-                   fadd_stall when fadd,
-                   fadd_stall when fnmsub, 
-                   fadd_stall when fmsub, 
-                   fadd_stall when fnmadd, 
-                   fadd_stall when fmadd,
-                   fsub_stall when fsub, 
-                    '1'       when others;
+        stall_o <= fdiv_stall   when fdiv,
+                   fadd_stall   when fadd,
+                   fadd_stall   when fnmsub, 
+                   fadd_stall   when fmsub, 
+                   fadd_stall   when fnmadd, 
+                   fadd_stall   when fmadd,
+                   fsub_stall   when fsub, 
+                   fsqrt_stall  when fsqrt,
+                    '1'         when others;
     with op_i select
         start_s <= '1' when fdiv,
                    '1' when fadd,
@@ -235,7 +251,8 @@ begin
                    '1' when fmadd, 
                    '1' when fnmadd, 
                    '1' when fmsub, 
-                   '1' when fnmsub, 
+                   '1' when fnmsub,
+                   '1' when fsqrt, 
                    '0' when others;                
    res_o <= res_s;            
 end behavioral;    
