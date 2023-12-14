@@ -3,7 +3,7 @@
 
 \title{RV32IMF Description}
 \author{Milos Strizak}
-\date{October 2023}
+\date{\today}
 
 \begin{document}
 
@@ -140,7 +140,7 @@ current instruction.
     In this subsection is described all instruction in I-set. They are sorted in groups, depending on format of instruction they represent. There is 47 instructions in this set, they are divided in 6 types: 
     \begin{enumerate}
         \item  R-type: register-register
-        \item  I-type: short immediates and loads
+        \item  I-type: short immediate and loads
         \item  S-type: stores
         \item  B-type: conditional branches, a variation of S-type
         \item  U-type: long immediates
@@ -1131,111 +1131,139 @@ The standard IEEE 754 requires that the operation result must be the same which 
     \item Rounding to -infinity is the smallest floating point number (possibly -infinity) less than or equal to x
     \item Rounding to zero is the closest floating point number to x that is no greater in magnitude than x (it is equal to rounding to -infinity if x greater than 0 and to +infinity if x less than 0)
 \end{itemize}
-\addcontentsline{toc}{subsection}{Floating Point Adder Design} 
-\subsection*{Floating Point Adder Design}
-Steps in calculating addition/subtraction are: 
-\begin{enumerate}
-    \item Extracting signs, exponents and mantissas of both A and B numbers.
-    \item Treating the special cases:
-      \begin{itemize}
-          \item Operations with A or B equal to zero 
-          \item Operations with ±infinity
-          \item Operations with NaN 
-      \end{itemize}  
-    \item Finding out what type of numbers are given:
-        \begin{itemize}
-              \item Normal
-              \item Subnormal
-              \item Mixed 
-          \end{itemize} 
-    \item  Shifting the lower exponent number mantissa to the right (e1 - e2) bits. Setting the output exponent as the highest exponent.   \item  Working with the operation symbol and both signs to calculate the output sign and determine the operation to do.
-    \item Addition/Subtraction of the numbers and detection of mantissa overflow (carry bit).
-    \item Standardizing mantissa shifting it to the left up the first one will be at the first position and updating the value of the exponent according with the carry bit and the shifting over the mantissa. 
-    \item Detecting exponent overflow or underflow (result NaN or ±infinity).
-\end{enumerate}
-This steps are designed in three parts:
-\begin{enumerate}
-    \item Pre-Adder Block
-    \item Adder Block
-    \item Standardizing block 
-\end{enumerate}
-The first sub-block is the Pre-Adder. The goals are:
-\begin{enumerate}
-    \item Distinguishing between normal, subnormal or mixed (normal-subnormal combination) numbers.
-    \item Treating the numbers in order to be added (or subtracted) in the adder block.
-        \begin{itemize}
-            \item Setting the Output’s exponent
-            \item Shifting the mantissa
-            \item Standardizing the subnormal number in mixed numbers case to be treated as a normal case
-        \end{itemize}
-\end{enumerate}
-The second block is Adder the easiest part of the blocks. This block only implements the operation (addition or subtraction). Two functions are implemented in this part of the code:
-\begin{enumerate}
-    \item Obtaining the output’s sign
-    \item Implementing the desired operation 
-\end{enumerate}
-In this block two related problems should be taken into account. Firstly, the calculation symbol (+ or -) depends on itself and the A and B’s signs. Secondly, positive or negative numbers addition gives the same result. The problem will appear when the signs are different. In these cases the positive number will be kept in the first operand and the negative one in the second operand. All these problems will be explained in detail in next sections.
-\break \hfill
-Finally the Standardizing Block takes the result of the addition/subtraction and gives it an IEEE 754 format.The procedure is as follows:
-\begin{enumerate}
-    \item Shifting the mantissa to standardize the result
-    \item Calculating the new exponent according with the addition/subtraction overflow (carry out bit) and the displacement of the mantissa. 
-\end{enumerate}
-The exponent value must be controlled when these steps are going to be made because it could be the number of positions the mantissa must be shifted are higher than the exponent value. In this case the result becomes subnormal. Another exception is when exponent and number of displacements are equal: mantissa will be shifted and exponent will be one.
-\newpage
-\addcontentsline{toc}{subsubsection}{Implementation of Pre-Adder} 
-\subsubsection*{Implementation of Pre-Adder}
-Pre-Adder block contains several smaller blocks,each of them is going to be described what is functional specification. 
-Sub-blocks:
-\begin{enumerate}
-    \item n-case block - Both number A and number B are introduced as inputs. Vector S is one of the outputs and it contains the result when there is a special case, otherwise undefined. Finally, enable signal enables or disables the adder block if it is needed or not.
-    \item n-subn block - Number A and B are the entries. The outputs are six. SA-MA and SB-MB contain the sign and mantissa of A and B respectively. Comp signal is referred to the result comparison and EO is the result exponent. 
-    \item comp block - The block entries are both numbers and the outputs are the same numbers ordered as normal NA and subnormal NB.
-    \item zero block - Counting zeros is the zero block target. The mantissa which is needed to shift is introduced as an entry in T vector and the output Zcount contains the number of zeros the mantissa has on the beginning which corresponds with the number of positions the vector must be shifted.
-    \item shift block - Shifting is required to match the normal and mixed mantissas to perform the addition/subtraction properly.
-    \item norm block - Finally, the rest of the entities are all included in the norm block. It also performs the output exponent treatment. The inputs are the numbers A and B. Once the subnormal one has been shifted it is fixed in MB. The normal number is set in MA.
-    \item comp-exp block - The comp-exp entries are the two introduced numbers again. There are several outputs: SA and SB are the sign of A and B respectively, EMax is the output exponent, MMax the largest mantissa, Mshft the mantissa to shift, Dexp the number of positions Mshft must be shifted and Comp indicates what number is the largest one.
-    \item selector block - Selector block prepares the numbers: the entries are shorter than outputs because the implicit bit (high if the number is normal and low in subnormal’s case) and the guard bits are added in this block. Enable signal enables this block (and therefore the entire preadder block) when we do not have a special case. 
-    \item MUX/DEMUX blocks - The operation of the demux demultiplexor is routing the A and B numbers to the subnormal, normal or mixed block according with the e-data value. NumberA, NumberB and the enable signal e-data are the entries and the outputs are 3 pairs of signals but only one pair is activated in each time. The typical demultiplexor’s behaviour. The mux-ns multiplexor’s target is selecting which signal must be introduced in the normal numbers block: normal numbers or a standardized numbers from the mixed numbers block.Finally mux-adder multiplexor is in charge of selecting which data are going to be introduced in the adder.  
-\end{enumerate}
-Next step is showing structural look of Pre-Adder block design. 
+\addcontentsline{toc}{subsection}{Float point ALU} 
+\subsection*{Float point ALU}
+Float point ALU implements all arithmetic or logic instructions from F-set. Next few subsections are going to represent how some of the more complex instructions are implemented. 
+Interface of float ALU is represented in next table: 
+\begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|c|} \hline 
+             Interface & I/O & Description \\ \hline  
+             clk & input & Clock signal.  \\ \hline
+             rst & input & Reset signal active on 0.  \\ \hline
+             a-ii & input & Value from integer register bank.  \\ \hline
+             a-i & input & Value of first operand from float register bank.  \\ \hline
+             b-i & input & Value of second operand from float register bank.  \\ \hline
+             c-i & input & Value of third operand from float register bank.  \\ \hline
+             op-i & input & Operation that is executed.  \\ \hline
+             res-o & output & Result of float instruction.  \\ \hline
+             stall-o & output & Stall execution for instructions that take multiple cycles.  \\ \hline
+        \end{tabular}
+        \caption{Float ALU interface}
+\end{table}
+\addcontentsline{toc}{subsection}{Float point addition and subtraction} 
+\subsection*{Float point addition and subtraction}
+Float point addition and subtraction are implemented using same logic. This is done using simple FSM with five states: 
+\begin{itemize}
+    \item  WAITING - This is the initial state, where unit waits for start signal to begin executing algorithm for addition or subtraction. 
+    \item  ALIGN - In this state mantissa values of numbers are aligned, if that is not possible bigger number is output as a result. 
+    \item  ADD - This state does arithmetic operation addition when numbers have same sign, vice versa subtraction is executed.
+    \item  NORMALIZE - In this state mantissa is normalized, after that it goes to output state. 
+    \item  OUTPUT - In this state it is waiting for start signal to get low to go to WAITING state. 
+\end{itemize}
+Next figure represents FSM of float point addition or subtraction. 
 \begin{figure}[htb!]
     \centering
-    \includegraphics[width=1\linewidth]{preadder2.png}
-    \caption{Structural Pre-adder}
-    \label{fig:preadder}
+    \includegraphics[width=0.8\linewidth]{FSM_ADDER.png}
+    \caption{FSM FP addition or subtraction}
+    \label{fig:FPa}
 \end{figure}
-\addcontentsline{toc}{subsubsection}{Implementation of Adder} 
-\subsubsection*{Implementation of Adder}
-The adder is a fundamental piece of the design because it implements the addition/subtraction operation, main purpose of the 32 bit Floating Point Adder. 
-The Adder block is composed by two entities: signout and adder. Signout is responsible for the sign operation and the adder is the adder strictly speaking. 
-Next figure shows structural look of Adder block:
+\addcontentsline{toc}{subsection}{Float point class} 
+\subsection*{Float point class}
+The FCLASS instruction examines the value in floating-point register rs1 and writes to integer register rd a 10-bit mask that indicates the class of the floating-point number. The format of the mask is described in Table 29. The corresponding bit in rd will be set if the property is true and clear otherwise. All other bits in rd are cleared. Note that exactly one bit in rd will be set. FCLASS does not set the floating-point exception flags.
+\begin{table}[htb!]
+            \centering
+            \begin{tabular}{|c|c|} \hline 
+             rd bit & Description \\ \hline  
+             0 & rs1 is negative infinity.  \\ \hline
+             1 & rs1 is negative normal number.  \\ \hline
+             2 & rs1 is negative subnormal number.  \\ \hline
+             3 & rs1 is negative 0.  \\ \hline
+             4 & rs1 is positive 0.  \\ \hline
+             5 & rs1 is positive subnormal number.  \\ \hline
+             6 & rs1 is positive normal number.  \\ \hline
+             7 & rs1 is positive infinity.  \\ \hline
+             8 & rs1 is signaling NaN.  \\ \hline
+             9 & rs1 is quite NaN.  \\ \hline
+        \end{tabular}
+        \caption{FCLASS instruction}
+\end{table}
+\newline
+\newline
+\newline
+\addcontentsline{toc}{subsection}{Float point division} 
+\subsection*{Float point division}
+Division is more complex operation, because of that it is needed to implement algorithm for division computation using FSM. This FSM contains seven states: 
+\begin{itemize}
+    \item  IDLE - Waits for GO signal to be set.
+    \item  ALIGN - Align dividend 
+    \item  SetExponent - Set the quotient exponent
+    \item  START - Start mantissa divider.
+    \item  WaitTilDone - Wait for completion.
+    \item  DONE - Done with calculation.
+    \item  PAUSE - Wait for GO signal to be cleared.
+\end{itemize}
+
+Next figure represents FSM of division algorithm.
 \begin{figure}[htb!]
     \centering
-    \includegraphics[width=1\linewidth]{adder.png}
-    \caption{Structural Adder}
-    \label{fig:adder}
+    \includegraphics[width=0.8\linewidth]{FPDIV_FSM.png}
+    \caption{FSM division}
+    \label{fig:FSMd}
 \end{figure}
-\addcontentsline{toc}{subsubsection}{Implementation of Standardizing block} 
-\subsubsection*{Implementation of Standardizing block}
-The Standardizing block, as its name suggest, is responsible for displaying the addition/subtraction operation value according to the IEEE 754 standard. 
-This block is composed of four entities. Shift-left and zero blocks have been explained. Round block provides more accuracy to the design. Four bits at the end of the vector had been added in the Pre-Adder block. Now it is time to use these bits in order to round the result.
-Next figure shows structural look of Standardizing block:
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\newline
+\addcontentsline{toc}{subsection}{Float point square root} 
+\subsection*{Float point square root}
+Square root is the most complex operation for implementation. In this case it is implemented using simple approximation algorithm. Formula for this is: 
+\newline
+\break
+\(result = (a + (n/a))/2\)
+\newline
+\break
+This result is getting better, with more number of iteration. In this case number of iteration used is 32. Deviation of result is approximately 0.01 percent. 
+This algorithm is implemented using already implemented float point addition and float point division. Buy using FSM there are seven state, each state represents one part of result computed. States are:
+\begin{itemize}
+    \item  IDLE - Waits for start signal to be set.
+    \item  START-DIV - Starts first division n/a in algorithm. 
+    \item  DIV - Executes first division.
+    \item  ADD - Executes addition.
+    \item  START-DIV2 - Starts second division in algorithm, division by 2.
+    \item  DIV2 - Executes second division.
+    \item  RES - If number of iteration was 32 then result was computed, othervise it goes back to START-DIV state and executes next iteration.
+\end{itemize}
+Next figure represents FSM for square root operation. 
 \begin{figure}[htb!]
     \centering
-    \includegraphics[width=1\linewidth]{Stabilizing.png}
-    \caption{Structural Stabilizing block}
-    \label{fig:Stabilizing}
+    \includegraphics[width=0.6\linewidth]{FSM_SQRT.png}
+    \caption{FSM square root}
+    \label{fig:FSMsq}
 \end{figure}
-\addcontentsline{toc}{subsubsection}{Float point model} 
-\subsubsection*{Float point model}
-Representing float point adder/subtractor in block form on next figure. It is done this way because of complexity of design. Thicker arrows represent multiple signals between two blocks. 
-\begin{figure}[htb!]
+\addcontentsline{toc}{subsection}{Float point three operand instructions} 
+\subsection*{Float point three operand instructions}
+F set of instruction has four instructions that are using three operand to be executed: FMADD, FNMADD, FMSUB, FNMSUB. This operations use float point multiplication and addition or subtraction. First this instructions are separately implemented and after that combined with additional selection logic to get three operand instructions. Next figure represents this additional logic necessary for implementing this instructions. 
+\begin{figure}
     \centering
-    \includegraphics[width=1\linewidth]{FADD.png}
-    \caption{FADD/FSUB structure}
-    \label{fig:FADD}
+    \includegraphics[width=0.85\linewidth]{threeoperands.png}
+    \caption{Additional logic for three operands}
+    \label{fig:ThreeOp}
 \end{figure}
+
+\addcontentsline{toc}{subsection}{Float point conclusion} 
+\subsection*{Float point conclusion}
+In F set of instruction there are 26 instruction. In previous subsections are described only instructions that are more complex and take multiple cycles to execute. Other instructions are intuitive and take one cycle to execute, so there is no need for more detail explanation. 
 
 \newpage
 \addcontentsline{toc}{section}{Acronyms} 
