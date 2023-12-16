@@ -35,6 +35,15 @@ add_files -norecurse ../TOP_RISCV.vhd
 add_files -norecurse ../RISCV_tb/BRAM_byte_addressable.vhd
 add_files -fileset sim_1 ../RISCV_tb/TOP_RISCV_tb.vhd
 
+add_files -norecurse ../Branch_Predictor/BHR.vhd
+add_files -norecurse ../Branch_Predictor/BHR_local.vhd
+add_files -norecurse ../Branch_Predictor/Gshare.vhd
+add_files -norecurse ../Branch_Predictor/PAp.vhd
+add_files -norecurse ../Branch_Predictor/PHT.vhd
+add_files -norecurse ../Branch_Predictor/TBP.vhd
+add_files -norecurse ../Branch_Predictor/TOC.vhd
+add_files -norecurse ../Branch_Predictor/two_bit_pred.vhd
+
 update_compile_order -fileset sources_1
 
 set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]
