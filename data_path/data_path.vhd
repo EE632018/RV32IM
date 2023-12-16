@@ -424,7 +424,7 @@ begin
          --of_o   => alu_of_ex_s
          );
 
-    MHBP_INST:TBP
+    TBP_INST:TBP
     GENERIC MAP(WIDTH       => 4,
                 WIDTH_BHR   => 3,
                 WIDTH_PHT   => 7,
