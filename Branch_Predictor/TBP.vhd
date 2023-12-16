@@ -106,9 +106,8 @@ architecture Behavioral of TBP is
     END COMPONENT;
     
         -- Signals for connectino
-    signal cnt_one_s, cnt_two_s, cnt_three_s, cnt_four_s: std_logic_vector(1 downto 0);
-    signal index_sel_s:  std_logic_vector (1 downto 0);
-    signal gshare_pred_s, GAg_pred_s, pshare_pred_s, PAp_pred_s: std_logic;
+    signal cnt_one_s: std_logic_vector(1 downto 0);
+    signal gshare_pred_s,  PAp_pred_s: std_logic;
     signal pht_addr_4bit_gshare_s, pht_addr_4bit_pshare_s: std_logic_vector(3 downto 0);  
     signal pht_addr_4bit_GAg_s, pht_addr_4bit_PAp_s: std_logic_vector(6 downto 0); 
 begin
@@ -165,14 +164,14 @@ begin
     -- Additional logic mux 4 on 1 choosing one of branch predictors for final prediction
     -- output final_pred
     
-    finale_prediction_process: process(index_sel_s,gshare_pred_s,GAg_pred_s,pshare_pred_s,PAp_pred_s)
+    finale_prediction_process: process(cnt_one_s,gshare_pred_s,PAp_pred_s)
                                begin
-                                    case(index_sel_s)is
+                                    case(cnt_one_s)is
                                         when "00" => final_pred <= gshare_pred_s;
-                                        when "01" => final_pred <= GAg_pred_s;
-                                        when "10" => final_pred <= pshare_pred_s;
+                                        when "01" => final_pred <= gshare_pred_s;
+                                        when "10" => final_pred <= PAp_pred_s;
                                         when "11" => final_pred <= PAp_pred_s;
-                                        when others => final_pred <= GAg_pred_s;
+                                        when others => final_pred <= gshare_pred_s;
                                     end case;
                                end process finale_prediction_process;
                                
