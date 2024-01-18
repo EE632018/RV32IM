@@ -42,12 +42,14 @@ module top(
 	   	const bit [4 : 0] sra_op 	= "01000";  //---> shift right arithmetic
 	   	const bit [4 : 0] mulu_op 	= "01001";  //---> multiply lower      
 	   	const bit [4 : 0] mulhs_op 	= "01010";  //---> multiply higher signed 
-	   	const bit [4 : 0] mulhsu_op = "01011";  //---> multiply higher signed and unsigned 
-   		const bit [4 : 0] mulhu_op  = "01100";  //---> multiply higher unsigned 
+	   	const bit [4 : 0] mulhsu_op 	= "01011";  //---> multiply higher signed and unsigned 
+   		const bit [4 : 0] mulhu_op  	= "01100";  //---> multiply higher unsigned 
   	 	const bit [4 : 0] divu_op 	= "01101";  //---> divide unsigned
 	   	const bit [4 : 0] divs_op  	= "01110";  //---> divide signed
-	   	const bit [4 : 0] remu_op   = "01111";  //---> reminder unsigned
+	   	const bit [4 : 0] remu_op   	= "01111";  //---> reminder unsigned
 		const bit [4 : 0] rems_op	= "10000";  //---> reminder signed
+    	
+    	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     	
 		logic [1 : 0] alu_2bit_op;
 		logic [2 : 0] funct3;
@@ -74,6 +76,8 @@ module top(
 		logic rems_operation;
 		logic and_operation;
 		logic remu_operation;
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 		always @(alu_2bit_op_i)begin
 			alu_2bit_op = alu_2bit_op_i;
@@ -97,6 +101,8 @@ module top(
 			.funct7_i(funct7_i),
 			.alu_op_o(alu_op_o)
         ); 
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		        
 	   	always_comb begin
 			if (alu_2bit_op == "00") 
@@ -245,12 +251,13 @@ module top(
 				remu_operation = 0;
 		end
 		
-
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 		clocking @(posedge clk);
 		endclocking
 
 		default disable iff rst;
-		
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//////LIMITS FOR INPUT ////////////////
 		property limmitst_for_alu_2bit_op_i;
 			 alu_2bit_op_i == ("00" || "01 "|| "11" || "10");
@@ -262,119 +269,120 @@ module top(
 		
 		assume property (limmitst_for_alu_2bit_op_i);
 		assume property (limits_for_fun7);
-		
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		/////CHEKING FOR ALL POSIBLE OUTPUTS////////
 		property add_output;
 			 and_operation |-> (alu_op_o == and_op); 
 		endproperty;
 		
-		assert property (add_output);
+		add_output_s:assert property (add_output);
 		
 		property eq_output;
 			eq_operation |-> (alu_op_o == eq_op);
 		endproperty;
 		
-		assert property(eq_output);
+		eq_output_s:assert property(eq_output);
 		
 		property lts_output;
 			lts_operation |-> (alu_op_o == lts_op);
 		endproperty;
 		
-		assert property (lts_output);
+		lts_output_s:assert property (lts_output);
 		
 		property ltu_output;
 			ltu_operation |-> (alu_op_o == ltu_op);
 		endproperty;
 		
-		assert property (ltu_output);
+		ltu_output_s:assert property (ltu_output);
 		
 		property sub_output;
 			sub_operation |-> (alu_op_o == sub_op); 
 		endproperty;
 		
-		assert property (sub_output);
+		sub_output_s:assert property (sub_output);
 		
 		property mulu_output;
 			mulu_operation |-> (alu_op_o == mulu_op); 
 		endproperty;
 		
-		assert property (mulu_output);
+		mulu_output_s:assert property (mulu_output);
 		
 		property mulhs_output;
 			mulhs_operation |-> (alu_op_o == mulhs_op); 
 		endproperty;
 		
-		assert property (mulhs_output);
+		mulhs_output_s:assert property (mulhs_output);
 		
 		property sll_output;
 			sll_operation |-> (alu_op_o == sll_op); 
 		endproperty;
 		
-		assert property (sll_output);
+		sll_output_s:assert property (sll_output);
 		
 		property mulhsu_output;
 			mulhsu_operation |-> (alu_op_o == mulhsu_op); 
 		endproperty;
 		
-		assert property (mulhsu_output);
+		mulhsu_output_s:assert property (mulhsu_output);
 		
 		property mulhu_output;
 			mulhu_operation |-> (alu_op_o == mulhu_op); 
 		endproperty;
 		
-		assert property (mulhu_output);
+		mulhu_output_s:assert property (mulhu_output);
 		
 		property divs_output;
 			divs_operation |-> (alu_op_o == divs_op); 
 		endproperty;
 		
-		assert property (divs_output);
+		divs_output_s:assert property (divs_output);
 		
 		property xor_output;
 			xor_operation |-> (alu_op_o == xor_op); 
 		endproperty;
 		
-		assert property (xor_output);
+		xor_output_s:assert property (xor_output);
 		
 		property srl_output;
 			srl_operation |-> (alu_op_o == srl_op); 
 		endproperty;
 		
-		assert property (srl_output);
+		srl_output_s:assert property (srl_output);
 		
 		property sra_output;
 			sra_operation |-> (alu_op_o == sra_op); 
 		endproperty;
 		
-		assert property (sra_output);
+		sra_output_s:assert property (sra_output);
 		
 		property divu_output;
 			divu_operation |-> (alu_op_o == divu_op); 
 		endproperty;
 		
-		assert property (divu_output);
+		divu_output_s:assert property (divu_output);
 		
 		property or_output;
 			or_operation |-> (alu_op_o == or_op); 
 		endproperty;
 		
-		assert property (or_output);
+		or_output_s:assert property (or_output);
 		
 		property rems_output;
 			rems_operation |-> (alu_op_o == rems_op); 
 		endproperty;
 		
-		assert property (rems_output);
+		rems_output_s:assert property (rems_output);
 		
 		property and_output;
 			and_operation |-> (alu_op_o == and_op); 
 		endproperty;
 		
-		assert property (and_output);
+		and_output_s:assert property (and_output);
 		
 		property remu_output;
 			remu_operation |-> (alu_op_o == remu_op); 
 		endproperty;
 		
-		assert property (remu_output);
+		remu_output_s:assert property (remu_output);
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	endmodule
