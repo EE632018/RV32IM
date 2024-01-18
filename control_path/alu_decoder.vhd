@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.alu_ops_pkg.all;
+--use work.alu_ops_pkg.all;
 
 entity alu_decoder is
    port ( 
@@ -26,7 +26,7 @@ architecture behavioral of alu_decoder is
    constant sll_op: std_logic_vector (4 downto 0):="10110"; ---> shift left logic
    constant srl_op: std_logic_vector (4 downto 0):="00111"; ---> shift right logic
    constant sra_op: std_logic_vector (4 downto 0):="01000"; ---> shift right arithmetic
-   constant mulu_op: std_logic_vector (4 downto 0):="01001"; ---> multiply lower
+   constant mulu_op: std_logic_vector (4 downto 0):="01001"; ---> multiply lower 
    constant mulhs_op: std_logic_vector (4 downto 0):="01010"; ---> multiply higher signed
    constant mulhsu_op: std_logic_vector (4 downto 0):="01011"; ---> multiply higher signed and unsigned
    constant mulhu_op: std_logic_vector (4 downto 0):="01100"; ---> multiply higher unsigned
